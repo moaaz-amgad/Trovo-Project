@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\PhoneUsage;
 use App\Models\QuestionnaireResponse;
+use App\Models\Diagnosis;
 
 class User extends Authenticatable
 {
@@ -57,7 +58,11 @@ public function phoneUsages()
     }
 
 public function questionnaireResponses() {
-    return $this->hasMany(QuestionnaireResponse::class, 'user_id');
+    return $this->hasMany(QuestionnaireResponse::class, 'user_id', 'id');
+    }
+
+public function diagnosis(){
+    return $this->hasMany(diagnosis::class, 'user_id', 'id');
     }
 
 }

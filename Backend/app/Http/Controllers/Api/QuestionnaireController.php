@@ -8,42 +8,54 @@ use App\Models\QuestionnaireResponse;
 
 class QuestionnaireController extends Controller
 {
+    /**
+     * تخزين إجابة استبيان جديدة
+     */
     public function store(Request $request)
     {
-        // 1. الفلتر (Validation): لو أي شرط نقص، لارفيل بيرجع ايرور محدد أوتوماتيك
+        // 1. سحب اليوزر من الـ Token
+        $user = $request->user();
+
+        // 2. الفلتر (Validation): تعديل المسميات والأنواع لتناسب الـ AI والميجريشن
         $validatedData = $request->validate([
-            'gender'               => 'required|string|in:male,female,other', // بيجبره يختار من قيم معينة
-            'sleep_hours'          => 'required|integer|min:0|max:24',        // من 0 لـ 24 ساعة
-            'academic_performance' => 'required|integer|min:0|max:100',      // من 0 لـ 100%
-            'social_interaction'   => 'required|integer|min:0|max:10',       // من 0 لـ 10
+            'gender'               => 'required|string|in:male,female,other',
+            'sleep_hours'          => 'required|numeric|min:0|max:24', // تغيير لـ numeric عشان الساعات الكسرية
+            'academic_performance' => 'required|numeric|min:0|max:100',
+            'social_interactions'  => 'required|numeric|min:0|max:10', // إضافة حرف الـ s وتغيير لـ numeric
             'exercise_hours'       => 'required|numeric|min:0|max:24',
-            'anxiety_level'        => 'required|numeric|min:0',              // مستويات دقيقة (double)
+            'anxiety_level'        => 'required|numeric|min:0',
             'depression_level'     => 'required|numeric|min:0',
-            'self_esteem'          => 'required|integer|min:0|max:100',
+            'self_esteem'          => 'required|numeric|min:0|max:100',
             'time_on_education'    => 'required|numeric|min:0|max:24',
-            'family_communication' => 'required|integer|min:1|max:10',       // مقياس من 1 لـ 10
         ]);
 
-        // 2. التنفيذ: سحب الـ User من الـ Token وربط الداتا بيه
-        $response = $request->user()->questionnaireResponses()->create(array_merge($validatedData, [
-            'answered_at' => now(), // بنسجل وقت الإجابة أوتوماتيك من السيرفر
+        // 3. التنفيذ: استخدام العلاقة لتخزين البيانات
+        // يتم وضع الـ user_id والـ answered_at أوتوماتيكياً
+        $response = $user->questionnaireResponses()->create(array_merge($validatedData, [
+            'answered_at' => now(),
         ]));
 
-        // 3. الرد الناجح
+        // 4. الرد النهائي الموحد
         return response()->json([
             'status'  => 'success',
-            'message' => 'Questionnaire recorded successfully for ' . $request->user()->name,
+            'message' => 'Questionnaire recorded successfully for ' . $user->name,
             'data'    => $response
         ], 201);
     }
 
+    /**
+     * عرض تاريخ الاستبيانات الخاص باليوزر الحالي فقط
+     */
     public function index(Request $request)
     {
-        // عرض تاريخ الإجابات الخاص باليوزر ده بس
-        $history = $request->user()->questionnaireResponses()->latest()->get();
+        $user = $request->user();
+
+        // جلب البيانات مرتبة من الأحدث للأقدم
+        $history = $user->questionnaireResponses()->latest()->get();
 
         return response()->json([
             'status' => 'success',
+            'user'   => $user->name,
             'count'  => $history->count(),
             'data'   => $history
         ], 200);

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trovo Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        // تخصيص الألوان اللي الدكتور عايزها في Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkTeal: '#0f2a30',
+                        lightBlue: '#c2f2ff',
+                        bgMain: '#f0f4f5',
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-bgMain text-darkTeal">
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-64 bg-darkTeal text-white hidden md:flex flex-col shadow-2xl">
+            <div class="p-6 text-center border-b border-gray-700">
+                <h1 class="text-2xl font-bold text-lightBlue">Trovo Project</h1>
+                <p class="text-xs opacity-50">نظام تحليل إدمان الموبايل</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 mt-4">
+                <a href="#" class="flex items-center space-x-3 space-x-reverse p-3 bg-white/10 rounded-lg text-lightBlue">
+                    <span>📊</span>
+                    <span class="font-bold">لوحة التحكم</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 space-x-reverse p-3 hover:bg-white/5 rounded-lg transition">
+                    <span>👥</span>
+                    <span>سجل الطلاب</span>
+                </a>
+            </nav>
+            <div class="p-6 border-t border-gray-700 text-center text-xs opacity-40">
+                إصدار 2026 - كلية الحاسبات
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            <header class="bg-white shadow-sm py-4 px-8 flex justify-between items-center">
+                <h2 class="text-xl font-bold">ملخص نتايج عينة الطلاب</h2>
+                <div class="flex items-center gap-4">
+                    <span id="sync-status" class="text-xs text-green-500 font-bold">● متصل بالسيرفر</span>
+                    <button onclick="fetchData()" class="bg-lightBlue hover:bg-cyan-200 px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all active:scale-95">
+                        تحديث يدوي
+                    </button>
+                </div>
+            </header>
+
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-darkTeal relative overflow-hidden">
+                        <p class="text-gray-500 text-sm font-semibold">إجمالي المفحوصين</p>
+                        <h3 id="total_users" class="text-4xl font-bold mt-2">0</h3>
+                        <div class="absolute -right-2 -bottom-2 text-darkTeal opacity-5 text-6xl">👤</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-green-500">
+                        <p class="text-gray-500 text-sm font-semibold">حالات Mild</p>
+                        <h3 id="mild_cases" class="text-4xl font-bold mt-2 text-green-600">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-yellow-500">
+                        <p class="text-gray-500 text-sm font-semibold">حالات Moderate</p>
+                        <h3 id="moderate_cases" class="text-4xl font-bold mt-2 text-yellow-600">0</h3>
+                    </div>
+                    <div class="bg-darkTeal p-6 rounded-2xl shadow-lg border-r-4 border-red-500 text-white">
+                        <p class="text-white/60 text-sm font-semibold">حالات Severe 🚨</p>
+                        <h3 id="severe_cases" class="text-4xl font-bold mt-2 text-red-400">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100">
+                    <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
+                        <h3 class="font-bold">قائمة سجلات التشخيص</h3>
+                        <span class="text-xs text-gray-400 text-mono">بناءً على موديل الذكاء الاصطناعي</span>
+                    </div>
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="text-gray-400 text-sm border-b">
+                                <th class="p-5 font-semibold">اسم الطالب</th>
+                                <th class="p-5 font-semibold">مستوى الإدمان (Score)</th>
+                                <th class="p-5 font-semibold">المرحلة</th>
+                                <th class="p-5 font-semibold text-left">تاريخ التحليل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diagnosis_table_body" class="divide-y divide-gray-50">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -11,25 +11,29 @@ class PhoneUsageData extends Model
 
     protected $fillable = [
         'user_id',
-        'diagnosis_id',
-        'day_usage_hours',
-        'screen_time_beforer_bed',
-        'phone_chek_per_day',
+        'daily_usage_hours',
+        'screen_time_before_bed',
+        'phone_checks_per_day',
         'apps_used_daily',
         'time_on_social_media',
-        'time_in_gaming',
+        'time_on_gaming',
         'phone_usage_purpose',
         'weekend_usage_hours',
-        'breaks_between_sessions',
         'collected_at'
-        ];
+    ];
 
     protected $casts = [
-        'collected_at' => 'datetime',
-        ];
+        'daily_usage_hours'      => 'float',
+        'screen_time_before_bed' => 'float',
+        'time_on_social_media'   => 'float',
+        'time_on_gaming'         => 'float',
+        'weekend_usage_hours'    => 'float',
+        'collected_at'           => 'datetime',
+    ];
 
     public function user()
     {
-    return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
+public $timestamps = false;
 }

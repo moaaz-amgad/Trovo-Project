@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PhoneUsageController;
 use App\Http\Controllers\Api\QuestionnaireController;
+use App\Http\Controllers\Api\DiagnosisController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,33 +13,39 @@ use App\Http\Controllers\Api\QuestionnaireController;
 |--------------------------------------------------------------------------
 */
 
-// --- مسارات عامة (لا تتطلب تسجيل دخول) ---
+// --- مسارات عامة (Public Routes) ---
 
-// 1. تسجيل حساب جديد
+// 1. الحسابات
 Route::post('/register', [AuthController::class, 'register']);
-
-// 2. تسجيل الدخول (للحصول على الـ Token)
 Route::post('/login', [AuthController::class, 'login']);
 
 
-// --- مسارات محمية (تتطلب وجود Token في الهيدر) ---
+// --- مسارات محمية (Protected Routes) ---
+Route::middleware('auth:sanctum')->group(function () {
 
-Route::middleware('auth:sanctum')->group(function ()
-{
+    // 1. بيانات المستخدم الأساسية والمصادقة
+    Route::get('/user', [AuthController::class, 'getUser']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-    // إرسال بيانات استخدام الموبايل
+    // 2. استخدام الموبايل (Phone Usage)
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);
-
-    // عرض بيانات الاستخدام للمستخدم
     Route::get('/phone-usage', [PhoneUsageController::class, 'index']);
 
-    Route::get('/user' , [AuthController::class , 'getUser']);
-    Route::post('/logout', [PhoneUsageController::class, 'logout']);
-
-
-
-    // Questionnaire
+    // 3. الاستبيان (Questionnaire)
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
+    // 4. التشخيص الذكي (Diagnosis)
+    // إنشاء تشخيص جديد بناءً على آخر بيانات مسجلة
+    Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate']);
+    // عرض سجل التشخيصات السابق (للمستخدم الحالي فقط)
+    Route::get('/diagnosis', [DiagnosisController::class, 'index']);
+
+    // ---------------------------------------------------------
+    // 5. مسارات الداشبورد (Admin Dashboard)
+    // ده الـ Route اللي الداشبورد المنفصلة هتكلمه عشان تعرض داتا "كل" الطلبة
+    // ---------------------------------------------------------
+    Route::get('/admin/all-diagnoses', [DiagnosisController::class, 'getAllForAdmin']);
+
 });
+

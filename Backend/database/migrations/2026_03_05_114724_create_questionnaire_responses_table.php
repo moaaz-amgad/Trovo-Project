@@ -12,20 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('questionnaire_responses', function (Blueprint $table) {
-            $table->id('response_id');
+            $table->id('questionnaire_id'); // غيرتها لـ questionnaire_id لتوحيد العلاقات
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('gender', 20);
-            $table->smallInteger('sleep_hours');
-            $table->integer('academic_performance'); // من 0 لـ 100
-            $table->smallInteger('social_interaction'); // من 0 لـ 10
-            $table->double('exercise_hours');
-            $table->double('anxiety_level');
-            $table->double('depression_level');
-            $table->integer('self_esteem');
-            $table->double('time_on_education');
-            $table->integer('family_communication');
-            $table->dateTime('answered_at');
-            $table->timestamps();
+            
+            // البيانات الشخصية
+            $table->string('gender', 20); // (Male, Female, Other)
+            
+            $table->float('sleep_hours');
+            $table->float('academic_performance'); // من 0 لـ 100
+            $table->float('social_interactions');  // من 0 لـ 10
+            $table->float('exercise_hours');
+            $table->float('anxiety_level');
+            $table->float('depression_level');
+            $table->float('self_esteem');
+            $table->float('time_on_education'); 
+            
+            $table->timestamp('answered_at')->useCurrent();
         });
     }
 

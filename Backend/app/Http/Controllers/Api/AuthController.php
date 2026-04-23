@@ -27,22 +27,27 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'message' => 'User registered successfully',
-            'access_token' => $token,
-            'user' => $user
-        ], 201);
+        return response()->json(
+            [
+                'message' => 'User registered successfully',
+                'access_token' => $token,
+                'user' => $user,
+            ],
+            201,
+        );
     }
 
-   public function getUser(Request $request)
-{
-$user = $request->user();
+    public function getUser(Request $request)
+    {
+        $user = $request->user();
 
-
-return response()->json([
-    'data' => $user,
-], 200);
-}
+        return response()->json(
+            [
+                'data' => $user,
+            ],
+            200,
+        );
+    }
 
     // 2. تسجيل دخول (للمستخدمين الحاليين)
     public function login(Request $request)
@@ -58,7 +63,21 @@ return response()->json([
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user
+            'user' => $user,
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        // حذف التوكن الحالي اللي اليوزر مستخدمه دلوقتي عشان ميعرفش يدخل بيه تاني
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(
+            [
+                'status' => 'success',
+                'message' => 'Logged out successfully. Token revoked.',
+            ],
+            200,
+        );
     }
 }
