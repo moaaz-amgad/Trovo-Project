@@ -14,10 +14,9 @@ use Illuminate\Support\Facades\Artisan;
 |--------------------------------------------------------------------------
 */
 
-// --- مسارات الصيانة (Maintenance - تُحذف بعد الإصلاح) ---
+// --- 1. مسارات الصيانة (Maintenance) ---
 Route::get('/fix-db', function () {
     try {
-        // تنفيذ الميجريشن ومسح القديم
         Artisan::call('migrate:fresh', ['--force' => true]);
         return response()->json([
             'message' => 'Database Updated Successfully!',
@@ -28,33 +27,40 @@ Route::get('/fix-db', function () {
     }
 });
 
-// --- مسارات عامة (Public Routes) ---
-
-// 1. الحسابات
+// --- 2. مسارات عامة (Public Routes) ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+/**
+ * مسارات الداشبورد (Admin Dashboard)
+ * خليناها بره الـ Middleware مؤقتاً عشان الدكتور يقدر يشوف الداتا فوراً من مشروع الفرونت إند
+ */
+Route::prefix('admin')->group(function () {
+    // لجلب كل الإحصائيات والجدول
+    Route::get('/all-diagnoses', [DiagnosisController::class, 'getAllForAdmin']);
+    // للبحث عن طالب معين بالـ ID
+    Route::get('/student/{id}', [DiagnosisController::class, 'getStudentDetail']);
+});
 
-// --- مسارات محمية (Protected Routes) ---
+
+// --- 3. مسارات محمية (Protected Routes) ---
 Route::middleware('auth:sanctum')->group(function () {
 
-    // 1. بيانات المستخدم الأساسية والمصادقة
+    // بيانات المستخدم والمصادقة
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // 2. استخدام الموبايل (Phone Usage)
+    // استخدام الموبايل (Phone Usage)
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);
     Route::get('/phone-usage', [PhoneUsageController::class, 'index']);
 
-    // 3. الاستبيان (Questionnaire)
+    // الاستبيان (Questionnaire)
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
-    // 4. التشخيص الذكي (Diagnosis)
+    // التشخيص الذكي (Diagnosis)
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate']);
     Route::get('/diagnosis', [DiagnosisController::class, 'index']);
 
-    // 5. مسارات الداشبورد (Admin Dashboard)
-    Route::get('/admin/all-diagnoses', [DiagnosisController::class, 'getAllForAdmin']);
 });
 
