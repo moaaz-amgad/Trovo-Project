@@ -6,12 +6,27 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PhoneUsageController;
 use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\DiagnosisController;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
 */
+
+// --- مسارات الصيانة (Maintenance - تُحذف بعد الإصلاح) ---
+Route::get('/fix-db', function () {
+    try {
+        // تنفيذ الميجريشن ومسح القديم
+        Artisan::call('migrate:fresh', ['--force' => true]);
+        return response()->json([
+            'message' => 'Database Updated Successfully!',
+            'output' => Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
 
 // --- مسارات عامة (Public Routes) ---
 
@@ -36,16 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
     // 4. التشخيص الذكي (Diagnosis)
-    // إنشاء تشخيص جديد بناءً على آخر بيانات مسجلة
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate']);
-    // عرض سجل التشخيصات السابق (للمستخدم الحالي فقط)
     Route::get('/diagnosis', [DiagnosisController::class, 'index']);
 
-    // ---------------------------------------------------------
     // 5. مسارات الداشبورد (Admin Dashboard)
-    // ده الـ Route اللي الداشبورد المنفصلة هتكلمه عشان تعرض داتا "كل" الطلبة
-    // ---------------------------------------------------------
     Route::get('/admin/all-diagnoses', [DiagnosisController::class, 'getAllForAdmin']);
-
 });
 
