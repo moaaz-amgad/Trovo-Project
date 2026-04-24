@@ -1,104 +1,110 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trovo Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script>
-        // تخصيص الألوان اللي الدكتور عايزها في Tailwind
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        darkTeal: '#0f2a30',
-                        lightBlue: '#c2f2ff',
-                        bgMain: '#f0f4f5',
+                        navyDark: '#0a192f', // الكحلي الغامق جداً للخلفية
+                        navyCard: '#112240', // كحلي أفتح قليلاً للكروت
+                        lightBlue: '#64ffda', // لون التحديد (النيون)
+                        textMain: '#ccd6f6',
                     },
                     fontFamily: {
-                        cairo: ['Cairo', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
     <style>
-        body { font-family: 'Cairo', sans-serif; }
+        body { font-family: 'Inter', sans-serif; }
+        /* تحسين شكل السكرول بار ليناسب اللون الكحلي */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a192f; }
+        ::-webkit-scrollbar-thumb { background: #112240; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-bgMain text-darkTeal">
+<body class="bg-navyDark text-textMain">
 
     <div class="flex h-screen overflow-hidden">
-        <aside class="w-64 bg-darkTeal text-white hidden md:flex flex-col shadow-2xl">
-            <div class="p-6 text-center border-b border-gray-700">
+        <aside class="w-64 bg-[#020c1b] text-white hidden md:flex flex-col shadow-2xl border-r border-white/5">
+            <div class="p-6 text-center border-b border-white/5">
                 <h1 class="text-2xl font-bold text-lightBlue">Trovo Project</h1>
-                <p class="text-xs opacity-50">نظام تحليل إدمان الموبايل</p>
+                <p class="text-xs opacity-50 uppercase tracking-widest">Addiction Analysis</p>
             </div>
             <nav class="flex-1 p-4 space-y-2 mt-4">
-                <a href="#" class="flex items-center space-x-3 space-x-reverse p-3 bg-white/10 rounded-lg text-lightBlue">
+                <a href="#" class="flex items-center space-x-3 p-3 bg-white/5 rounded-lg text-lightBlue border-l-2 border-lightBlue">
                     <span>📊</span>
-                    <span class="font-bold">لوحة التحكم</span>
+                    <span class="font-bold">Dashboard</span>
                 </a>
-                <a href="#" class="flex items-center space-x-3 space-x-reverse p-3 hover:bg-white/5 rounded-lg transition">
+                <a href="#" class="flex items-center space-x-3 p-3 hover:bg-white/5 rounded-lg transition opacity-70">
                     <span>👥</span>
-                    <span>سجل الطلاب</span>
+                    <span>Student Records</span>
                 </a>
             </nav>
-            <div class="p-6 border-t border-gray-700 text-center text-xs opacity-40">
-                إصدار 2026 - كلية الحاسبات
+            <div class="p-6 border-t border-white/5 text-center text-xs opacity-30">
+                2026 Edition - FCIS Project
             </div>
         </aside>
 
         <main class="flex-1 flex flex-col overflow-y-auto">
-            <header class="bg-white shadow-sm py-4 px-8 flex justify-between items-center">
-                <h2 class="text-xl font-bold">ملخص نتايج عينة الطلاب</h2>
+            <header class="bg-navyDark/50 backdrop-blur-md sticky top-0 z-10 py-4 px-8 flex justify-between items-center border-b border-white/5">
+                <h2 class="text-xl font-bold text-white">Students Analysis Summary</h2>
                 <div class="flex items-center gap-4">
-                    <span id="sync-status" class="text-xs text-green-500 font-bold">● متصل بالسيرفر</span>
-                    <button onclick="fetchData()" class="bg-lightBlue hover:bg-cyan-200 px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all active:scale-95">
-                        تحديث يدوي
+                    <span id="sync-status" class="text-xs text-lightBlue font-bold">● Connected</span>
+                    <button onclick="fetchData()" class="border border-lightBlue text-lightBlue hover:bg-lightBlue/10 px-6 py-2 rounded-lg font-bold text-sm transition-all active:scale-95">
+                        Refresh Data
                     </button>
                 </div>
             </header>
 
             <div class="p-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-darkTeal relative overflow-hidden">
-                        <p class="text-gray-500 text-sm font-semibold">إجمالي المفحوصين</p>
-                        <h3 id="total_users" class="text-4xl font-bold mt-2">0</h3>
-                        <div class="absolute -right-2 -bottom-2 text-darkTeal opacity-5 text-6xl">👤</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 text-left">
+                    <div class="bg-navyCard p-6 rounded-xl shadow-xl border-b-2 border-lightBlue/30 relative overflow-hidden">
+                        <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Total Users</p>
+                        <h3 id="total_users" class="text-4xl font-bold mt-2 text-white">0</h3>
+                        <div class="absolute -right-2 -bottom-2 text-white opacity-5 text-6xl">👤</div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-green-500">
-                        <p class="text-gray-500 text-sm font-semibold">حالات Mild</p>
-                        <h3 id="mild_cases" class="text-4xl font-bold mt-2 text-green-600">0</h3>
+                    <div class="bg-navyCard p-6 rounded-xl shadow-xl border-b-2 border-green-500/30">
+                        <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Mild Cases</p>
+                        <h3 id="mild_cases" class="text-4xl font-bold mt-2 text-green-400">0</h3>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-yellow-500">
-                        <p class="text-gray-500 text-sm font-semibold">حالات Moderate</p>
-                        <h3 id="moderate_cases" class="text-4xl font-bold mt-2 text-yellow-600">0</h3>
+                    <div class="bg-navyCard p-6 rounded-xl shadow-xl border-b-2 border-yellow-500/30">
+                        <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Moderate Cases</p>
+                        <h3 id="moderate_cases" class="text-4xl font-bold mt-2 text-yellow-400">0</h3>
                     </div>
-                    <div class="bg-darkTeal p-6 rounded-2xl shadow-lg border-r-4 border-red-500 text-white">
-                        <p class="text-white/60 text-sm font-semibold">حالات Severe 🚨</p>
+                    <div class="bg-navyCard p-6 rounded-xl shadow-xl border-b-2 border-red-500/30">
+                        <p class="text-white/80 text-sm font-semibold uppercase tracking-wider">Severe Cases 🚨</p>
                         <h3 id="severe_cases" class="text-4xl font-bold mt-2 text-red-400">0</h3>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100">
-                    <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
-                        <h3 class="font-bold">قائمة سجلات التشخيص</h3>
-                        <span class="text-xs text-gray-400 text-mono">بناءً على موديل الذكاء الاصطناعي</span>
+                <div class="bg-navyCard rounded-2xl shadow-2xl overflow-hidden border border-white/5">
+                    <div class="p-6 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                        <h3 class="font-bold text-white">Diagnosis Logs</h3>
+                        <span class="text-xs text-lightBlue/50 font-mono italic">AI Real-time Data</span>
                     </div>
-                    <table class="w-full text-right border-collapse">
-                        <thead>
-                            <tr class="text-gray-400 text-sm border-b">
-                                <th class="p-5 font-semibold">اسم الطالب</th>
-                                <th class="p-5 font-semibold">مستوى الإدمان (Score)</th>
-                                <th class="p-5 font-semibold">المرحلة</th>
-                                <th class="p-5 font-semibold text-left">تاريخ التحليل</th>
-                            </tr>
-                        </thead>
-                        <tbody id="diagnosis_table_body" class="divide-y divide-gray-50">
-                            </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-gray-400 text-sm border-b border-white/5">
+                                    <th class="p-5 font-semibold">Student Name</th>
+                                    <th class="p-5 font-semibold">Addiction Score</th>
+                                    <th class="p-5 font-semibold">Stage</th>
+                                    <th class="p-5 font-semibold">Analysis Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diagnosis_table_body" class="divide-y divide-white/5">
+                                </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
