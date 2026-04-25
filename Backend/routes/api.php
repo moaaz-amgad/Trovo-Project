@@ -30,16 +30,13 @@ Route::get('/fix-db', function () {
 // --- 2. مسارات عامة (Public Routes) ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
-// مسارات نسيان كلمة السر (Forgot Password)
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-
-// مسار تسجيل الدخول بجوجل (Google Login)
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
 /**
  * مسارات الداشبورد (Admin Dashboard)
+ * خليناها بره الـ Sanctum عشان الداشبورد الخارجية تقدر توصل للداتا
  */
 Route::prefix('admin')->group(function () {
     // جلب كافة التشخيصات والإحصائيات
@@ -48,7 +45,7 @@ Route::prefix('admin')->group(function () {
     // جلب تفاصيل طالب محدد بتاريخه الطبي
     Route::get('/student/{id}', [DiagnosisController::class, 'getStudentDetail'])->name('admin.student.detail');
 
-    // (إضافة) مسار سريع لحذف تشخيص معين لو الدكتور طلب ده
+    // مسار حذف تشخيص معين
     Route::delete('/diagnosis/{id}', [DiagnosisController::class, 'destroy'])->name('admin.diagnosis.delete');
 });
 
@@ -68,7 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
-    // التشخيص الذكي (Diagnosis) - المحرك الأساسي للاختبار
+    // التشخيص الذكي (Diagnosis)
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate'])->name('diagnosis.generate');
     Route::get('/diagnosis', [DiagnosisController::class, 'index']);
 
