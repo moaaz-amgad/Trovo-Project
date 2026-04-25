@@ -1,6 +1,6 @@
 FROM php:8.4-cli
 
-# تثبيت المكتبات الأساسية
+# 1. تثبيت المكتبات الأساسية للنظام ولارفيل
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -14,18 +14,20 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd
 
-# تنزيل Composer
+# 2. تنزيل Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# 3. تحديد مكان الكود ونسخ الملفات
 WORKDIR /var/www
 COPY . .
 
-# تنزيل مكتبات المشروع
+# 4. تنزيل مكتبات المشروع (Vendors)
 RUN composer install --no-dev --optimize-autoloader
 
-# صلاحيات المجلدات
+# 5. ضبط صلاحيات المجلدات عشان متبقاش Read-only
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# السطر ده هو "الزتونة": بيخلي لارفيل يسمع للبورت اللي ريلواي بيبعته ديناميكياً
+# 6. السطر القاضي: تشغيل السيرفر مباشرة على البورت بتاع ريلواي
+# ملحوظة: شلنا الـ migrate عشان متوقعش السيرفر وهنعملها يدوي
 CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
