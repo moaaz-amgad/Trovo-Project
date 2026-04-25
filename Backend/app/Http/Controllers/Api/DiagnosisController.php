@@ -25,7 +25,7 @@ class DiagnosisController extends Controller
             ], 400);
         }
 
-        // 2. تجهيز الـ 21 حقل المطلوبة لموديل الـ AI (One-Hot Encoding)
+        // 2. تجهيز الـ 21 حقل المطلوبة لموديل الـ AI
         $aiInputs = [
             'Daily_Usage_Hours'      => (float) $lastUsage->daily_usage_hours,
             'Sleep_Hours'            => (float) $lastQuestionnaire->sleep_hours,
@@ -43,11 +43,9 @@ class DiagnosisController extends Controller
             'Time_on_Education'      => (float) $lastQuestionnaire->time_on_education,
             'Weekend_Usage_Hours'    => (float) $lastUsage->weekend_usage_hours,
 
-            // معالجة تصنيفات النوع (Gender)
             'Gender_Male'                     => ($lastQuestionnaire->gender == 'male') ? 1 : 0,
             'Gender_Other'                    => ($lastQuestionnaire->gender == 'other') ? 1 : 0,
 
-            // معالجة تصنيفات غرض الاستخدام (Usage Purpose)
             'Phone_Usage_Purpose_Education'   => ($lastUsage->phone_usage_purpose == 'Education') ? 1 : 0,
             'Phone_Usage_Purpose_Gaming'      => ($lastUsage->phone_usage_purpose == 'Gaming') ? 1 : 0,
             'Phone_Usage_Purpose_Other'       => ($lastUsage->phone_usage_purpose == 'Other') ? 1 : 0,
@@ -55,38 +53,35 @@ class DiagnosisController extends Controller
         ];
 
         try {
-            // 3. إرسال الطلب لسيرفر الـ AI (Railway Production URL)
-            // سحب اللينك من الـ Environment Variables لضمان المرونة
+            // 3. إرسال الطلب لسيرفر الـ AI
             $aiUrl = env('AI_SERVER_URL', 'https://brain-rot-prediction-and-classification-production.up.railway.app');
 
             $response = Http::withHeaders([
                 'Accept' => 'application/json'
-            ])->timeout(60)->post(
-                $aiUrl . '/predict',
-                $aiInputs
-            );
+            ])->timeout(60)->post($aiUrl . '/predict', $aiInputs);
 
             $aiResult = $response->json();
 
-            // ضيف دول عشان تشوف الرد الحقيقي في بوستمان
-        if (!$response->successful()) {
-         return response()->json([
-        'debug_sent_data' => $aiInputs,
-        'debug_raw_body' => $response->body(), // ده هيوريك السيرفر رد بـ إيه بالظبط (حتى لو Error)
-        'debug_status' => $response->status()
-    ], 500);
-        }
+            // Debug في حالة الفشل
+            if (!$response->successful()) {
+                return response()->json([
+                    'debug_sent_data' => $aiInputs,
+                    'debug_raw_body' => $response->body(),
+                    'debug_status' => $response->status()
+                ], 500);
+            }
 
+            // التحقق من النجاح بناءً على الرد الجديد (وجود addiction_level)
             if ($response->successful() && isset($aiResult['addiction_level'])) {
 
-                // 4. تخزين التشخيص في قاعدة البيانات
+                // 4. تخزين التشخيص في قاعدة البيانات (تعديل المسميات لتطابق مخرجات الـ AI)
                 $diagnosis = $user->diagnosis()->create([
                     'usage_id'         => $lastUsage->usage_id,
                     'questionnaire_id' => $lastQuestionnaire->questionnaire_id,
-                    'addiction_level'  => $aiResult['addiction_level'], // من 1 لـ 10
-                    'brain_rot_stage'  => $aiResult['brain_rot_stage'], // (mild, moderate, severe)
-                    'main_issue'       => $aiResult['main_issue'] ?? 'General Usage Pattern',
-                    'recommendations'  => $aiResult['recommendations'] ?? [], // مصفوفة النصائح
+                    'addiction_level'  => $aiResult['addiction_level'], // 4.12
+                    'brain_rot_stage'  => $aiResult['brainrot_stage'],  // بدون underscore
+                    'main_issue'       => $aiResult['analysis_intro'] ?? 'General Pattern', // استخدام الانترو كـ Issue
+                    'recommendations'  => $aiResult['recommendations'] ?? [],
                     'diagnosed_at'     => now(),
                 ]);
 
@@ -140,13 +135,12 @@ class DiagnosisController extends Controller
                         ->latest('diagnosed_at')
                         ->get();
 
-        // حساب الإحصائيات المطلوبة للكروت في الداشبورد (تطابق التصميم)
         $totalUsers = User::count();
-        $mild = Diagnosis::where('brain_rot_stage', 'mild')->count();
-        $moderate = Diagnosis::where('brain_rot_stage', 'moderate')->count();
-        $severe = Diagnosis::where('brain_rot_stage', 'severe')->count();
+        // تأكد أن الكود هنا يبحث عن المسميات المخزنة (مثلاً 'Low (Mild)') حسب رد الـ AI
+        $mild = Diagnosis::where('brain_rot_stage', 'like', '%Mild%')->count();
+        $moderate = Diagnosis::where('brain_rot_stage', 'like', '%Moderate%')->count();
+        $severe = Diagnosis::where('brain_rot_stage', 'like', '%Severe%')->count();
 
-        // حساب نسبة الإدمان (Moderate + Severe)
         $addictionRate = $totalUsers > 0
             ? round((($moderate + $severe) / $totalUsers) * 100, 1)
             : 0;
@@ -159,14 +153,14 @@ class DiagnosisController extends Controller
                 'moderate_cases' => $moderate,
                 'severe_cases'   => $severe,
                 'addiction_rate' => $addictionRate . '%',
-                'efficiency'     => '94.8%' // نسبة افتراضية لدقة الموديل
+                'efficiency'     => '94.8%'
             ],
             'data'   => $allDiagnoses
         ], 200);
     }
 
     /**
-     * ميثود إضافية للبحث عن مستخدم محدد بالـ ID (لزر الـ Begin Diagnostic)
+     * ميثود إضافية للبحث عن مستخدم محدد بالـ ID
      */
     public function getStudentDetail($id)
     {
