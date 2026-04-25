@@ -51,7 +51,9 @@ class QuestionnaireController extends Controller
         $user = $request->user();
 
         // جلب البيانات مرتبة من الأحدث للأقدم
-        $history = $user->questionnaireResponses()->latest()->get();
+        $history = $user->questionnaireResponses()
+                    ->orderBy('answered_at', 'desc')
+                    ->get();
 
         return response()->json([
             'status' => 'success',
