@@ -1,6 +1,6 @@
 FROM php:8.4-cli
 
-# تثبيت الإضافات
+# تثبيت المكتبات
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -19,12 +19,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 COPY . .
 
+# تنزيل المكتبات
 RUN composer install --no-dev --optimize-autoloader
 
-# ضبط الصلاحيات
+# صلاحيات المجلدات
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# التعديل الجوهري هنا: هنشغل السيرفر مباشرة
-# الـ Migrate اعمله يدوي من ريلواي مرة واحدة عشان ميوقعش السيرفر كل شوية
+# تشغيل السيرفر مباشرة (ده اللي هيخليها Active)
 CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
