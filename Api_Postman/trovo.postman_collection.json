@@ -1,20 +1,35 @@
 {
   "info": {
-    "_postman_id": "ba3e2add-e849-4f97-8a80-8c2ec3121c61",
+    "_postman_id": "8b3a36c4-1c88-4839-b6ed-a3381f389073",
     "name": "trovo",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "49368354",
-    "_collection_link": "https://go.postman.co/collection/49368354-ba3e2add-e849-4f97-8a80-8c2ec3121c61?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/49368354-8b3a36c4-1c88-4839-b6ed-a3381f389073?source=collection_link"
   },
   "item": [
     {
       "name": "Auth",
       "item": [
         {
-          "name": "Register",
+          "name": "register",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer Token",
+                "type": "text"
+              },
               {
                 "key": "Accept",
                 "value": "application/json",
@@ -26,34 +41,28 @@
               "formdata": [
                 {
                   "key": "name",
-                  "value": "moaaz",
+                  "value": "moaaz1@gmail.com",
                   "type": "text",
-                  "uuid": "4d50e46c-59dd-41d3-938b-51d79ddd0cbb"
+                  "uuid": "6d828d19-929b-47ae-b68e-d7ba0bf6bf4f"
                 },
                 {
                   "key": "email",
-                  "value": "moaaz@gmail.com",
+                  "value": "123456",
                   "type": "text",
-                  "uuid": "85b26d9a-ff75-4979-9b1b-e70ea7554f58"
+                  "uuid": "579a2dbf-69a1-49aa-aecf-208f609425d0"
                 },
                 {
                   "key": "password",
-                  "value": "123",
+                  "value": "",
                   "type": "text",
-                  "uuid": "cba5f800-2a9b-4902-87ce-e268973aa58c"
-                },
-                {
-                  "key": "password_confirmation",
-                  "value": "123",
-                  "type": "text",
-                  "uuid": "dda6ae43-146e-4d56-baf3-c65f1f5972c9"
+                  "uuid": "b66c7c38-441a-4005-9c4a-68831a2b52d7"
                 }
               ]
             },
             "url": {
-              "raw": "{{base_url}}/register",
+              "raw": "{{URL}}/register",
               "host": [
-                "{{base_url}}"
+                "{{URL}}"
               ],
               "path": [
                 "register"
@@ -64,9 +73,56 @@
         },
         {
           "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let response = pm.response.json();\r",
+                  "\r",
+                  "if (response.access_token) {\r",
+                  "    pm.collectionVariables.set(\"Token\", response.access_token);\r",
+                  "    \r",
+                  "    console.log(\"Token has been saved: \" + response.access_token);\r",
+                  "} else {\r",
+                  "    console.log(\"Token not found in response!\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer Token",
+                "type": "text"
+              },
               {
                 "key": "Accept",
                 "value": "application/json",
@@ -78,22 +134,22 @@
               "formdata": [
                 {
                   "key": "email",
-                  "value": "moaaz@gmail.com",
+                  "value": "a@gmail.com",
                   "type": "text",
-                  "uuid": "74f3953a-1f45-493c-a653-cdc9daec7777"
+                  "uuid": "6d828d19-929b-47ae-b68e-d7ba0bf6bf4f"
                 },
                 {
                   "key": "password",
-                  "value": "123",
+                  "value": "123123",
                   "type": "text",
-                  "uuid": "24d798c8-d76c-4acd-9654-6a401e5b6b76"
+                  "uuid": "579a2dbf-69a1-49aa-aecf-208f609425d0"
                 }
               ]
             },
             "url": {
-              "raw": "{{base_url}}/login",
+              "raw": "{{railway-URL}}/login",
               "host": [
-                "{{base_url}}"
+                "{{railway-URL}}"
               ],
               "path": [
                 "login"
@@ -105,20 +161,35 @@
         {
           "name": "log out",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{Token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{Token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "http://127.0.0.1:8000/api/logout",
-              "protocol": "http",
+              "raw": "{{URL}}/logout",
               "host": [
-                "127",
-                "0",
-                "0",
-                "1"
+                "{{URL}}"
               ],
-              "port": "8000",
               "path": [
-                "api",
                 "logout"
               ]
             }
@@ -126,22 +197,9 @@
           "response": []
         },
         {
-          "name": "Get User Profile",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
+          "name": "google login",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
+            "method": "POST",
             "header": [
               {
                 "key": "Accept",
@@ -151,7 +209,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "",
+              "raw": "{\r\n    \"name\": \"Moaaz Amgad\",\r\n    \"email\": \"moaaz@example.com\",\r\n    \"google_id\": \"1234567890\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -159,9 +217,42 @@
               }
             },
             "url": {
-              "raw": "{{url}}/user",
+              "raw": "{{railway-URL}}/google-login",
               "host": [
-                "{{url}}"
+                "{{railway-URL}}"
+              ],
+              "path": [
+                "google-login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Info",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{URL}}/user",
+              "host": [
+                "{{URL}}"
               ],
               "path": [
                 "user"
@@ -169,145 +260,66 @@
             }
           },
           "response": []
-        }
-      ]
-    },
-    {
-      "name": "Phone Usage",
-      "item": [
+        },
         {
-          "name": "Phone Usage",
+          "name": "Forgot Password",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
               {
                 "key": "Accept",
                 "value": "application/json",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "day_usage_hours",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "d9a7f971-371c-4648-b670-a7350bf3f808"
-                },
-                {
-                  "key": "screen_time_beforer_bed",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "f68b6911-fa05-4ae0-89f0-5c7f241a457f"
-                },
-                {
-                  "key": "phone_chek_per_day",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "dac51045-41c8-4d5a-b953-01a2ac961205"
-                },
-                {
-                  "key": "apps_used_daily",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "ec6ee488-7874-4330-961c-453c8ac0c764"
-                },
-                {
-                  "key": "time_on_social_media",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "31dda713-b45a-40b0-8a2d-b0a1c2d8f712"
-                },
-                {
-                  "key": "time_in_gaming",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "8cfd2f34-b372-4670-8398-20498ca9e538"
-                },
-                {
-                  "key": "phone_usage_purpose",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "66fa5c7d-1ea9-4bcc-b71f-7f2b853f8c21"
-                },
-                {
-                  "key": "weekend_usage_hours",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "2bbcee6a-4c5e-49ed-9787-0de8998177fc"
-                },
-                {
-                  "key": "breaks_between_sessions",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "8ad6c9e1-7ef6-430a-b015-ff63536f9dfb"
-                },
-                {
-                  "key": "collected_at",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "a0a67af7-940c-4d7b-bf58-bca97b6b22cb"
-                }
-              ]
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"moaaz@example.com\"\r\n}"
             },
             "url": {
-              "raw": "{{url}}/phone-usage",
+              "raw": "{{railway-URL}}/forgot-password",
               "host": [
-                "{{url}}"
+                "{{railway-URL}}"
               ],
               "path": [
-                "phone-usage"
+                "forgot-password"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "get Phone Usage",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
+          "name": "Reset Password",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
+            "method": "POST",
             "header": [
               {
                 "key": "Accept",
                 "value": "application/json",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "body": {
-              "mode": "formdata",
-              "formdata": []
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"moaaz@example.com\"\r\n}"
             },
             "url": {
-              "raw": "{{url}}/phone-usage",
+              "raw": "{{railway-URL}}/reset-password",
               "host": [
-                "{{url}}"
+                "{{railway-URL}}"
               ],
               "path": [
-                "phone-usage"
+                "reset-password"
               ]
             }
           },
@@ -316,147 +328,300 @@
       ]
     },
     {
-      "name": "Questionnaire Responses",
+      "name": "User data",
       "item": [
+        {
+          "name": "Phone Usage Data",
+          "item": [
+            {
+              "name": "Post Phone Data",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{Token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "daily_usage_hours",
+                      "value": "6",
+                      "type": "text",
+                      "uuid": "3963fa54-27f6-44e4-8a62-226f61e7be75"
+                    },
+                    {
+                      "key": "screen_time_before_bed",
+                      "value": "2",
+                      "type": "text",
+                      "uuid": "6782558d-8bfe-48ab-9e99-40033822fb3c"
+                    },
+                    {
+                      "key": "phone_checks_per_day",
+                      "value": "20",
+                      "type": "text",
+                      "uuid": "76f5747e-15a5-41a7-84ee-8da7c14c7714"
+                    },
+                    {
+                      "key": "apps_used_daily",
+                      "value": "15",
+                      "type": "text",
+                      "uuid": "a159ce1d-6c39-4ae1-a431-8023e780b291"
+                    },
+                    {
+                      "key": "time_on_social_media",
+                      "value": "3",
+                      "type": "text",
+                      "uuid": "259a5849-e813-49e2-820e-93832b7c8f96"
+                    },
+                    {
+                      "key": "time_on_gaming",
+                      "value": "1.5",
+                      "type": "text",
+                      "uuid": "0b8638e5-0e32-432f-8253-42537f03b718"
+                    },
+                    {
+                      "key": "phone_usage_purpose",
+                      "value": "Gaming",
+                      "type": "text",
+                      "uuid": "05aa2eaf-5509-43b3-9772-eb810b23843b"
+                    },
+                    {
+                      "key": "weekend_usage_hours",
+                      "value": "8",
+                      "type": "text",
+                      "uuid": "48919ab3-b35b-4e6f-b063-ef177486a23b"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{railway-URL}}/phone-usage",
+                  "host": [
+                    "{{railway-URL}}"
+                  ],
+                  "path": [
+                    "phone-usage"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Phone Data History",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{Token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{railway-URL}}/phone-usage",
+                  "host": [
+                    "{{railway-URL}}"
+                  ],
+                  "path": [
+                    "phone-usage"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
         {
           "name": "Questionnaire Responses",
+          "item": [
+            {
+              "name": "Post Questionnaire Responses",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{Token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "gender",
+                      "value": "55",
+                      "type": "text",
+                      "uuid": "e5975957-26a8-4903-b06e-94026b90c76a"
+                    },
+                    {
+                      "key": "sleep_hours",
+                      "value": "30",
+                      "type": "text",
+                      "uuid": "cf129495-f8f2-4f7d-b256-b739ac6716b7"
+                    },
+                    {
+                      "key": "academic_performance",
+                      "value": "200",
+                      "type": "text",
+                      "uuid": "733248aa-9a91-4384-bf24-437983543622"
+                    },
+                    {
+                      "key": "social_interactions",
+                      "value": "40",
+                      "type": "text",
+                      "uuid": "584112b1-0018-48ee-8b25-6d43cf2ee023"
+                    },
+                    {
+                      "key": "exercise_hours",
+                      "value": "80",
+                      "type": "text",
+                      "uuid": "ed93be6b-1689-4cdb-a59b-56b1b1aa47c5"
+                    },
+                    {
+                      "key": "anxiety_level",
+                      "value": "20",
+                      "type": "text",
+                      "uuid": "a66253fa-8338-46ff-8518-d758dc6cd6c7"
+                    },
+                    {
+                      "key": "depression_level",
+                      "value": "15",
+                      "type": "text",
+                      "uuid": "51ab9fe0-c5a8-43a8-8806-f30a5dd18a42"
+                    },
+                    {
+                      "key": "self_esteem",
+                      "value": "54",
+                      "type": "text",
+                      "uuid": "fb623162-98b3-4062-9e44-4d92570f251a"
+                    },
+                    {
+                      "key": "time_on_education",
+                      "value": "78",
+                      "type": "text",
+                      "uuid": "ed09c76e-f03d-4f88-a077-6c1f5f8b61ee"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{URL}}/questionnaire",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "questionnaire"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Questionnaire Responses History",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{Token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{railway-URL}}/questionnaire",
+                  "host": [
+                    "{{railway-URL}}"
+                  ],
+                  "path": [
+                    "questionnaire"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Diagnosis",
+      "item": [
+        {
+          "name": "diagnosis",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "gender",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "8afdf0e1-7c64-4386-a4e7-0ac2bd6fc2e6"
-                },
-                {
-                  "key": "sleep_hours",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "c08fadf8-1d8f-4e11-b227-85963c2cc726"
-                },
-                {
-                  "key": "academic_performance",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "c18968eb-a699-4944-8c98-ee6412e39bea"
-                },
-                {
-                  "key": "social_interaction",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "8d0e7350-3a7b-4f14-a86c-c38c319a472d"
-                },
-                {
-                  "key": "exercise_hours",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "d1552bd0-6a71-4b7a-9058-a5dba5ae9d55"
-                },
-                {
-                  "key": "anxiety_level",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "7a6a33b7-3c74-408b-b1f7-2521b15dde4b"
-                },
-                {
-                  "key": "depression_level",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "5dd7e47c-2b27-40a7-a778-9632b7d9544c"
-                },
-                {
-                  "key": "self_esteem",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "fea0695e-b566-43c3-8255-f42f797ef9fb"
-                },
-                {
-                  "key": "time_on_education",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "87ec314b-5d3a-4fad-9e70-2936c2487f5d"
-                },
-                {
-                  "key": "family_communication",
-                  "value": "",
-                  "type": "text",
-                  "uuid": "ecb77050-0610-4480-ac19-685380b4fa98"
-                }
-              ]
-            },
+            "header": [],
             "url": {
-              "raw": "http://127.0.0.1:8000/api/questionnaire",
-              "protocol": "http",
+              "raw": "{{URL}}/diagnosis/generate",
               "host": [
-                "127",
-                "0",
-                "0",
-                "1"
+                "{{URL}}"
               ],
-              "port": "8000",
               "path": [
-                "api",
-                "questionnaire"
+                "diagnosis",
+                "generate"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "get Questionnaire Responses",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
+          "name": "diagnosis history",
           "request": {
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{Token}}",
                   "type": "string"
                 }
               ]
             },
             "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": []
-            },
+            "header": [],
             "url": {
-              "raw": "{{url}}/phone-usage",
+              "raw": "{{railway-URL}}/diagnosis",
               "host": [
-                "{{url}}"
+                "{{railway-URL}}"
               ],
               "path": [
-                "phone-usage"
+                "diagnosis"
               ]
             }
           },
@@ -473,7 +638,7 @@
         "packages": {},
         "requests": {},
         "exec": [
-          ""
+          "pm.request.headers.add({key: 'Accept', value: 'application/json'});"
         ]
       }
     },
@@ -495,7 +660,15 @@
       "value": ""
     },
     {
-      "key": "token",
+      "key": "URL",
+      "value": ""
+    },
+    {
+      "key": "Token",
+      "value": ""
+    },
+    {
+      "key": "railway-URL",
       "value": ""
     }
   ]
