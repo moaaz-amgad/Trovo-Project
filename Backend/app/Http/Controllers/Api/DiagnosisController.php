@@ -55,12 +55,14 @@ class DiagnosisController extends Controller
         ];
 
         try {
-            // 3. إرسال الطلب لسيرفر الـ AI (Ngrok)
+            // 3. إرسال الطلب لسيرفر الـ AI (Railway Production URL)
+            // سحب اللينك من الـ Environment Variables لضمان المرونة
+            $aiUrl = env('AI_SERVER_URL', 'https://brain-rot-prediction-and-classification-production.up.railway.app');
+
             $response = Http::withHeaders([
-                'ngrok-skip-browser-warning' => 'true',
                 'Accept' => 'application/json'
             ])->timeout(60)->post(
-                'https://dotted-rectified-unabashed.ngrok-free.dev/predict',
+                $aiUrl . '/predict',
                 $aiInputs
             );
 
@@ -171,3 +173,4 @@ class DiagnosisController extends Controller
         ], 200);
     }
 }
+
