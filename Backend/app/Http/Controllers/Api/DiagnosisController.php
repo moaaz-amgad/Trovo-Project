@@ -68,6 +68,15 @@ class DiagnosisController extends Controller
 
             $aiResult = $response->json();
 
+            // ضيف دول عشان تشوف الرد الحقيقي في بوستمان
+        if (!$response->successful()) {
+         return response()->json([
+        'debug_sent_data' => $aiInputs,
+        'debug_raw_body' => $response->body(), // ده هيوريك السيرفر رد بـ إيه بالظبط (حتى لو Error)
+        'debug_status' => $response->status()
+    ], 500);
+        }
+
             if ($response->successful() && isset($aiResult['addiction_level'])) {
 
                 // 4. تخزين التشخيص في قاعدة البيانات
