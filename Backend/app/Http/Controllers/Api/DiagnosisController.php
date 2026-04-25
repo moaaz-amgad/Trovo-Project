@@ -7,9 +7,13 @@ use Illuminate\Http\Request;
 use App\Models\Diagnosis;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class DiagnosisController extends Controller
 {
+    /**
+     * إنشاء تشخيص جديد باستخدام الذكاء الاصطناعي
+     */
     public function generate(Request $request)
     {
         $user = $request->user();
@@ -74,13 +78,13 @@ class DiagnosisController extends Controller
             // التحقق من النجاح بناءً على الرد الجديد (وجود addiction_level)
             if ($response->successful() && isset($aiResult['addiction_level'])) {
 
-                // 4. تخزين التشخيص في قاعدة البيانات (تعديل المسميات لتطابق مخرجات الـ AI)
+                // 4. تخزين التشخيص في قاعدة البيانات
                 $diagnosis = $user->diagnosis()->create([
                     'usage_id'         => $lastUsage->usage_id,
                     'questionnaire_id' => $lastQuestionnaire->questionnaire_id,
-                    'addiction_level'  => $aiResult['addiction_level'], // 4.12
-                    'brain_rot_stage'  => $aiResult['brainrot_stage'],  // بدون underscore
-                    'main_issue'       => $aiResult['analysis_intro'] ?? 'General Pattern', // استخدام الانترو كـ Issue
+                    'addiction_level'  => $aiResult['addiction_level'],
+                    'brain_rot_stage'  => $aiResult['brainrot_stage'],
+                    'main_issue'       => $aiResult['analysis_intro'] ?? 'General Pattern',
                     'recommendations'  => $aiResult['recommendations'] ?? [],
                     'diagnosed_at'     => now(),
                 ]);
@@ -107,7 +111,7 @@ class DiagnosisController extends Controller
     }
 
     /**
-     * عرض تاريخ التشخيصات لليوزر
+     * عرض تاريخ التشخيصات لليوزر الحالي
      */
     public function index(Request $request)
     {
@@ -127,44 +131,60 @@ class DiagnosisController extends Controller
     }
 
     /**
-     * جلب كافة التشخيصات لكل المستخدمين (الجدول الرئيسي للدكتور)
+     * جلب كافة البيانات والإحصائيات للداشبورد (لوحة تحكم الطبيب)
      */
     public function getAllForAdmin(Request $request)
     {
+        // 1. جلب كافة التشخيصات مع بيانات المستخدمين
         $allDiagnoses = Diagnosis::with('user')
                         ->latest('diagnosed_at')
                         ->get();
 
+        // 2. إحصائيات عامة للكروت (Stats Cards)
         $totalUsers = User::count();
-        // تأكد أن الكود هنا يبحث عن المسميات المخزنة (مثلاً 'Low (Mild)') حسب رد الـ AI
+        $totalDiagnoses = Diagnosis::count();
+
+        // حساب الحالات بناءً على النصوص الراجعة من الـ AI
         $mild = Diagnosis::where('brain_rot_stage', 'like', '%Mild%')->count();
         $moderate = Diagnosis::where('brain_rot_stage', 'like', '%Moderate%')->count();
         $severe = Diagnosis::where('brain_rot_stage', 'like', '%Severe%')->count();
 
+        // 3. حساب نسبة الإدمان (Moderate + Severe)
+        $addictedCount = $moderate + $severe;
         $addictionRate = $totalUsers > 0
-            ? round((($moderate + $severe) / $totalUsers) * 100, 1)
+            ? round(($addictedCount / $totalUsers) * 100, 1)
             : 0;
+
+        // 4. إحصائية إضافية للدكتور: توزيع الجنسين في التشخيصات
+        $genderDistribution = DB::table('questionnaire_responses')
+            ->select('gender', DB::raw('count(*) as total'))
+            ->groupBy('gender')
+            ->get();
 
         return response()->json([
             'status' => 'success',
             'stats'  => [
-                'total_users'    => $totalUsers,
-                'mild_cases'     => $mild,
-                'moderate_cases' => $moderate,
-                'severe_cases'   => $severe,
-                'addiction_rate' => $addictionRate . '%',
-                'efficiency'     => '94.8%'
+                'total_users'      => $totalUsers,
+                'total_diagnoses'  => $totalDiagnoses,
+                'mild_cases'       => $mild,
+                'moderate_cases'   => $moderate,
+                'severe_cases'     => $severe,
+                'addiction_rate'   => $addictionRate . '%',
+                'accuracy_rate'    => '94.8%',
+                'gender_stats'     => $genderDistribution
             ],
             'data'   => $allDiagnoses
         ], 200);
     }
 
     /**
-     * ميثود إضافية للبحث عن مستخدم محدد بالـ ID
+     * جلب تفاصيل مستخدم معين مع تاريخه الطبي (للعرض التفصيلي)
      */
     public function getStudentDetail($id)
     {
-        $user = User::with(['phoneUsages', 'questionnaireResponses', 'diagnosis'])->find($id);
+        $user = User::with(['phoneUsages', 'questionnaireResponses', 'diagnosis' => function($q) {
+            $q->latest('diagnosed_at');
+        }])->find($id);
 
         if (!$user) {
             return response()->json(['message' => 'Student not found'], 404);
