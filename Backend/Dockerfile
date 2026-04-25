@@ -1,38 +1,30 @@
-# 1. بنستخدم نسخة PHP الرسمية
-FROM php:8.2-fpm
+FROM php:8.4-cli
 
-# 2. تحديث وتثبيت مكتبات النظام (حل مشكلة libatomic1)
+# تثبيت الإضافات المطلوبة
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
     libpng-dev \
-    libonig-dev \
-    libxml2-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     zip \
     unzip \
-    libatomic1 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git \
+    curl \
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql zip exif pcntl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
 
-# 3. تثبيت إضافات PHP
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
-# 4. تثبيت Composer
+# تثبيت Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 5. مسار العمل
 WORKDIR /var/www
-
-# 6. نسخ الملفات
 COPY . .
 
-# 7. تثبيت الحزم
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# تثبيت مكتبات لارفيل (Vendors)
+RUN composer install --no-dev --optimize-autoloader
 
-# 8. الصلاحيات
+# ضبط الصلاحيات
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# 9. المنفذ
-EXPOSE 8000
-
-# 10. تشغيل السيرفر
+# السطر السحري اللي هيشغل السيرفر ويعمل Migrate
 CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

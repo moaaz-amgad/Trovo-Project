@@ -1,0 +1,52 @@
+services:
+  # 1. خدمة الـ Laravel
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trovo-backend-api
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - trovo-net  # تم التعديل هنا
+
+  # 2. خدمة الـ Nginx
+  web:
+    image: nginx:alpine
+    container_name: trovo-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker-config/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - trovo-net
+
+  # 3. خدمة الـ MySQL
+  db:
+    image: mysql:8.0
+    container_name: trovo-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - trovo-net
+
+networks:
+  trovo-net:
+    driver: bridge
+
+volumes:
+  dbdata:
