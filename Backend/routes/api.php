@@ -31,14 +31,18 @@ Route::get('/fix-db', function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// مسارات نسيان كلمة السر (Forgot Password)
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+// مسار تسجيل الدخول بجوجل (Google Login)
+Route::post('/google-login', [AuthController::class, 'googleLogin']);
+
 /**
  * مسارات الداشبورد (Admin Dashboard)
- * خليناها بره الـ Middleware مؤقتاً عشان الدكتور يقدر يشوف الداتا فوراً من مشروع الفرونت إند
  */
 Route::prefix('admin')->group(function () {
-    // لجلب كل الإحصائيات والجدول
     Route::get('/all-diagnoses', [DiagnosisController::class, 'getAllForAdmin']);
-    // للبحث عن طالب معين بالـ ID
     Route::get('/student/{id}', [DiagnosisController::class, 'getStudentDetail']);
 });
 

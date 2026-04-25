@@ -13,7 +13,7 @@ use App\Models\Diagnosis;
 
 class User extends Authenticatable
 {
-public function phoneUsages()
+    public function phoneUsages()
     {
         return $this->hasMany(PhoneUsageData::class, 'user_id');
     }
@@ -21,7 +21,7 @@ public function phoneUsages()
     use HasApiTokens, Notifiable;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -32,6 +32,7 @@ public function phoneUsages()
         'name',
         'email',
         'password',
+        'google_id', // دي الإضافة الوحيدة اللي زادت عشان جوجل يشتغل
     ];
 
     /**
@@ -57,12 +58,12 @@ public function phoneUsages()
         ];
     }
 
-public function questionnaireResponses() {
-    return $this->hasMany(QuestionnaireResponse::class, 'user_id', 'id');
+    public function questionnaireResponses() {
+        return $this->hasMany(QuestionnaireResponse::class, 'user_id', 'id');
     }
 
-public function diagnosis(){
-    return $this->hasMany(diagnosis::class, 'user_id', 'id');
+    public function diagnosis(){
+        return $this->hasMany(diagnosis::class, 'user_id', 'id');
     }
 
 }
