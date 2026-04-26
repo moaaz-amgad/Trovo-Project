@@ -14,31 +14,22 @@ use Illuminate\Support\Facades\Artisan;
 |--------------------------------------------------------------------------
 */
 
-// --- حل مشكلة الـ CORS من المنبع ---
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+// --- 1. مسارات الصيانة ---
+Route::get('/fix-db', function () {
+    try {
+        Artisan::call('migrate:fresh', ['--force' => true]);
+        return response()->json(['message' => 'Database Updated Successfully!']);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
 
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    exit;
-}
-
-// --- 1. مسارات الصيانة الفورية (Rescue Routes) ---
 Route::get('/fix-all', function () {
     try {
         Artisan::call('route:clear');
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
         return response()->json(['message' => 'Railway Cache Cleared Successfully!']);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
-
-Route::get('/fix-db', function () {
-    try {
-        Artisan::call('migrate:fresh', ['--force' => true]);
-        return response()->json(['message' => 'Database Reset Successfully!']);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
@@ -55,11 +46,12 @@ Route::post('/google-login', [AuthController::class, 'googleLogin']);
  * مسارات الداشبورد (Admin Dashboard)
  */
 Route::prefix('admin')->group(function () {
+    // جلب كافة التشخيصات والإحصائيات مع السماح للـ CORS
     Route::get('/all-diagnoses', function(Request $request) {
-        // بننادي الميثود بتاعتك وبنحط عليها Headers زيادة للأمان
-        return (new DiagnosisController())->getAllForAdmin($request)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        $response = (new DiagnosisController())->getAllForAdmin($request);
+        // بنضيف الـ Headers هنا جوه الـ Route عشان متبوظش السيرفر
+        return $response->header('Access-Control-Allow-Origin', '*')
+                        ->header('Access-Control-Allow-Methods', 'GET, OPTIONS');
     })->name('admin.diagnoses.all');
 
     Route::get('/student/{id}', [DiagnosisController::class, 'getStudentDetail'])->name('admin.student.detail');
@@ -70,10 +62,16 @@ Route::prefix('admin')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // استخدام الموبايل
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);
     Route::get('/phone-usage', [PhoneUsageController::class, 'index']);
+
+    // الاستبيان
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
+
+    // التشخيص الذكي
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate'])->name('diagnosis.generate');
     Route::get('/diagnosis', [DiagnosisController::class, 'index']);
 });
