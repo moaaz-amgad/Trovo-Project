@@ -14,28 +14,20 @@ use Illuminate\Support\Facades\Artisan;
 |--------------------------------------------------------------------------
 */
 
-// --- 1. مسارات الصيانة (Rescue) ---
-Route::get('/fix-all', function () {
-    try {
-        Artisan::call('route:clear');
-        Artisan::call('config:clear');
-        Artisan::call('cache:clear');
-        return response()->json(['message' => 'Railway Cache Cleared!']);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
-
+// --- 1. مسارات الصيانة (Maintenance) ---
 Route::get('/fix-db', function () {
     try {
         Artisan::call('migrate:fresh', ['--force' => true]);
-        return response()->json(['message' => 'Database Reset Successfully!']);
+        return response()->json([
+            'message' => 'Database Updated Successfully!',
+            'output' => Artisan::output()
+        ]);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 });
 
-// --- 2. مسارات عامة (Public) ---
+// --- 2. مسارات عامة (Public Routes) ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
@@ -44,33 +36,36 @@ Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
 /**
  * مسارات الداشبورد (Admin Dashboard)
+ * التعديل الوحيد هنا هو إضافة ->header لضمان تخطي الـ CORS
  */
 Route::prefix('admin')->group(function () {
     Route::get('/all-diagnoses', function(Request $request) {
-        // بننادي الميثود بتاعتك وبنحقن الـ Headers عشان الـ CORS
-        $response = (new DiagnosisController())->getAllForAdmin($request);
-        return $response->header('Access-Control-Allow-Origin', '*')
-                        ->header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        return (new DiagnosisController())->getAllForAdmin($request)
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     })->name('admin.diagnoses.all');
 
     Route::get('/student/{id}', [DiagnosisController::class, 'getStudentDetail'])->name('admin.student.detail');
     Route::delete('/diagnosis/{id}', [DiagnosisController::class, 'destroy'])->name('admin.diagnosis.delete');
 });
 
-// --- 3. مسارات محمية (Protected) ---
+
+// --- 3. مسارات محمية (Protected Routes) ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // استخدام الموبايل (Phone Usage)
+    // استخدام الموبايل
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);
     Route::get('/phone-usage', [PhoneUsageController::class, 'index']);
 
-    // الاستبيان (Questionnaire)
+    // الاستبيان
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
-    // التشخيص الذكي (Diagnosis)
+    // التشخيص الذكي
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate'])->name('diagnosis.generate');
     Route::get('/diagnosis', [DiagnosisController::class, 'index']);
 });
+
