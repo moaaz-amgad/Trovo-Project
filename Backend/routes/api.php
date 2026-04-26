@@ -24,6 +24,13 @@ Route::get('/fix-db', function () {
     }
 });
 
+Route::get('/fix-all', function () {
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    return response()->json(['message' => 'All Caches Cleared! Server is Fresh.']);
+});
+
 // --- 2. مسارات عامة (Public) ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
