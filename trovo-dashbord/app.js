@@ -1,5 +1,5 @@
 // ده الرابط بتاع Railway اللي عليه الداتا الحقيقية
-const BASE_URL = "https://brain-rot-prediction-and-classification-production.up.railway.app/api"; 
+const BASE_URL = "https://trovo-project-production.up.railway.app/api"; 
 
 async function fetchData() {
     const statusText = document.getElementById('sync-status');

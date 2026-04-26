@@ -49,7 +49,16 @@ Route::post('/google-login', [AuthController::class, 'googleLogin']);
  * مسارات الداشبورد (Admin Dashboard)
  */
 Route::prefix('admin')->group(function () {
-    Route::get('/all-diagnoses', [DiagnosisController::class, 'getAllForAdmin'])->name('admin.diagnoses.all');
+    Route::get('/all-diagnoses', function(Illuminate\Http\Request $request) {
+        $data = (new App\Http\Controllers\Api\DiagnosisController())->getAllForAdmin($request);
+
+        // بنرجع الداتا وبنقول للمتصفح "مسموح لأي حد يشوفها"
+        return response()->json($data->original, 200)
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    });
+
     Route::get('/student/{id}', [DiagnosisController::class, 'getStudentDetail'])->name('admin.student.detail');
     Route::delete('/diagnosis/{id}', [DiagnosisController::class, 'destroy'])->name('admin.diagnosis.delete');
 });
