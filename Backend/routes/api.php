@@ -36,38 +36,36 @@ Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
 /**
  * مسارات الداشبورد (Admin Dashboard)
- * خليناها بره الـ Sanctum عشان الداشبورد الخارجية تقدر توصل للداتا
+ * التعديل الوحيد هنا هو إضافة ->header لضمان تخطي الـ CORS
  */
 Route::prefix('admin')->group(function () {
-    // جلب كافة التشخيصات والإحصائيات
-    Route::get('/all-diagnoses', [DiagnosisController::class, 'getAllForAdmin'])->name('admin.diagnoses.all');
+    Route::get('/all-diagnoses', function(Request $request) {
+        return (new DiagnosisController())->getAllForAdmin($request)
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    })->name('admin.diagnoses.all');
 
-    // جلب تفاصيل طالب محدد بتاريخه الطبي
     Route::get('/student/{id}', [DiagnosisController::class, 'getStudentDetail'])->name('admin.student.detail');
-
-    // مسار حذف تشخيص معين
     Route::delete('/diagnosis/{id}', [DiagnosisController::class, 'destroy'])->name('admin.diagnosis.delete');
 });
 
 
 // --- 3. مسارات محمية (Protected Routes) ---
 Route::middleware('auth:sanctum')->group(function () {
-
-    // بيانات المستخدم والمصادقة
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // استخدام الموبايل (Phone Usage)
+    // استخدام الموبايل
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);
     Route::get('/phone-usage', [PhoneUsageController::class, 'index']);
 
-    // الاستبيان (Questionnaire)
+    // الاستبيان
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
-    // التشخيص الذكي (Diagnosis)
+    // التشخيص الذكي
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate'])->name('diagnosis.generate');
     Route::get('/diagnosis', [DiagnosisController::class, 'index']);
-
 });
 
