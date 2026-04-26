@@ -78,13 +78,14 @@ class DiagnosisController extends Controller
             // التحقق من النجاح بناءً على الرد الجديد (وجود addiction_level)
             if ($response->successful() && isset($aiResult['addiction_level'])) {
 
-                // 4. تخزين التشخيص في قاعدة البيانات
+                // 4. تخزين التشخيص في قاعدة البيانات بالأسماء الجديدة
                 $diagnosis = $user->diagnosis()->create([
                     'usage_id'         => $lastUsage->usage_id,
                     'questionnaire_id' => $lastQuestionnaire->questionnaire_id,
                     'addiction_level'  => $aiResult['addiction_level'],
-                    'brain_rot_stage'  => $aiResult['brainrot_stage'],
-                    'main_issue'       => $aiResult['analysis_intro'] ?? 'General Pattern',
+                    'brainrot_stage'   => $aiResult['brainrot_stage'], // تم التعديل
+                    'analysis_intro'   => $aiResult['analysis_intro'] ?? 'General Pattern', // تم التعديل
+                    'top_factors'      => $aiResult['top_factors'] ?? [], // تم التعديل
                     'recommendations'  => $aiResult['recommendations'] ?? [],
                     'diagnosed_at'     => now(),
                 ]);
@@ -144,10 +145,10 @@ class DiagnosisController extends Controller
         $totalUsers = User::count();
         $totalDiagnoses = Diagnosis::count();
 
-        // حساب الحالات بناءً على النصوص الراجعة من الـ AI
-        $mild = Diagnosis::where('brain_rot_stage', 'like', '%Mild%')->count();
-        $moderate = Diagnosis::where('brain_rot_stage', 'like', '%Moderate%')->count();
-        $severe = Diagnosis::where('brain_rot_stage', 'like', '%Severe%')->count();
+        // حساب الحالات بناءً على النصوص الراجعة من الـ AI (تم تعديل اسم العمود لـ brainrot_stage)
+        $mild = Diagnosis::where('brainrot_stage', 'like', '%Mild%')->count();
+        $moderate = Diagnosis::where('brainrot_stage', 'like', '%Moderate%')->count();
+        $severe = Diagnosis::where('brainrot_stage', 'like', '%Severe%')->count();
 
         // 3. حساب نسبة الإدمان (Moderate + Severe)
         $addictedCount = $moderate + $severe;

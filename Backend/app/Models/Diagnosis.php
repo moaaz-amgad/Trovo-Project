@@ -19,14 +19,16 @@ class Diagnosis extends Model
         'usage_id',
         'questionnaire_id',
         'addiction_level',
-        'brain_rot_stage',
-        'main_issue',
+        'brainrot_stage',   // تم التعديل ليطابق الـ JSON والميجريشن
+        'analysis_intro',    // تم التعديل ليطابق الـ JSON والميجريشن
+        'top_factors',      // إضافة العمود الجديد الخاص بالعوامل
         'recommendations',
         'diagnosed_at'
     ];
 
     protected $casts = [
         'addiction_level' => 'float',
+        'top_factors'     => 'array', // تحويل العوامل لمصفوفة تلقائياً
         'recommendations' => 'array',
         'diagnosed_at'    => 'datetime',
     ];
@@ -55,3 +57,4 @@ class Diagnosis extends Model
         return $this->belongsTo(QuestionnaireResponse::class, 'questionnaire_id', 'questionnaire_id');
     }
 }
+
