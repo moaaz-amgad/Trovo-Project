@@ -33,11 +33,12 @@ return new class extends Migration
                   ->constrained('questionnaire_responses', 'questionnaire_id')
                   ->onDelete('set null');
 
-            // مخرجات الـ AI المعتمدة
-            $table->float('addiction_level');       // مستوى الإدمان (قيمة من 1 إلى 10)
-            $table->string('brain_rot_stage');      // الحالة: (mild, moderate, severe)
-            $table->string('main_issue');           // تحليل المشكلة الأساسية الناتج عن الموديل
-            $table->json('recommendations');        // قائمة النصائح المخزنة بصيغة JSON
+            // مخرجات الـ AI المحدثة بناءً على ملف الـ JSON الجديد
+            $table->float('addiction_level');           // مستوى الإدمان (addiction_level)
+            $table->string('brainrot_stage');          // الحالة (brainrot_stage)
+            $table->text('analysis_intro');            // المقدمة التحليلية (analysis_intro)
+            $table->json('top_factors');               // العوامل الأساسية (top_factors)
+            $table->json('recommendations');           // قائمة النصائح (recommendations)
 
             // توثيق وقت التشخيص
             $table->timestamp('diagnosed_at')->useCurrent();
@@ -53,3 +54,4 @@ return new class extends Migration
         Schema::dropIfExists('diagnosis');
     }
 };
+
