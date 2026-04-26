@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\Artisan;
 |--------------------------------------------------------------------------
 */
 
-// --- حل مشكلة الـ CORS والـ Terminal Error ---
-// بنقوله: لو أنت شغال من الـ Terminal (زي وقت الـ Build) متعملش حاجة
-if (isset($_SERVER['REQUEST_METHOD'])) {
+// --- حل مشكلة الـ Build والـ CORS للأبد ---
+// السطر ده بيقول للارافيل: "لو شغال من الـ Terminal (وقت الـ Build) طنش الكود اللي جاي ده"
+if (php_sapi_name() !== 'cli' && isset($_SERVER['REQUEST_METHOD'])) {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
