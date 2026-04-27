@@ -7,147 +7,71 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    // 1. تسجيل مستخدم جديد
-    public function register(Request $request)
+    public function login(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+        $request->validate([
+            'student_code' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+        $credentials = [
+            'student_code' => $request->student_code,
+            'password' => $request->password
+        ];
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'بيانات الدخول غير صحيحة. يرجى مراجعة الدكتور للتأكد من تسجيل بياناتك وتفعيل حسابك.'
+            ], 401);
+        }
+
+        $user = User::where('student_code', $request->student_code)->firstOrFail();
+
+        if ($user->role !== 'student') {
+            Auth::logout();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'عذراً، هذا الحساب غير مصرح له بالدخول عبر التطبيق.'
+            ], 403);
+        }
+
+        $token = $user->createToken('student_auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'student_code' => $user->student_code,
+                'phone_number' => $user->phone_number
+            ]
         ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json(
-            [
-                'message' => 'User registered successfully',
-                'access_token' => $token,
-                'user' => $user,
-            ],
-            201,
-        );
     }
 
     public function getUser(Request $request)
     {
-        $user = $request->user();
-
-        return response()->json(
-            [
-                'data' => $user,
-            ],
-            200,
-        );
-    }
-
-    // 2. تسجيل دخول (للمستخدمين الحاليين)
-    public function login(Request $request)
-    {
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json(['message' => 'Invalid login details'], 401);
-        }
-
-        $user = User::where('email', $request['email'])->firstOrFail();
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user,
-        ]);
+            'status' => 'success',
+            'data' => $request->user()
+        ], 200);
     }
 
-    // 3. تسجيل الخروج
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(
-            [
-                'status' => 'success',
-                'message' => 'Logged out successfully. Token revoked.',
-            ],
-            200,
-        );
-    }
-
-    // -----------------------------------------------------------
-    // الزيادات الجديدة (Forget Password & Google Login)
-    // -----------------------------------------------------------
-
-    /**
-     * إرسال كود إعادة تعيين كلمة السر
-     */
-    public function forgotPassword(Request $request)
-    {
-        $request->validate(['email' => 'required|email|exists:users,email']);
-
-        // توليد كود عشوائي من 6 أرقام
-        $code = rand(100000, 999999);
-
-        // تخزينه في جدول password_reset_tokens (جدول افتراضي في لارفيل)
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $request->email],
-            [
-                'token' => Hash::make($code),
-                'created_at' => now()
-            ]
-        );
-
-        // ملاحظة: هنا يجب إعداد MAIL_SERVER في Railway لإرسال الإيميل حقيقةً
-        // سأترك لك الكود يرجع في الاستجابة مؤقتاً للتجربة (Debug)
         return response()->json([
             'status' => 'success',
-            'message' => 'Reset code generated successfully',
-            'code_debug' => $code // احذف هذا السطر عند الانتقال للإنتاج الفعلي
-        ]);
+            'message' => 'تم تسجيل الخروج بنجاح'
+        ], 200);
     }
 
-    /**
-     * تعيين كلمة سر جديدة باستخدام الكود
-     */
-    public function resetPassword(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        $resetData = DB::table('password_reset_tokens')->where('email', $request->email)->first();
-
-        if (!$resetData || !Hash::check($request->code, $resetData->token)) {
-            return response()->json(['message' => 'Invalid or expired reset code'], 400);
-        }
-
-        $user = User::where('email', $request->email)->first();
-        $user->update(['password' => Hash::make($request->password)]);
-
-        // حذف الكود بعد الاستخدام لزيادة الأمان
-        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Password has been reset successfully'
-        ]);
-    }
-
-    /**
-     * تسجيل الدخول عبر جوجل (للموبايل)
-     */
     public function googleLogin(Request $request)
     {
         $request->validate([
@@ -156,23 +80,23 @@ class AuthController extends Controller
             'name' => 'required'
         ]);
 
-        // البحث عن المستخدم أو إنشاؤه إذا لم يكن موجوداً
-        $user = User::updateOrCreate(
-            ['email' => $request->email],
-            [
-                'name' => $request->name,
-                'google_id' => $request->google_id,
-                'password' => Hash::make(Str::random(24)), // كلمة سر عشوائية للأمان فقط
-            ]
-        );
+        $user = User::where('email', $request->email)->first();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        if (!$user || $user->role !== 'student') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'عذراً، هذا الحساب غير مسجل ضمن كشوفات الطلاب المعتمدة.'
+            ], 403);
+        }
+
+        $user->update(['google_id' => $request->google_id]);
+        $token = $user->createToken('student_auth_token')->plainTextToken;
 
         return response()->json([
             'status' => 'success',
             'access_token' => $token,
-            'token_type' => 'Bearer',
             'user' => $user
         ]);
     }
 }
+

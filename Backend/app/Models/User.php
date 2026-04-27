@@ -2,54 +2,33 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\PhoneUsage;
+use App\Models\PhoneUsageData;
 use App\Models\QuestionnaireResponse;
 use App\Models\Diagnosis;
 
 class User extends Authenticatable
 {
-    public function phoneUsages()
-    {
-        return $this->hasMany(PhoneUsageData::class, 'user_id');
-    }
+    use HasApiTokens, Notifiable, HasFactory;
 
-    use HasApiTokens, Notifiable;
-
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
+        'student_code',
+        'phone_number',
         'email',
         'password',
-        'google_id', // دي الإضافة الوحيدة اللي زادت عشان جوجل يشتغل
+        'role',
+        'google_id',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -58,12 +37,34 @@ class User extends Authenticatable
         ];
     }
 
-    public function questionnaireResponses() {
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin', 'super_admin']);
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
+
+    public function phoneUsages()
+    {
+        return $this->hasMany(PhoneUsageData::class, 'user_id');
+    }
+
+    public function questionnaireResponses()
+    {
         return $this->hasMany(QuestionnaireResponse::class, 'user_id', 'id');
     }
 
-    public function diagnosis(){
-        return $this->hasMany(diagnosis::class, 'user_id', 'id');
+    public function diagnosis()
+    {
+        return $this->hasMany(Diagnosis::class, 'user_id', 'id');
     }
-
 }
+
