@@ -10,27 +10,15 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-
-            // البيانات الشخصية (تُرفع عبر الإكسيل)
-            $table->string('name');
-            $table->string('student_code')->unique();
+            $table->string('name'); // الاسم الثلاثي أو الرباعي
+            $table->string('student_code')->unique(); // كود الطالب (Username & Password)
             $table->string('phone_number')->nullable();
-            $table->string('email')->nullable()->unique();
-
-
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('google_id')->nullable()->unique();
-
-
-
-
-            $table->enum('role', ['super_admin', 'admin', 'student'])->default('student');
-
             $table->rememberToken();
             $table->timestamps();
         });
 
+        // جداول النظام الأساسية
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');

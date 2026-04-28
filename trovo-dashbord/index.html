@@ -32,21 +32,14 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         [x-cloak] { display: none !important; }
         .bar-transition { transition: height 1.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s; }
+        .text-shadow-neon { text-shadow: 0 0 10px rgba(100, 255, 218, 0.5); }
     </style>
 </head>
-<body x-data="{ 
-    screen: 'overview', 
-    openProfile: false,
-    /* درجات الألوان المتدرجة من 1 لـ 10 */
-    barColors: [
-        '#10b981', '#34d399', '#6ee7b7', // Greenish (1-3)
-        '#fbbf24', '#f59e0b', '#d97706', // Yellow/Orange (4-6)
-        '#f87171', '#ef4444', '#dc2626', '#7f1d1d' // Reds to Dark Red (7-10)
-    ]
-}" x-cloak>
+<body x-data="dashboardApp()" x-init="init()" x-cloak>
 
     <div class="flex h-screen overflow-hidden">
         
+        <!-- Sidebar -->
         <aside class="w-72 bg-darkBg border-r border-borderClr flex flex-col p-6 z-50">
             <div class="text-3xl font-bold text-neon mb-10 text-left tracking-widest flex items-center gap-3">
                 <i class="fa-solid fa-brain text-shadow-neon"></i> TROVO
@@ -67,17 +60,29 @@
                 </button>
             </nav>
 
-            <button @click="screen = 'super'" class="mt-auto border border-dashed border-red-500/50 text-red-500 p-4 rounded-xl flex items-center gap-3 hover:bg-red-500/10 transition-all">
-                <i class="fa-solid fa-shield-halved"></i> Super Admin Panel
+            <button @click="screen = 'super'" :class="screen === 'super' ? 'bg-red-500/10 text-red-500' : 'text-red-500/60'" class="mt-auto border border-dashed border-red-500/50 p-4 rounded-xl flex items-center justify-between hover:bg-red-500/10 transition-all">
+                <span class="flex items-center gap-3"><i class="fa-solid fa-shield-halved"></i> Super Panel</span>
+                <span :class="appStatus === 'Online' ? 'bg-emerald-500' : 'bg-red-500'" class="w-2 h-2 rounded-full animate-pulse"></span>
             </button>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-grow overflow-y-auto p-10 custom-scroll bg-gradient-to-br from-darkBg to-surface">
             
-            <div x-show="screen === 'overview'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4">
-                <header class="mb-10">
-                    <h1 class="text-4xl font-bold tracking-tight">System Overview</h1>
-                    <p class="text-subtext mt-2 italic">Real-time digital dopamine addiction analytics.</p>
+            <!-- Screen: Overview -->
+            <div x-show="screen === 'overview'" x-transition>
+                <header class="mb-10 flex justify-between items-start">
+                    <div>
+                        <h1 class="text-4xl font-bold tracking-tight">System Overview</h1>
+                        <p class="text-subtext mt-2 italic">Real-time digital dopamine addiction analytics.</p>
+                    </div>
+                    <div class="bg-card border border-borderClr p-4 rounded-2xl flex items-center gap-4">
+                        <div class="text-right">
+                            <p class="text-[10px] font-black text-subtext uppercase">System Status</p>
+                            <p :class="appStatus === 'Online' ? 'text-neon' : 'text-red-500'" class="font-bold" x-text="appStatus"></p>
+                        </div>
+                        <div :class="appStatus === 'Online' ? 'bg-neon shadow-[0_0_10px_#64ffda]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'" class="w-3 h-3 rounded-full"></div>
+                    </div>
                 </header>
                 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
@@ -116,32 +121,32 @@
                             </template>
                         </div>
                     </div>
+
                     <div class="bg-card p-8 rounded-3xl border border-borderClr">
-                        <h3 class="text-xl font-semibold mb-6">Critical Indicators</h3>
+                        <h3 class="text-xl font-semibold mb-6">Main Issues</h3>
                         <div class="space-y-8 mt-4">
-                            <div>
-                                <div class="flex justify-between text-sm mb-3 font-bold"><span>Doom Scrolling</span><span class="text-neon">45%</span></div>
-                                <div class="w-full bg-darkBg h-3 rounded-full overflow-hidden border border-borderClr"><div class="bg-neon h-full w-[45%] shadow-[0_0_10px_#64ffda]"></div></div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-3 font-bold"><span>Sleep Loss</span><span class="text-neon">30%</span></div>
-                                <div class="w-full bg-darkBg h-3 rounded-full overflow-hidden border border-borderClr"><div class="bg-neon h-full w-[30%] opacity-80"></div></div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-3 font-bold"><span>Gaming Addiction</span><span class="text-neon">25%</span></div>
-                                <div class="w-full bg-darkBg h-3 rounded-full overflow-hidden border border-borderClr"><div class="bg-neon h-full w-[25%] opacity-60"></div></div>
-                            </div>
+                            <template x-for="issue in mainIssues" :key="issue.label">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-3 font-bold">
+                                        <span x-text="issue.label"></span>
+                                        <span class="text-neon" x-text="issue.val + '%'"></span>
+                                    </div>
+                                    <div class="w-full bg-darkBg h-3 rounded-full overflow-hidden border border-borderClr">
+                                        <div class="bg-neon h-full shadow-[0_0_10px_#64ffda] transition-all duration-1000" :style="`width: ${issue.val}%`" ></div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Screen: Data Inputs Baseline (17 Fields Kept Exactly) -->
             <div x-show="screen === 'data_inputs'" x-transition>
                 <h1 class="text-4xl font-bold mb-4 tracking-tight">Data Inputs Baseline</h1>
                 <p class="text-subtext mb-10 text-lg">Statistical means for the 17 behavioral raw inputs.</p>
-                
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
-                    <template x-for="field in ['daily_usage_hours', 'screen_time_before_bed', 'phone_checks_per_day', 'apps_used_daily', 'time_on_social_media', 'time_on_gaming', 'weekend_usage_hours', 'sleep_hours', 'academic_performance', 'social_interactions', 'exercise_hours', 'anxiety_level', 'depression_level', 'self_esteem', 'time_on_education', 'gender', 'phone_usage_purpose']">
+                    <template x-for="field in fields17">
                         <div class="bg-card p-6 rounded-2xl border border-borderClr text-center hover:border-neon transition-all hover:-translate-y-1">
                             <span class="text-[10px] text-neon uppercase font-black tracking-widest block mb-2 opacity-70" x-text="field.replace(/_/g, ' ')"></span>
                             <div class="text-2xl font-bold">5.4</div>
@@ -150,12 +155,13 @@
                 </div>
             </div>
 
+            <!-- Screen: Database -->
             <div x-show="screen === 'database'" x-transition>
                 <div class="flex justify-between items-end mb-10">
                     <h1 class="text-4xl font-bold tracking-tight">Students Records</h1>
                     <div class="relative">
                         <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-subtext"></i>
-                        <input type="text" placeholder="Search students..." class="bg-card border border-borderClr rounded-xl pl-12 pr-6 py-3 w-80 focus:border-neon outline-none">
+                        <input type="text" placeholder="Search by name or code..." class="bg-card border border-borderClr rounded-xl pl-12 pr-6 py-3 w-80 focus:border-neon outline-none">
                     </div>
                 </div>
                 
@@ -165,6 +171,7 @@
                             <tr>
                                 <th class="p-6">Student Info</th>
                                 <th class="p-6">Stage</th>
+                                <th class="p-6">Status</th>
                                 <th class="p-6">Level</th>
                                 <th class="p-6">Action</th>
                             </tr>
@@ -176,9 +183,15 @@
                                     <div class="text-subtext text-xs uppercase tracking-tighter">Code: 2026100</div>
                                 </td>
                                 <td class="p-6"><span class="bg-red-500/10 text-red-500 px-4 py-1 rounded-lg font-black border border-red-500/20 text-xs">SEVERE</span></td>
-                                <td class="p-6 font-black text-neon text-xl italic">8 / 10</td>
                                 <td class="p-6">
-                                    <button @click="openProfile = true" class="bg-neon text-darkBg px-6 py-2 rounded-xl font-black text-[10px] hover:shadow-[0_0_15px_#64ffda] transition-all">VIEW DOSSIER</button>
+                                    <span class="text-emerald-500 flex items-center gap-2 font-bold uppercase text-[10px]">
+                                        <i class="fa-solid fa-circle text-[6px]"></i> Active
+                                    </span>
+                                </td>
+                                <td class="p-6 font-black text-xl italic" :style="`color: getColor(8)`">8 / 10</td>
+                                <td class="p-6 flex gap-2">
+                                    <button @click="openProfile = true" class="bg-neon text-darkBg px-4 py-2 rounded-xl font-black text-[10px] hover:shadow-[0_0_15px_#64ffda] transition-all">DOSSIER</button>
+                                    <button class="bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl font-black text-[10px] hover:bg-red-500 hover:text-white transition-all">SUSPEND</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -186,103 +199,110 @@
                 </div>
             </div>
 
+            <!-- Modal: Student Profile -->
             <div x-show="openProfile" class="fixed inset-0 bg-darkBg/95 backdrop-blur-xl z-[100] flex items-center justify-center p-10" x-transition>
-                <div class="bg-surface border border-borderClr w-full max-w-6xl rounded-[40px] p-10 max-h-[90vh] overflow-y-auto custom-scroll relative">
+                <div class="bg-surface border border-borderClr w-full max-w-6xl rounded-[40px] p-10 max-h-[90vh] overflow-y-auto custom-scroll relative text-left">
                     <button @click="openProfile = false" class="absolute top-8 right-8 text-4xl text-subtext hover:text-white transition-colors">&times;</button>
                     
-                    <div class="flex items-center gap-6 mb-12">
-                        <div class="w-20 h-20 bg-neon text-darkBg rounded-3xl flex items-center justify-center text-3xl font-black shadow-[0_0_20px_rgba(100,255,218,0.3)]">MA</div>
-                        <div>
-                            <h2 class="text-4xl font-black text-white italic">Moaaz Amgad</h2>
-                            <p class="text-neon font-bold tracking-widest uppercase text-xs mt-1">Detailed Diagnostic Breakdown</p>
+                    <div class="flex justify-between items-center mb-12">
+                        <div class="flex items-center gap-6">
+                            <div class="w-20 h-20 bg-neon text-darkBg rounded-3xl flex items-center justify-center text-3xl font-black">MA</div>
+                            <div>
+                                <h2 class="text-4xl font-black text-white italic">Moaaz Amgad</h2>
+                                <p class="text-neon font-bold tracking-widest uppercase text-xs mt-1">Diagnostic Breakdown</p>
+                            </div>
                         </div>
+                        <button class="bg-red-600/20 text-red-500 border border-red-600/50 px-6 py-3 rounded-2xl font-black text-xs hover:bg-red-600 hover:text-white transition-all">
+                            <i class="fa-solid fa-ban mr-2"></i> DISABLE ACCOUNT
+                        </button>
                     </div>
                     
-                    <div class="space-y-8">
-                        <div class="bg-card rounded-3xl border border-neon/30 p-10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-                            <div class="flex flex-wrap justify-between items-center mb-10 gap-4">
-                                <h3 class="text-2xl font-bold">Latest Diagnosis: <span class="text-neon">#TRV-9842</span></h3>
-                                <div class="flex gap-4">
-                                    <div class="bg-red-600 px-8 py-3 rounded-2xl font-black text-center shadow-lg shadow-red-900/30">SEVERE</div>
-                                    <div class="bg-darkBg border border-borderClr px-8 py-3 rounded-2xl font-black text-center italic">LVL 8</div>
+                    <div class="bg-card rounded-3xl border border-neon/30 p-10">
+                        <h4 class="text-subtext text-[11px] font-black uppercase tracking-[0.3em] mb-8 border-b border-borderClr pb-2">Behavioral Matrix</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
+                            <template x-for="m in matrixData">
+                                <div class="bg-darkBg/60 p-5 rounded-2xl border border-borderClr">
+                                    <span class="text-[9px] text-subtext uppercase font-black block mb-2" x-text="m.label"></span>
+                                    <div class="text-xl font-bold text-white" x-text="m.val"></div>
                                 </div>
-                            </div>
-                            
-                            <h4 class="text-subtext text-[11px] font-black uppercase tracking-[0.3em] mb-8 border-b border-borderClr pb-2">Behavioral Matrix (The 17 Fields)</h4>
-                            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
-                                <template x-for="val in [
-                                    {label: 'Daily Usage', val: '10.5h'}, {label: 'Bedtime Screen', val: '3.2h'}, {label: 'Phone Checks', val: '142'},
-                                    {label: 'Daily Apps', val: '24'}, {label: 'Social Media', val: '7.1h'}, {label: 'Gaming', val: '1.2h'},
-                                    {label: 'Purpose', val: 'Social'}, {label: 'Weekend Use', val: '14h'}, {label: 'Gender', val: 'Male'},
-                                    {label: 'Sleep Hours', val: '4.5h'}, {label: 'Academic Perf.', val: '68%'}, {label: 'Social Int.', val: '3/10'},
-                                    {label: 'Exercise', val: '0h'}, {label: 'Anxiety', val: '9/10'}, {label: 'Depression', val: '7/10'},
-                                    {label: 'Self Esteem', val: '4/10'}, {label: 'Education', val: '0.5h'}
-                                ]">
-                                    <div class="bg-darkBg/60 p-5 rounded-2xl border border-borderClr hover:border-neon/50 transition-all group">
-                                        <span class="text-[9px] text-subtext uppercase font-black block mb-2 group-hover:text-neon transition-colors" x-text="val.label"></span>
-                                        <div class="text-xl font-bold text-white group-hover:scale-110 transition-transform" x-text="val.val"></div>
-                                    </div>
-                                </template>
-                            </div>
+                            </template>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Screen: Management -->
             <div x-show="screen === 'management'" x-transition>
                 <h1 class="text-4xl font-bold mb-10 tracking-tight">System Management</h1>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div class="bg-card p-10 rounded-[40px] border border-borderClr shadow-xl">
-                        <h3 class="text-2xl font-bold mb-8">Direct Student Registration</h3>
-                        <div class="space-y-6">
+                        <h3 class="text-2xl font-bold mb-8 italic text-neon">Direct Student Registration</h3>
+                        <form action="#" class="space-y-6">
                             <div>
-                                <label class="text-[10px] font-black uppercase text-subtext mb-2 block tracking-widest">Full Legal Name</label>
-                                <input type="text" placeholder="Full Name" class="w-full bg-darkBg border border-borderClr p-4 rounded-2xl outline-none focus:border-neon transition-all">
+                                <label class="text-[10px] font-black uppercase text-subtext mb-2 block tracking-widest">Full Name</label>
+                                <input type="text" required class="w-full bg-darkBg border border-borderClr p-4 rounded-2xl outline-none focus:border-neon transition-all">
                             </div>
-                            <div>
-                                <label class="text-[10px] font-black uppercase text-subtext mb-2 block tracking-widest">Phone Number (Required)</label>
-                                <input type="tel" placeholder="+20 XXX XXX XXXX" class="w-full bg-darkBg border border-borderClr p-4 rounded-2xl outline-none focus:border-neon transition-all">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] font-black uppercase text-subtext mb-2 block tracking-widest">Phone</label>
+                                    <input type="tel" required class="w-full bg-darkBg border border-borderClr p-4 rounded-2xl outline-none focus:border-neon transition-all">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black uppercase text-subtext mb-2 block tracking-widest">Access Code</label>
+                                    <input type="text" placeholder="TRV-2026" class="w-full bg-darkBg border border-borderClr p-4 rounded-2xl outline-none focus:border-neon transition-all">
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-[10px] font-black uppercase text-subtext mb-2 block tracking-widest">Access Code</label>
-                                <input type="text" placeholder="2026-ID" class="w-full bg-darkBg border border-neon/30 p-4 rounded-2xl outline-none focus:border-neon transition-all">
-                            </div>
-                            <button class="w-full bg-neon text-darkBg font-black py-5 rounded-2xl mt-4 text-sm hover:scale-[1.02] transition-transform">AUTHORIZE ACCOUNT</button>
-                        </div>
+                            <button type="submit" class="w-full bg-neon text-darkBg font-black py-5 rounded-2xl mt-4 text-sm hover:scale-[1.02] transition-transform">AUTHORIZE ACCOUNT</button>
+                        </form>
                     </div>
+
                     <div class="bg-card p-10 rounded-[40px] border border-borderClr flex flex-col items-center justify-center text-center">
-                        <div class="w-24 h-24 bg-emerald-500/10 rounded-[30px] flex items-center justify-center mb-8 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
-                            <i class="fa-solid fa-file-csv text-emerald-500 text-4xl"></i>
+                        <div class="w-24 h-24 bg-emerald-500/10 rounded-[30px] flex items-center justify-center mb-8 border border-emerald-500/20">
+                            <i class="fa-solid fa-file-excel text-emerald-500 text-4xl animate-bounce"></i>
                         </div>
-                        <h3 class="text-2xl font-bold mb-2">Bulk Batch Upload</h3>
-                        <p class="text-subtext text-sm mb-10 px-10 leading-relaxed">Import institutional data via Excel/CSV for automated mass registration.</p>
-                        <button class="bg-emerald-600 text-white font-black px-12 py-4 rounded-2xl hover:bg-emerald-500 transition-all">UPLOAD SPREADSHEET</button>
+                        <h3 class="text-2xl font-bold mb-2 italic">Bulk Batch Upload</h3>
+                        <p class="text-subtext text-sm mb-10 px-10">Import data from Excel/CSV for automated mass registration.</p>
+                        <button class="bg-emerald-600 text-white font-black px-12 py-4 rounded-2xl hover:bg-emerald-500 transition-all">SELECT SPREADSHEET</button>
                     </div>
                 </div>
             </div>
 
+            <!-- Screen: Ghost Authority (Super Admin) -->
             <div x-show="screen === 'super'" x-transition>
-                <div class="flex items-center gap-4 mb-10">
-                    <div class="w-1.5 h-10 bg-red-600 rounded-full shadow-[0_0_15px_#dc2626]"></div>
-                    <h1 class="text-4xl font-bold text-red-500 tracking-tight italic">Ghost Authority Panel</h1>
+                <div class="flex items-center justify-between mb-10">
+                    <div class="flex items-center gap-4">
+                        <div class="w-1.5 h-10 bg-red-600 rounded-full"></div>
+                        <h1 class="text-4xl font-bold text-red-500 tracking-tight italic">Ghost Authority Panel</h1>
+                    </div>
+                    <button @click="appStatus = (appStatus === 'Online' ? 'Maintenance' : 'Online')" 
+                            :class="appStatus === 'Online' ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'"
+                            class="px-8 py-4 rounded-2xl font-black text-white flex items-center gap-3 transition-all">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span x-text="appStatus === 'Online' ? 'STOP ALL APP TRAFFIC' : 'RESTART APPLICATION'"></span>
+                    </button>
                 </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div class="bg-card p-10 rounded-[40px] border border-red-500/20">
-                        <h3 class="text-xl font-bold mb-8 text-red-400 uppercase tracking-tighter">System Administrators</h3>
+                        <h3 class="text-xl font-bold mb-8 text-red-400 uppercase italic">Admin Directory (Root)</h3>
                         <div class="space-y-4">
-                            <div class="bg-darkBg p-6 rounded-2xl flex justify-between items-center border border-borderClr group">
-                                <span class="font-bold group-hover:text-red-400 transition-colors italic">Dr_Ahmed_Manager</span>
-                                <button class="text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/20 px-4 py-2 rounded-lg hover:bg-red-600 hover:text-white transition-all">Kill Session</button>
+                            <div class="bg-darkBg p-6 rounded-2xl flex justify-between items-center border border-borderClr">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 bg-neon rounded-full"></div>
+                                    <span class="font-bold">Super_Admin_Main</span>
+                                    <span class="text-[8px] bg-white/10 px-2 py-1 rounded text-subtext">NON-DELETABLE</span>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="bg-card p-10 rounded-[40px] border border-red-500/20">
-                        <h3 class="text-xl font-bold mb-8 text-red-400 uppercase tracking-tighter">New Admin Privilege</h3>
-                        <div class="space-y-4">
-                            <input type="text" placeholder="Admin ID" class="w-full bg-darkBg border border-borderClr p-4 rounded-2xl outline-none focus:border-red-600 transition-all">
+                        <h3 class="text-xl font-bold mb-8 text-red-400 uppercase italic">New Admin Privilege</h3>
+                        <form action="#" class="space-y-4">
+                            <input type="text" placeholder="Admin Username" class="w-full bg-darkBg border border-borderClr p-4 rounded-2xl outline-none focus:border-red-600 transition-all">
                             <input type="password" placeholder="Passkey" class="w-full bg-darkBg border border-borderClr p-4 rounded-2xl outline-none focus:border-red-600 transition-all">
-                            <button class="w-full bg-red-600 text-white font-black py-5 rounded-2xl mt-4 shadow-xl shadow-red-900/40 hover:brightness-125 transition-all italic">EXECUTE AUTHORIZATION</button>
-                        </div>
+                            <button type="submit" class="w-full bg-red-600 text-white font-black py-5 rounded-2xl mt-4 shadow-xl shadow-red-900/40 hover:brightness-125 transition-all italic uppercase text-xs tracking-widest">Execute Authorization</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -290,5 +310,43 @@
         </main>
     </div>
 
+    <script>
+        function dashboardApp() {
+            return {
+                screen: 'overview',
+                openProfile: false,
+                appStatus: 'Online',
+                barColors: ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b', '#d97706', '#f87171', '#ef4444', '#dc2626', '#7f1d1d'],
+                fields17: [
+                    'daily_usage_hours', 'screen_time_before_bed', 'phone_checks_per_day', 'apps_used_daily', 
+                    'time_on_social_media', 'time_on_gaming', 'weekend_usage_hours', 'sleep_hours', 
+                    'academic_performance', 'social_interactions', 'exercise_hours', 'anxiety_level', 
+                    'depression_level', 'self_esteem', 'time_on_education', 'gender', 'phone_usage_purpose'
+                ],
+                mainIssues: [
+                    { label: 'Doom Scrolling', val: 45 },
+                    { label: 'Sleep Loss', val: 30 },
+                    { label: 'Gaming Addiction', val: 25 }
+                ],
+                matrixData: [
+                    {label: 'Daily Usage', val: '10.5h'}, {label: 'Bedtime Screen', val: '3.2h'}, 
+                    {label: 'Phone Checks', val: '142'}, {label: 'Daily Apps', val: '24'}, 
+                    {label: 'Social Media', val: '7.1h'}, {label: 'Gaming', val: '1.2h'}, 
+                    {label: 'Purpose', val: 'Social'}, {label: 'Weekend Use', val: '14h'}, 
+                    {label: 'Gender', val: 'Male'}, {label: 'Sleep Hours', val: '4.5h'}, 
+                    {label: 'Academic Perf.', val: '68%'}, {label: 'Social Int.', val: '3/10'}, 
+                    {label: 'Exercise', val: '0h'}, {label: 'Anxiety', val: '9/10'}, 
+                    {label: 'Depression', val: '7/10'}, {label: 'Self Esteem', val: '4/10'}, 
+                    {label: 'Education', val: '0.5h'}
+                ],
+                getColor(level) {
+                    return this.barColors[Math.min(Math.max(Math.round(level) - 1, 0), 9)];
+                },
+                init() {
+                    console.log("TROVO Master Dashboard Initialized.");
+                }
+            }
+        }
+    </script>
 </body>
 </html>
