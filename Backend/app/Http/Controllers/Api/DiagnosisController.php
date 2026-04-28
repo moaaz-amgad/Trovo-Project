@@ -7,12 +7,11 @@ use Illuminate\Http\Request;
 use App\Models\Diagnosis;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\DB;
 
 class DiagnosisController extends Controller
 {
     /**
-     * إنشاء تشخيص جديد باستخدام الذكاء الاصطناعي
+     * إنشاء تشخيص جديد باستخدام الذكاء الاصطناعي (خاص بالطالب)
      */
     public function generate(Request $request)
     {
@@ -69,23 +68,24 @@ class DiagnosisController extends Controller
             // Debug في حالة الفشل
             if (!$response->successful()) {
                 return response()->json([
+                    'status' => 'error',
+                    'message' => 'فشل الاتصال بسيرفر التحليل',
                     'debug_sent_data' => $aiInputs,
-                    'debug_raw_body' => $response->body(),
                     'debug_status' => $response->status()
                 ], 500);
             }
 
-            // التحقق من النجاح بناءً على الرد الجديد (وجود addiction_level)
-            if ($response->successful() && isset($aiResult['addiction_level'])) {
+            // التحقق من وجود addiction_level في الرد
+            if (isset($aiResult['addiction_level'])) {
 
-                // 4. تخزين التشخيص في قاعدة البيانات بالأسماء الجديدة
+                // 4. تخزين التشخيص في قاعدة البيانات (تم الحفاظ على كل الأعمدة الجديدة)
                 $diagnosis = $user->diagnosis()->create([
                     'usage_id'         => $lastUsage->usage_id,
                     'questionnaire_id' => $lastQuestionnaire->questionnaire_id,
                     'addiction_level'  => $aiResult['addiction_level'],
-                    'brainrot_stage'   => $aiResult['brainrot_stage'], // تم التعديل
-                    'analysis_intro'   => $aiResult['analysis_intro'] ?? 'General Pattern', // تم التعديل
-                    'top_factors'      => $aiResult['top_factors'] ?? [], // تم التعديل
+                    'brainrot_stage'   => $aiResult['brainrot_stage'],
+                    'analysis_intro'   => $aiResult['analysis_intro'] ?? 'General Pattern',
+                    'top_factors'      => $aiResult['top_factors'] ?? [],
                     'recommendations'  => $aiResult['recommendations'] ?? [],
                     'diagnosed_at'     => now(),
                 ]);
@@ -99,20 +99,19 @@ class DiagnosisController extends Controller
 
             return response()->json([
                 'status'  => 'error',
-                'message' => 'فشل موديل الذكاء الاصطناعي في تحليل البيانات.',
-                'details' => $aiResult
+                'message' => 'رد غير صالح من موديل الذكاء الاصطناعي.'
             ], 422);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'حدث خطأ في الاتصال بسيرفر التحليل: ' . $e->getMessage()
+                'message' => 'حدث خطأ: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * عرض تاريخ التشخيصات لليوزر الحالي
+     * عرض تاريخ التشخيصات للطالب الحالي فقط
      */
     public function index(Request $request)
     {
@@ -130,71 +129,6 @@ class DiagnosisController extends Controller
             'data'   => $history
         ], 200);
     }
-
-    /**
-     * جلب كافة البيانات والإحصائيات للداشبورد (لوحة تحكم الطبيب)
-     */
-    public function getAllForAdmin(Request $request)
-    {
-        // 1. جلب كافة التشخيصات مع بيانات المستخدمين
-        $allDiagnoses = Diagnosis::with('user')
-                        ->latest('diagnosed_at')
-                        ->get();
-
-        // 2. إحصائيات عامة للكروت (Stats Cards)
-        $totalUsers = User::count();
-        $totalDiagnoses = Diagnosis::count();
-
-        // حساب الحالات بناءً على النصوص الراجعة من الـ AI (تم تعديل اسم العمود لـ brainrot_stage)
-        $mild = Diagnosis::where('brainrot_stage', 'like', '%Mild%')->count();
-        $moderate = Diagnosis::where('brainrot_stage', 'like', '%Moderate%')->count();
-        $severe = Diagnosis::where('brainrot_stage', 'like', '%Severe%')->count();
-
-        // 3. حساب نسبة الإدمان (Moderate + Severe)
-        $addictedCount = $moderate + $severe;
-        $addictionRate = $totalUsers > 0
-            ? round(($addictedCount / $totalUsers) * 100, 1)
-            : 0;
-
-        // 4. إحصائية إضافية للدكتور: توزيع الجنسين في التشخيصات
-        $genderDistribution = DB::table('questionnaire_responses')
-            ->select('gender', DB::raw('count(*) as total'))
-            ->groupBy('gender')
-            ->get();
-
-        return response()->json([
-            'status' => 'success',
-            'stats'  => [
-                'total_users'      => $totalUsers,
-                'total_diagnoses'  => $totalDiagnoses,
-                'mild_cases'       => $mild,
-                'moderate_cases'   => $moderate,
-                'severe_cases'     => $severe,
-                'addiction_rate'   => $addictionRate . '%',
-                'accuracy_rate'    => '94.8%',
-                'gender_stats'     => $genderDistribution
-            ],
-            'data'   => $allDiagnoses
-        ], 200);
-    }
-
-    /**
-     * جلب تفاصيل مستخدم معين مع تاريخه الطبي (للعرض التفصيلي)
-     */
-    public function getStudentDetail($id)
-    {
-        $user = User::with(['phoneUsages', 'questionnaireResponses', 'diagnosis' => function($q) {
-            $q->latest('diagnosed_at');
-        }])->find($id);
-
-        if (!$user) {
-            return response()->json(['message' => 'Student not found'], 404);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'data'   => $user
-        ], 200);
-    }
 }
+
 

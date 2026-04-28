@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PhoneUsageController;
 use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\DiagnosisController;
+use App\Http\Controllers\Api\Admin\ExcelController;
+use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use Illuminate\Support\Facades\Artisan;
 
 /*
@@ -15,7 +17,6 @@ use Illuminate\Support\Facades\Artisan;
 */
 
 // --- حل مشكلة الـ Build والـ CORS للأبد ---
-// السطر ده بيقول للارافيل: "لو شغال من الـ Terminal (وقت الـ Build) طنش الكود اللي جاي ده"
 if (php_sapi_name() !== 'cli' && isset($_SERVER['REQUEST_METHOD'])) {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -46,24 +47,28 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
 /**
- * مسارات الداشبورد (Admin Dashboard)
+ * 3. مسارات الإدارة المحمية (Admin Dashboard)
+ * محمية بـ Sanctum للتحقق من التوكن، وبـ Admin Middleware للتحقق من الرتبة
  */
-Route::prefix('admin')->group(function () {
-    Route::get('/all-diagnoses', function(Illuminate\Http\Request $request) {
-        $data = (new App\Http\Controllers\Api\DiagnosisController())->getAllForAdmin($request);
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
 
-        // بنرجع الداتا وبنقول للمتصفح "مسموح لأي حد يشوفها"
-        return response()->json($data->original, 200)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    });
+    // مسار استيراد الطلاب من الإكسيل
+    Route::post('/import-students', [ExcelController::class, 'import']);
 
-    Route::get('/student/{id}', [DiagnosisController::class, 'getStudentDetail'])->name('admin.student.detail');
-    Route::delete('/diagnosis/{id}', [DiagnosisController::class, 'destroy'])->name('admin.diagnosis.delete');
+    // مسار إحصائيات لوحة التحكم (Stats)
+    Route::get('/dashboard-stats', [AdminDashboardController::class, 'getStats']);
+
+    // مسار عرض كل التشخيصات
+    Route::get('/all-diagnoses', [AdminDashboardController::class, 'getAllDiagnoses']);
+
+    // مسار تفاصيل الطالب
+    Route::get('/student/{id}', [AdminDashboardController::class, 'getStudentProfile'])->name('admin.student.detail');
+
+    // مسار حذف التشخيص
+    Route::delete('/diagnosis/{id}', [AdminDashboardController::class, 'deleteDiagnosis'])->name('admin.diagnosis.delete');
 });
 
-// --- 3. مسارات محمية (Protected) ---
+// --- 4. مسارات المستخدمين المحمية (Protected) ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
