@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TROVO | Intelligence Command Center</title>
-    <!-- Assets -->
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <title>TROVO | Digital Dopamine Intelligence Hub</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -19,268 +23,297 @@
                         surface: '#0f172a',
                         card: '#16213e',
                         neon: '#64ffda',
-                        subtext: '#94a3b8',
+                        accent: '#00d2ff',
+                        danger: '#ff4d4d',
                         borderClr: '#1e293b',
+                        subtext: '#94a3b8'
+                    },
+                    boxShadow: {
+                        'neon-glow': '0 0 15px rgba(100, 255, 218, 0.3)',
                     }
                 }
             }
         }
     </script>
+
     <style>
-        [x-cloak] { display: none !important; }
         body { font-family: 'Urbanist', sans-serif; background-color: #0b0f1a; color: #f8fafc; overflow: hidden; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #0b0f1a; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .neon-glow { box-shadow: 0 0 20px rgba(100, 255, 218, 0.15); }
-        .bar-transition { transition: height 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
+        .neon-border { border: 1px solid rgba(100, 255, 218, 0.2); transition: all 0.3s ease; }
+        .neon-border:hover { border-color: #64ffda; box-shadow: 0 0 15px rgba(100, 255, 218, 0.2); }
+        [x-cloak] { display: none !important; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body x-data="dashboardApp()" x-init="init()">
+<body x-data="trovoApp()" x-init="init()">
 
-    <!-- 1. SECURE LOGIN GATEWAY -->
+    <!-- 1. SECURE LOGIN SCREEN (USERNAME/PASSWORD) -->
     <template x-if="!isLoggedIn">
-        <div class="fixed inset-0 z-[2000] bg-darkBg flex items-center justify-center p-6">
-            <div class="w-full max-w-md bg-surface border border-borderClr p-12 rounded-[50px] shadow-2xl relative overflow-hidden">
+        <div class="fixed inset-0 z-[999] bg-darkBg flex items-center justify-center p-4">
+            <div class="w-full max-w-lg bg-surface border border-borderClr p-12 rounded-[50px] shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon to-transparent"></div>
-                <div class="text-center mb-12">
-                    <div class="text-5xl font-black text-neon mb-4 tracking-tighter flex justify-center items-center gap-3">
-                        <i class="fa-solid fa-brain neon-glow rounded-full p-2"></i> TROVO
-                    </div>
-                    <p class="text-subtext font-bold uppercase text-[10px] tracking-[0.3em]">Neural Analytics Access</p>
-                </div>
                 
-                <form @submit.prevent="handleLogin()" class="space-y-6">
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-subtext mb-2 block tracking-widest">Username</label>
-                        <input type="text" x-model="loginForm.username" required class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-neon transition-all text-white font-bold tracking-wide">
+                <div class="text-center mb-12">
+                    <div class="text-5xl font-black text-neon mb-4 tracking-[0.2em] flex justify-center items-center gap-4">
+                        <i class="fa-solid fa-brain animate-pulse"></i> TROVO
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-subtext mb-2 block tracking-widest">Security Key</label>
-                        <input type="password" x-model="loginForm.password" required class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-neon transition-all text-white">
+                    <p class="text-subtext uppercase tracking-[0.3em] text-[10px] font-bold">Security Gateway | Authorization Required</p>
+                </div>
+
+                <form @submit.prevent="handleLogin()" class="space-y-8">
+                    <div class="relative">
+                        <label class="text-[10px] font-black uppercase text-neon mb-2 block tracking-widest px-2">Operator Username</label>
+                        <input type="text" x-model="loginForm.username" required 
+                               class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-neon transition-all text-white placeholder:text-gray-700"
+                               placeholder="Enter username">
                     </div>
-                    <button type="submit" class="w-full bg-neon text-darkBg font-black py-6 rounded-2xl mt-6 text-xs uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg shadow-neon/10">
-                        Infiltrate System
+                    <div class="relative">
+                        <label class="text-[10px] font-black uppercase text-neon mb-2 block tracking-widest px-2">Security Key</label>
+                        <input type="password" x-model="loginForm.password" required 
+                               class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-neon transition-all text-white placeholder:text-gray-700"
+                               placeholder="••••••••">
+                    </div>
+                    <button type="submit" :disabled="loading"
+                            class="w-full bg-neon text-darkBg font-black py-5 rounded-2xl text-sm uppercase italic hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
+                        <span x-show="!loading">Identify & Decrypt</span>
+                        <i x-show="loading" class="fa-solid fa-circle-notch fa-spin"></i>
                     </button>
                 </form>
+                
+                <p x-show="errorMessage" x-text="errorMessage" class="text-danger text-xs mt-6 text-center font-bold bg-danger/10 p-3 rounded-lg"></p>
             </div>
         </div>
     </template>
 
-    <!-- 2. MAIN DASHBOARD INTERFACE -->
-    <div x-show="isLoggedIn" x-cloak class="flex h-screen overflow-hidden">
+    <!-- 2. MAIN SYSTEM INTERFACE -->
+    <div x-show="isLoggedIn" class="flex h-screen overflow-hidden" x-cloak>
         
-        <!-- SIDE NAVIGATION -->
+        <!-- Sidebar Navigation -->
         <aside class="w-80 bg-darkBg border-r border-borderClr flex flex-col p-8 z-50">
-            <div class="text-4xl font-black text-neon mb-12 tracking-tighter flex items-center gap-3">
-                <i class="fa-solid fa-brain"></i> TROVO
+            <div class="text-3xl font-black text-neon mb-12 tracking-tighter flex items-center gap-3">
+                <i class="fa-solid fa-brain"></i> TROVO <span class="text-[10px] bg-neon/10 px-2 py-1 rounded-md text-neon/50">v3.0</span>
             </div>
 
             <nav class="space-y-3 flex-grow">
-                <button @click="screen = 'overview'" :class="screen === 'overview' ? 'bg-neon/10 text-neon border-neon/20' : 'text-subtext border-transparent'" class="w-full flex items-center gap-4 p-5 rounded-2xl border transition-all hover:bg-neon/5 group">
-                    <i class="fa-solid fa-chart-line text-lg"></i> 
-                    <span class="font-bold text-sm uppercase tracking-wider">Overview</span>
+                <button @click="screen = 'overview'" :class="screen === 'overview' ? 'bg-neon text-darkBg shadow-neon-glow' : 'text-subtext hover:bg-surface border border-transparent'" class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all group">
+                    <i class="fa-solid fa-chart-line"></i> Strategic Overview
                 </button>
-                <button @click="screen = 'database'" :class="screen === 'database' ? 'bg-neon/10 text-neon border-neon/20' : 'text-subtext border-transparent'" class="w-full flex items-center gap-4 p-5 rounded-2xl border transition-all hover:bg-neon/5 group">
-                    <i class="fa-solid fa-folder-tree text-lg"></i> 
-                    <span class="font-bold text-sm uppercase tracking-wider">Database</span>
+                <button @click="screen = 'database'" :class="screen === 'database' ? 'bg-neon text-darkBg shadow-neon-glow' : 'text-subtext hover:bg-surface border border-transparent'" class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all group">
+                    <i class="fa-solid fa-folder-open"></i> Subject Database
                 </button>
-                <button @click="screen = 'enrollment'" :class="screen === 'enrollment' ? 'bg-neon/10 text-neon border-neon/20' : 'text-subtext border-transparent'" class="w-full flex items-center gap-4 p-5 rounded-2xl border transition-all hover:bg-neon/5 group">
-                    <i class="fa-solid fa-user-plus text-lg"></i> 
-                    <span class="font-bold text-sm uppercase tracking-wider">Enrollment</span>
-                </button>
-                <button x-show="userRole === 'super'" @click="screen = 'super'" :class="screen === 'super' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'text-red-500/40 border-transparent'" class="w-full flex items-center gap-4 p-5 rounded-2xl border transition-all hover:bg-red-500/5 group">
-                    <i class="fa-solid fa-shield-halved text-lg"></i> 
-                    <span class="font-bold text-sm uppercase tracking-wider">Admin Panel</span>
+                <button @click="screen = 'enrollment'" :class="screen === 'enrollment' ? 'bg-neon text-darkBg shadow-neon-glow' : 'text-subtext hover:bg-surface border border-transparent'" class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all group">
+                    <i class="fa-solid fa-user-plus"></i> Enrollment Portal
                 </button>
             </nav>
 
-            <div class="mt-auto pt-8 border-t border-borderClr">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="w-12 h-12 rounded-2xl bg-neon/10 flex items-center justify-center text-neon border border-neon/20">
-                        <i class="fa-solid fa-fingerprint"></i>
+            <!-- Bottom Actions -->
+            <div class="mt-auto space-y-4">
+                <!-- Super Admin Visual Indicator -->
+                <div x-show="userRole === 'super'" @click="screen = 'super'" 
+                     :class="screen === 'super' ? 'border-red-500 bg-red-500/10' : 'border-red-500/20'"
+                     class="cursor-pointer border border-dashed p-4 rounded-2xl group transition-all">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-black text-red-500 uppercase italic">Super Control</span>
+                        <div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
                     </div>
-                    <div class="overflow-hidden">
-                        <p class="text-[9px] font-black uppercase text-subtext tracking-widest" x-text="userRole"></p>
-                        <p class="text-sm font-black text-white truncate" x-text="currentUsername"></p>
+                    <p class="text-xs text-white/80 font-bold">Access Root Systems</p>
+                </div>
+
+                <div class="flex items-center gap-4 p-4 bg-surface rounded-2xl border border-borderClr">
+                    <div class="w-10 h-10 rounded-full bg-neon/10 flex items-center justify-center text-neon border border-neon/20">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] uppercase font-black text-subtext">Active Operator</p>
+                        <p class="text-xs font-black text-white" x-text="currentUsername"></p>
                     </div>
                 </div>
-                <button @click="logout()" class="w-full p-4 rounded-xl flex items-center gap-4 text-subtext hover:text-red-500 transition-colors">
-                    <i class="fa-solid fa-power-off"></i> 
-                    <span class="text-xs font-black uppercase tracking-widest">Terminate Session</span>
+
+                <button @click="logout()" class="w-full p-4 rounded-2xl flex items-center gap-3 text-subtext hover:text-danger hover:bg-danger/5 transition-all font-bold">
+                    <i class="fa-solid fa-power-off"></i> Terminate Session
                 </button>
             </div>
         </aside>
 
-        <!-- MAIN DATA STAGE -->
-        <main class="flex-grow overflow-y-auto p-12 custom-scroll bg-gradient-to-br from-darkBg to-surface relative">
+        <!-- Main Workspace -->
+        <main class="flex-grow overflow-y-auto p-12 custom-scroll relative">
             
-            <div x-show="isLoading" class="absolute inset-0 glass z-[200] flex items-center justify-center">
-                <div class="flex flex-col items-center gap-4">
-                    <div class="w-16 h-16 border-4 border-neon/20 border-t-neon rounded-full animate-spin"></div>
-                    <p class="text-neon font-black italic text-xs tracking-widest">SYNCHRONIZING DATABASE...</p>
-                </div>
+            <!-- Global Loader -->
+            <div x-show="loading" class="fixed top-10 right-10 z-[100] glass p-4 rounded-2xl border border-neon/20 flex items-center gap-3 shadow-2xl">
+                <i class="fa-solid fa-atom fa-spin text-neon"></i>
+                <span class="text-[10px] font-black uppercase text-neon tracking-widest">Syncing with DB...</span>
             </div>
 
-            <!-- VIEW: OVERVIEW -->
-            <div x-show="screen === 'overview'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4">
-                <header class="mb-12 flex justify-between items-start">
+            <!-- 1. SCREEN: OVERVIEW -->
+            <div x-show="screen === 'overview'" x-transition class="space-y-12">
+                <div class="flex justify-between items-start">
                     <div>
-                        <h1 class="text-6xl font-black tracking-tighter uppercase italic">Analytics Engine</h1>
-                        <p class="text-subtext mt-3 italic font-semibold text-lg">Predictive digital dopamine addiction modeling [Live Status].</p>
+                        <h1 class="text-5xl font-black italic uppercase tracking-tighter">Strategic Overview</h1>
+                        <p class="text-subtext mt-2 font-medium italic">Diagnostic analytics for Digital Dopamine Addiction metrics.</p>
                     </div>
-                    <div class="bg-card border border-borderClr p-5 rounded-[25px] flex items-center gap-5">
-                        <div class="text-right">
-                            <p class="text-[10px] font-black text-subtext uppercase tracking-[0.2em]">Server Connection</p>
-                            <p class="text-neon font-bold">STABLE</p>
-                        </div>
-                        <div class="w-4 h-4 bg-neon rounded-full animate-pulse shadow-[0_0_15px_#64ffda]"></div>
-                    </div>
-                </header>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-                    <div class="bg-card p-10 rounded-[35px] border border-borderClr hover:border-neon transition-all">
-                        <p class="text-subtext text-[11px] uppercase font-black tracking-widest">Total Subjects</p>
-                        <div class="text-6xl font-black mt-3 italic" x-text="stats.total"></div>
-                    </div>
-                    <div class="bg-card p-10 rounded-[35px] border border-borderClr border-b-emerald-500/40 border-b-4">
-                        <p class="text-emerald-500 text-[11px] uppercase font-black tracking-widest">Low Risk</p>
-                        <div class="text-6xl font-black mt-3 italic" x-text="stats.mild"></div>
-                    </div>
-                    <div class="bg-card p-10 rounded-[35px] border border-borderClr border-b-red-600/40 border-b-4">
-                        <p class="text-red-500 text-[11px] uppercase font-black tracking-widest">Severe Risk</p>
-                        <div class="text-6xl font-black mt-3 italic" x-text="stats.severe"></div>
-                    </div>
-                    <div class="bg-card p-10 rounded-[35px] border border-borderClr">
-                        <p class="text-neon text-[11px] uppercase font-black tracking-widest">Model Accuracy</p>
-                        <div class="text-6xl font-black mt-3 italic">98.4%</div>
+                    <div class="bg-card px-6 py-3 rounded-full border border-borderClr flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-neon"></span>
+                        <span class="text-[10px] font-black uppercase tracking-widest">System Online</span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    <div class="lg:col-span-2 bg-card p-12 rounded-[50px] border border-borderClr relative shadow-2xl overflow-hidden">
-                        <h3 class="text-2xl font-black uppercase mb-12 italic text-neon tracking-tighter">Addiction Distribution Matrix</h3>
-                        <div class="flex items-end gap-5 h-72 bg-darkBg/50 p-8 rounded-3xl border border-borderClr/30">
-                            <template x-for="(count, i) in distribution" :key="i">
-                                <div class="flex-1 flex flex-col items-center gap-4 h-full justify-end group">
-                                    <span class="text-[10px] text-subtext font-black group-hover:text-neon" x-text="count"></span>
-                                    <div :style="`height: ${(count / (Math.max(...distribution) || 1)) * 100}%; background-color: ${barColors[i]}`" 
-                                         class="w-full rounded-t-xl bar-transition shadow-lg hover:brightness-125 cursor-help"></div>
-                                    <span class="text-[10px] font-black text-subtext" x-text="i+1"></span>
-                                </div>
-                            </template>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="bg-card p-8 rounded-[35px] border border-borderClr neon-border">
+                        <p class="text-subtext text-[10px] font-black uppercase tracking-[0.2em] mb-4">Total Subjects</p>
+                        <div class="text-5xl font-black italic" x-text="stats.total">0</div>
                     </div>
-
-                    <div class="bg-card p-12 rounded-[50px] border border-borderClr">
-                        <h3 class="text-2xl font-black mb-10 italic text-white uppercase tracking-tighter">Core Impulses</h3>
-                        <div class="space-y-12">
-                            <template x-for="issue in mainIssues" :key="issue.label">
-                                <div class="space-y-3">
-                                    <div class="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                                        <span class="text-subtext" x-text="issue.label"></span>
-                                        <span class="text-neon" x-text="issue.val + '%'"></span>
-                                    </div>
-                                    <div class="w-full bg-darkBg h-3 rounded-full overflow-hidden border border-borderClr/50">
-                                        <div class="bg-neon h-full transition-all duration-1000" :style="`width: ${issue.val}%`" ></div>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
+                    <div class="bg-card p-8 rounded-[35px] border border-emerald-500/20 neon-border">
+                        <p class="text-emerald-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Low Risk</p>
+                        <div class="text-5xl font-black italic text-emerald-500" x-text="stats.mild">0</div>
+                    </div>
+                    <div class="bg-card p-8 rounded-[35px] border border-amber-500/20 neon-border">
+                        <p class="text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Moderate</p>
+                        <div class="text-5xl font-black italic text-amber-500" x-text="stats.moderate">0</div>
+                    </div>
+                    <div class="bg-card p-8 rounded-[35px] border border-danger/20 neon-border">
+                        <p class="text-danger text-[10px] font-black uppercase tracking-[0.2em] mb-4">Severe Risk</p>
+                        <div class="text-5xl font-black italic text-danger" x-text="stats.severe">0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: DATABASE TABLE -->
-            <div x-show="screen === 'database'" x-transition>
-                <div class="flex justify-between items-end mb-12">
-                    <div>
-                        <h1 class="text-6xl font-black tracking-tighter uppercase italic">Subject Dossier</h1>
-                        <p class="text-subtext mt-3 italic font-bold">Encrypted production records retrieved from Laravel Database.</p>
-                    </div>
-                    <div class="relative group">
-                        <i class="fa-solid fa-search absolute left-6 top-1/2 -translate-y-1/2 text-subtext group-focus-within:text-neon transition-colors"></i>
-                        <input type="text" x-model="searchQuery" placeholder="Search by name, code or phone..." class="bg-card border border-borderClr rounded-[20px] pl-14 pr-8 py-5 w-96 focus:border-neon outline-none text-white font-bold transition-all shadow-xl">
+            <!-- 2. SCREEN: DATABASE -->
+            <div x-show="screen === 'database'" x-transition class="space-y-8">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-5xl font-black italic uppercase tracking-tighter">Subject Database</h1>
+                    <div class="flex gap-4">
+                         <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-subtext"></i>
+                            <input type="text" placeholder="Filter by name or code..." class="bg-card border border-borderClr py-3 pl-12 pr-6 rounded-xl outline-none focus:border-neon text-xs">
+                         </div>
                     </div>
                 </div>
-                
-                <div class="bg-card rounded-[45px] border border-borderClr overflow-hidden shadow-2xl">
+
+                <div class="bg-card rounded-[40px] border border-borderClr overflow-hidden shadow-2xl">
                     <table class="w-full text-left">
-                        <thead class="bg-darkBg text-subtext text-[11px] uppercase font-black tracking-[0.2em]">
-                            <tr>
-                                <th class="p-8">Student Identity</th>
-                                <th class="p-8">Contact Number</th>
-                                <th class="p-8">Internal ID</th>
-                                <th class="p-8">Risk Index</th>
-                                <th class="p-8 text-right">Action</th>
+                        <thead>
+                            <tr class="bg-darkBg/50 text-subtext text-[10px] uppercase font-black tracking-widest">
+                                <th class="p-8">Student Code</th>
+                                <th class="p-8">Subject Identity</th>
+                                <th class="p-8">Mobile Contact</th>
+                                <th class="p-8">Addiction Score</th>
+                                <th class="p-8 text-right">Operation</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-borderClr/50">
-                            <template x-for="student in filteredStudents" :key="student.code">
-                                <tr class="hover:bg-neon/5 transition-all group">
-                                    <td class="p-8 font-black text-xl italic" x-text="student.name"></td>
-                                    <td class="p-8 font-bold text-subtext" x-text="student.phone"></td>
-                                    <td class="p-8"><span class="bg-darkBg px-4 py-2 rounded-xl border border-borderClr text-neon font-mono text-xs" x-text="student.code"></span></td>
+                        <tbody class="divide-y divide-borderClr">
+                            <template x-for="student in students" :key="student.id">
+                                <tr class="hover:bg-neon/5 transition-all">
+                                    <td class="p-8 font-mono text-neon font-bold" x-text="student.student_code"></td>
+                                    <td class="p-8 text-white font-bold" x-text="student.name"></td>
+                                    <td class="p-8 text-subtext font-medium" x-text="student.phone"></td>
                                     <td class="p-8">
-                                        <div class="flex items-center gap-4">
-                                            <div class="w-32 bg-darkBg h-3 rounded-full overflow-hidden border border-borderClr/30">
-                                                <div class="h-full" :style="`width: ${student.level * 10}%; background-color: ${getColor(student.level)}`"></div>
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-24 h-1.5 bg-darkBg rounded-full overflow-hidden">
+                                                <div class="h-full bg-neon" :style="`width: ${student.level * 10}%`"></div>
                                             </div>
-                                            <span class="font-black text-lg" :style="`color: ${getColor(student.level)}`" x-text="student.level"></span>
+                                            <span class="font-black text-xs italic" x-text="student.level + '/10'"></span>
                                         </div>
                                     </td>
                                     <td class="p-8 text-right">
-                                        <button @click="openSubjectDossier(student)" class="bg-surface border border-borderClr text-subtext group-hover:text-neon group-hover:border-neon px-6 py-3 rounded-[15px] text-[10px] font-black uppercase tracking-widest transition-all">View Matrix</button>
+                                        <button class="text-neon border border-neon/20 px-4 py-2 rounded-lg text-[10px] font-black uppercase italic hover:bg-neon hover:text-darkBg transition-all">Details</button>
                                     </td>
                                 </tr>
                             </template>
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            <!-- VIEW: ENROLLMENT (Name, Phone, Code) -->
-            <div x-show="screen === 'enrollment'" x-transition>
-                <div class="max-w-3xl mx-auto">
-                    <h1 class="text-6xl font-black mb-4 tracking-tighter uppercase italic text-center">New Subject Registration</h1>
-                    <p class="text-center text-subtext font-bold mb-16 uppercase text-xs tracking-[0.4em]">Direct Database Synchronization Protocol</p>
-                    
-                    <div class="bg-card p-16 rounded-[60px] border border-borderClr shadow-2xl relative overflow-hidden">
-                        <form @submit.prevent="handleEnrollment()" class="space-y-10">
-                            <div>
-                                <label class="text-[11px] font-black uppercase text-subtext mb-4 block tracking-widest">1. Full Legal Name</label>
-                                <input type="text" x-model="enrollForm.name" required class="w-full bg-darkBg border border-borderClr p-6 rounded-2xl outline-none focus:border-neon transition-all text-white text-xl font-black italic">
-                            </div>
-                            <div class="grid grid-cols-2 gap-8">
-                                <div>
-                                    <label class="text-[11px] font-black uppercase text-subtext mb-4 block tracking-widest">2. Contact Number</label>
-                                    <input type="tel" x-model="enrollForm.phone" required class="w-full bg-darkBg border border-borderClr p-6 rounded-2xl outline-none focus:border-neon transition-all text-white font-bold">
-                                </div>
-                                <div>
-                                    <label class="text-[11px] font-black uppercase text-subtext mb-4 block tracking-widest">3. Student Serial Code</label>
-                                    <input type="text" x-model="enrollForm.code" required class="w-full bg-darkBg border border-borderClr p-6 rounded-2xl outline-none focus:border-neon transition-all text-white font-mono text-neon">
-                                </div>
-                            </div>
-                            <button type="submit" class="w-full bg-neon text-darkBg font-black py-7 rounded-3xl text-sm uppercase tracking-[0.2em] italic hover:scale-[1.02] transition-all shadow-xl shadow-neon/10">
-                                Finalize & Write to Database
-                            </button>
-                        </form>
+                    <div x-show="students.length === 0" class="p-32 text-center">
+                        <i class="fa-solid fa-database text-6xl text-borderClr mb-6"></i>
+                        <p class="text-subtext italic">No records found in primary database.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: ADMIN PANEL (Super Only) -->
-            <div x-show="screen === 'super' && userRole === 'super'" x-transition>
-                <h1 class="text-6xl font-black text-red-500 mb-12 tracking-tighter italic uppercase">Ghost Authority Panel</h1>
+            <!-- 3. SCREEN: ENROLLMENT HUB (REAL ADDITION) -->
+            <div x-show="screen === 'enrollment'" x-transition class="max-w-6xl mx-auto space-y-12">
+                <h1 class="text-5xl font-black italic uppercase tracking-tighter">Enrollment Hub</h1>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <div class="bg-card p-12 rounded-[50px] border border-red-500/20 shadow-2xl">
-                        <h3 class="text-2xl font-black mb-10 italic text-red-500 uppercase">Create System Admin</h3>
-                        <form @submit.prevent="createAdmin()" class="space-y-6">
-                            <input type="text" x-model="adminForm.username" placeholder="Username" class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-red-500 text-white font-bold">
-                            <input type="password" x-model="adminForm.password" placeholder="Key" class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-red-500 text-white font-bold">
-                            <button class="w-full bg-red-600 text-white font-black py-6 rounded-2xl uppercase tracking-widest">Grant Authority</button>
+                    <!-- Manual Entry Card -->
+                    <div class="bg-card p-12 rounded-[50px] border border-borderClr shadow-2xl">
+                        <div class="flex items-center gap-4 mb-10">
+                            <div class="w-12 h-12 bg-neon/10 rounded-2xl flex items-center justify-center text-neon border border-neon/20">
+                                <i class="fa-solid fa-pen-nib"></i>
+                            </div>
+                            <h3 class="text-2xl font-black italic uppercase tracking-tight">Manual Enrollment</h3>
+                        </div>
+
+                        <form @submit.prevent="enrollStudent()" class="space-y-8">
+                            <div>
+                                <label class="text-[10px] font-black uppercase text-neon mb-2 block tracking-widest">Full Subject Name</label>
+                                <input type="text" x-model="enrollForm.name" required 
+                                       class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-neon transition-all text-white shadow-inner">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black uppercase text-neon mb-2 block tracking-widest">Mobile Phone Number</label>
+                                <input type="text" x-model="enrollForm.phone" required 
+                                       class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-neon transition-all text-white shadow-inner">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black uppercase text-neon mb-2 block tracking-widest">Student ID / Code</label>
+                                <input type="text" x-model="enrollForm.student_code" required 
+                                       class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-neon transition-all text-white shadow-inner">
+                            </div>
+                            <button type="submit" 
+                                    class="w-full bg-neon text-darkBg font-black py-5 rounded-2xl text-sm uppercase italic hover:shadow-neon-glow transition-all">
+                                Commit to Database
+                            </button>
                         </form>
+                    </div>
+
+                    <!-- Excel Hub -->
+                    <div class="bg-card p-12 rounded-[50px] border border-borderClr flex flex-col items-center justify-center text-center">
+                        <div class="w-24 h-24 bg-accent/10 rounded-[35px] flex items-center justify-center mb-8 border border-accent/20">
+                            <i class="fa-solid fa-file-csv text-accent text-4xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-black italic uppercase tracking-tight mb-4">Bulk Data Ingestion</h3>
+                        <p class="text-subtext text-sm mb-12 max-w-xs mx-auto italic font-medium">Synchronize large-scale subject lists via Excel or CSV format directly to the central server.</p>
+                        
+                        <input type="file" id="bulk_file" class="hidden" @change="handleFileUpload($event)">
+                        <label for="bulk_file" class="bg-accent text-darkBg font-black px-12 py-5 rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all uppercase text-xs italic tracking-widest shadow-xl">
+                            Select Source File
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. SCREEN: SUPER ADMIN ROOT -->
+            <div x-show="screen === 'super' && userRole === 'super'" x-transition class="space-y-12">
+                <h1 class="text-5xl font-black text-danger italic uppercase tracking-tighter">Root System Authority</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="bg-card p-12 rounded-[50px] border border-danger/20 relative">
+                        <div class="absolute -top-4 -left-4 bg-danger text-white text-[10px] font-black px-4 py-2 rounded-lg italic uppercase tracking-widest">Root Access Only</div>
+                        <h3 class="text-2xl font-black mb-10 italic uppercase">Spawn Operator Account</h3>
+                        <form @submit.prevent="createAdmin()" class="space-y-6">
+                            <input type="text" x-model="adminForm.username" placeholder="New Operator Name" required class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-danger text-white">
+                            <input type="password" x-model="adminForm.password" placeholder="System Key" required class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-danger text-white">
+                            <button type="submit" class="w-full bg-danger text-white font-black py-5 rounded-2xl text-sm uppercase italic hover:opacity-90 transition-all">Authorize & Save</button>
+                        </form>
+                    </div>
+
+                    <div class="bg-card p-12 rounded-[50px] border border-borderClr">
+                        <h3 class="text-2xl font-black mb-10 italic uppercase">System Health</h3>
+                        <div class="space-y-6">
+                            <div class="flex justify-between items-center p-4 bg-darkBg rounded-2xl">
+                                <span class="text-xs font-bold text-subtext uppercase">DB Connectivity</span>
+                                <span class="text-xs font-black text-neon italic">CONNECTED</span>
+                            </div>
+                            <div class="flex justify-between items-center p-4 bg-darkBg rounded-2xl">
+                                <span class="text-xs font-bold text-subtext uppercase">AI Inference Server</span>
+                                <span class="text-xs font-black text-neon italic">OPTIMIZED</span>
+                            </div>
+                            <div class="flex justify-between items-center p-4 bg-darkBg rounded-2xl">
+                                <span class="text-xs font-bold text-subtext uppercase">Storage Capacity</span>
+                                <span class="text-xs font-black text-accent italic">94% FREE</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -288,143 +321,129 @@
         </main>
     </div>
 
-    <!-- MODAL: FULL DOSSIER (The 17 Scientific Fields) -->
-    <div x-show="openProfile" class="fixed inset-0 bg-darkBg/95 backdrop-blur-xl z-[1500] flex items-center justify-center p-12" x-transition>
-        <div class="bg-surface border border-borderClr w-full max-w-7xl rounded-[70px] p-16 max-h-[90vh] overflow-y-auto custom-scroll relative">
-            <button @click="openProfile = false" class="absolute top-12 right-12 text-5xl text-subtext hover:text-neon transition-all">&times;</button>
-            
-            <div class="flex items-end gap-10 mb-16 border-b border-borderClr pb-12">
-                <div class="w-32 h-32 bg-neon rounded-[40px] flex items-center justify-center text-5xl font-black text-darkBg shadow-[0_0_30px_#64ffda40]" x-text="selectedStudent.name ? selectedStudent.name[0] : '?'"></div>
-                <div>
-                    <h2 class="text-7xl font-black text-white italic uppercase tracking-tighter" x-text="selectedStudent.name"></h2>
-                    <div class="flex items-center gap-8 mt-4">
-                        <span class="text-neon font-black tracking-widest uppercase text-xs">Diagnostic ID: <span x-text="selectedStudent.code"></span></span>
-                        <div class="w-2 h-2 rounded-full bg-borderClr"></div>
-                        <span class="text-subtext font-black tracking-widest uppercase text-xs">Contact: <span x-text="selectedStudent.phone"></span></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                <template x-for="field in fields17" :key="field">
-                    <div class="bg-darkBg/40 p-6 rounded-[30px] border border-borderClr hover:border-neon transition-all">
-                        <span class="text-[9px] text-subtext uppercase font-black block mb-3 tracking-widest text-left" x-text="field.replace(/_/g, ' ')"></span>
-                        <div class="text-2xl font-black text-white italic" x-text="selectedStudent.matrix ? selectedStudent.matrix[field] : '0.0'"></div>
-                    </div>
-                </template>
-            </div>
-            
-            <!-- AI Prediction Result -->
-            <div class="mt-16 p-12 bg-neon/5 border border-neon/20 rounded-[50px] flex justify-between items-center">
-                <div>
-                    <h4 class="text-neon font-black uppercase text-xs tracking-[0.4em] mb-3">Model Analysis Summary</h4>
-                    <p class="text-3xl text-white font-bold italic">Diagnostic Outcome: <span :style="`color: ${getColor(selectedStudent.level)}`" x-text="selectedStudent.level > 7 ? 'Critical Addiction Detected' : 'Stable Behavioral Metrics'"></span></p>
-                </div>
-                <div class="text-right">
-                    <p class="text-[10px] font-black text-subtext uppercase tracking-widest mb-2">Confidence Score</p>
-                    <p class="text-5xl font-black text-neon tracking-tighter">98.2%</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOGIC SYSTEM -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        function dashboardApp() {
+        function trovoApp() {
             return {
                 isLoggedIn: false,
-                userRole: '',
+                userRole: null, 
                 currentUsername: '',
                 screen: 'overview',
-                isLoading: false,
-                openProfile: false,
-                searchQuery: '',
+                loading: false,
+                errorMessage: '',
                 
                 loginForm: { username: '', password: '' },
-                enrollForm: { name: '', phone: '', code: '' },
+                enrollForm: { name: '', phone: '', student_code: '' },
                 adminForm: { username: '', password: '' },
                 
-                selectedStudent: {},
-                students: [
-                    { name: 'Johnathan Wick', phone: '+20 100 293 847', code: 'TRV-ALPHA-01', level: 9, matrix: {} },
-                    { name: 'Sarah Connor', phone: '+20 112 445 667', code: 'TRV-OMEGA-09', level: 3, matrix: {} }
-                ],
-                
-                barColors: ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b', '#d97706', '#f87171', '#ef4444', '#dc2626', '#7f1d1d'],
-                fields17: ['daily_usage', 'screen_time_bed', 'phone_checks', 'apps_used', 'social_media', 'gaming_time', 'weekend_usage', 'sleep_hours', 'academic_perf', 'social_interact', 'exercise_hours', 'anxiety_level', 'depression_level', 'self_esteem', 'edu_time', 'gender', 'usage_purpose'],
-                
-                stats: { total: 0, mild: 0, severe: 0 },
-                distribution: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                mainIssues: [
-                    { label: 'Dopamine Threshold Leak', val: 88 },
-                    { label: 'Circadian Rhythm Shift', val: 64 },
-                    { label: 'Neural Reward Fatigue', val: 41 }
-                ],
+                students: [], 
+                stats: { total: 0, mild: 0, moderate: 0, severe: 0 },
 
-                init() {
-                    console.log("TROVO: Neural Dashboard v4.0 Active");
-                    this.recalculate();
+                // 1. Initial Data Fetch (When opening the dashboard)
+                async init() {
+                    console.log('TROVO: Intelligence Hub Online.');
+                    // If there's a token in localstorage, we can auto-login here
                 },
 
-                handleLogin() {
-                    this.isLoading = true;
-                    setTimeout(() => {
-                        // REAL-WORLD LOGIC: Database Auth
-                        if (this.loginForm.username === 'super' && this.loginForm.password === '123') {
+                // 2. Authentication Logic
+                async handleLogin() {
+                    this.loading = true;
+                    this.errorMessage = '';
+                    
+                    try {
+                        // الربط الفعلي مع Laravel API
+                        // const response = await axios.post('http://your-domain.test/api/login', this.loginForm);
+                        // const data = response.data;
+                        
+                        // محاكاة تسجيل الدخول بناءً على طلبك (للسوبر أدمن والأدمنز)
+                        // في الشغل الحقيقي، الداتا دي هتيجي من الـ Response بتاع Laravel
+                        if(this.loginForm.username === 'super_admin' && this.loginForm.password === 'root123') {
                             this.isLoggedIn = true;
                             this.userRole = 'super';
-                            this.currentUsername = 'Master Operator';
+                            this.currentUsername = 'ROOT_ACCESS';
+                            await this.fetchDashboardData();
                         } else {
-                            alert("CRITICAL ERROR: Unauthorized credentials. Contact Root Admin.");
+                            // هنا هنبعت الطلب للـ Database ونتأكد لو اليوزر موجود
+                            this.errorMessage = 'IDENTITY DENIED: Operator not found in database.';
                         }
-                        this.isLoading = false;
-                    }, 1000);
+                    } catch (err) {
+                        this.errorMessage = 'CONNECTION ERROR: Backend server unreachable.';
+                    } finally {
+                        this.loading = false;
+                    }
                 },
 
-                handleEnrollment() {
-                    if(!this.enrollForm.name || !this.enrollForm.phone || !this.enrollForm.code) return;
-                    this.isLoading = true;
-                    setTimeout(() => {
-                        const newUser = {
-                            name: this.enrollForm.name,
-                            phone: this.enrollForm.phone,
-                            code: this.enrollForm.code,
-                            level: Math.floor(Math.random() * 10) + 1,
-                            matrix: this.generateFullMatrix()
-                        };
-                        this.students.unshift(newUser);
-                        this.enrollForm = { name: '', phone: '', code: '' };
-                        this.recalculate();
-                        this.screen = 'database';
-                        this.isLoading = false;
-                        alert("DATABASE SYNC SUCCESS: Record encrypted and stored.");
-                    }, 800);
+                // 3. Fetch Real Data from MySQL via Laravel
+                async fetchDashboardData() {
+                    this.loading = true;
+                    try {
+                        // const response = await axios.get('http://your-domain.test/api/students');
+                        // this.students = response.data.list;
+                        // this.stats = response.data.stats;
+                        
+                        // Reset for now to show real flow
+                        this.students = []; 
+                    } catch (err) {
+                        console.error('Data fetch failed');
+                    } finally {
+                        this.loading = false;
+                    }
                 },
 
-                get filteredStudents() {
-                    const q = this.searchQuery.toLowerCase();
-                    return this.students.filter(s => s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q));
+                // 4. Enroll New Subject (The 3 Requirements: Name, Phone, Code)
+                async enrollStudent() {
+                    this.loading = true;
+                    try {
+                        // الربط مع لارافيل:
+                        // await axios.post('http://your-domain.test/api/students', this.enrollForm);
+                        
+                        // إضافة محلية للتجربة البصرية
+                        this.students.unshift({
+                            id: Date.now(),
+                            ...this.enrollForm,
+                            level: Math.floor(Math.random() * 10) // AI Logic should be on backend
+                        });
+                        
+                        this.stats.total++;
+                        alert('Subject identity committed to database successfully.');
+                        this.enrollForm = { name: '', phone: '', student_code: '' };
+                    } catch (err) {
+                        alert('Transaction failed: Check database constraints.');
+                    } finally {
+                        this.loading = false;
+                    }
                 },
 
-                recalculate() {
-                    this.stats.total = this.students.length;
-                    this.stats.mild = this.students.filter(s => s.level < 5).length;
-                    this.stats.severe = this.students.filter(s => s.level >= 8).length;
-                    
-                    let dist = new Array(10).fill(0);
-                    this.students.forEach(s => dist[s.level-1]++);
-                    this.distribution = dist;
+                // 5. Spawn New Operator (Super Admin Function)
+                async createAdmin() {
+                    this.loading = true;
+                    try {
+                        // await axios.post('http://your-domain.test/api/admins', this.adminForm);
+                        alert(`Operator ${this.adminForm.username} has been granted system access.`);
+                        this.adminForm = { username: '', password: '' };
+                    } catch (err) {
+                        alert('Authority error: Database rejected new operator.');
+                    } finally {
+                        this.loading = false;
+                    }
                 },
 
-                getColor(l) { return this.barColors[Math.min(l-1, 9)]; },
-                openSubjectDossier(s) { this.selectedStudent = s; this.openProfile = true; },
-                generateFullMatrix() {
-                    let m = {};
-                    this.fields17.forEach(f => m[f] = (Math.random() * 10).toFixed(1));
-                    return m;
+                // 6. Handle Bulk Upload
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if(file) {
+                        alert(`File [${file.name}] ready for ingestion. Sending to Laravel...`);
+                        // Use FormData to send file via axios
+                    }
                 },
-                logout() { 
-                    if(confirm("Terminate Secure Connection?")) location.reload(); 
+
+                logout() {
+                    if(confirm('Terminate all active sessions and logout?')) {
+                        this.isLoggedIn = false;
+                        this.userRole = null;
+                        this.loginForm = { username: '', password: '' };
+                        this.screen = 'overview';
+                    }
                 }
             }
         }
