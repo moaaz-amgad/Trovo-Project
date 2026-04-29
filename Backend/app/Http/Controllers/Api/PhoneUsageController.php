@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PhoneUsageData;
+use Illuminate\Http\JsonResponse;
 
 class PhoneUsageController extends Controller
 {
     /**
      * تخزين بيانات استخدام الموبايل الجديدة
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        // 1. التعرف على المستخدم من الـ Token
         $user = $request->user();
 
         $validatedData = $request->validate([
@@ -27,15 +27,14 @@ class PhoneUsageController extends Controller
             'weekend_usage_hours'    => 'required|numeric|min:0|max:24',
         ]);
 
-        // 3. التنفيذ: تخزين البيانات وربطها باليوزر
+        // تنفيذ التخزين من خلال العلاقة المعرفة في موديل اليوزر
         $usage = $user->phoneUsages()->create(array_merge($validatedData, [
             'collected_at' => now(),
         ]));
 
-        // 4. الرد النهائي
         return response()->json([
             'status'  => 'success',
-            'message' => 'Phone usage data recorded successfully for ' . $user->name,
+            'message' => 'تم تسجيل بيانات الاستخدام بنجاح للطالب: ' . $user->name,
             'data'    => $usage
         ], 201);
     }
@@ -43,7 +42,7 @@ class PhoneUsageController extends Controller
     /**
      * عرض تاريخ الاستخدام الخاص باليوزر الحالي فقط
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -58,3 +57,4 @@ class PhoneUsageController extends Controller
         ], 200);
     }
 }
+

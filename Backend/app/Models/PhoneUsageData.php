@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PhoneUsageData extends Model
 {
     protected $table = 'phone_usage_data';
     protected $primaryKey = 'usage_id';
+    public $timestamps = false; // لأننا نستخدم collected_at يدوياً
 
     protected $fillable = [
         'user_id',
@@ -31,9 +33,12 @@ class PhoneUsageData extends Model
         'collected_at'           => 'datetime',
     ];
 
-    public function user()
+    /**
+     * العلاقة مع الطالب
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-public $timestamps = false;
 }
+
