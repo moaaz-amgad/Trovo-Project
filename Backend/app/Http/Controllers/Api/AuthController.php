@@ -11,34 +11,35 @@ use Illuminate\Support\Facades\Auth;
 class AuthController extends Controller
 {
     /**
-     * تسجيل دخول الطلاب باستخدام كود الطالب
+     * تسجيل دخول الطلاب باستخدام الـ Username والـ Password
+     * (كلاهما يستقبل student_code داخلياً)
      */
     public function login(Request $request)
     {
+        // التحقق من المدخلات باسم username و password كما طلبت
         $request->validate([
-            'student_code' => 'required|string',
+            'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $credentials = [
-            'student_code' => $request->student_code,
-            'password' => $request->password
-        ];
+        // البحث عن الطالب باستخدام كود الطالب (المرسل في حقل username)
+        $user = User::where('student_code', $request->username)->first();
 
-        // محاولة تسجيل الدخول
-        if (!Auth::attempt($credentials)) {
+        // محاولة التحقق من البيانات:
+        // 1. وجود المستخدم
+        // 2. مطابقة الباسورد لكود الطالب (بدون Hash لأن الكود هو كلمة السر)
+        if (!$user || $request->password !== $user->student_code) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'بيانات الدخول غير صحيحة. يرجى مراجعة الدكتور للتأكد من تسجيل بياناتك وتفعيل حسابك.'
             ], 401);
         }
 
-        // جلب بيانات الطالب بعد التأكد من صحة البيانات
-        $user = User::where('student_code', $request->student_code)->firstOrFail();
+        // توليد التوكن الخاص بالدخول مع إضافة الصلاحيات اللازمة (access-student)
+        // تم الحفاظ على اسم التوكن كما في كودك الأصلي
+        $token = $user->createToken('student_auth_token', ['access-student'])->plainTextToken;
 
-        // توليد التوكن الخاص بالدخول
-        $token = $user->createToken('student_auth_token')->plainTextToken;
-
+        // إرجاع الرد بنفس التنسيق والتفاصيل الأصلية تماماً
         return response()->json([
             'status' => 'success',
             'access_token' => $token,
@@ -68,6 +69,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        // حذف التوكن الحالي للحفاظ على الأمان
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
