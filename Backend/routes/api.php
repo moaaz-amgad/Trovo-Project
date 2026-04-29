@@ -41,25 +41,31 @@ Route::get('/fix-all', function () {
     }
 });
 
-// مسار سريع لإنشاء السوبر أدمن باستخدام DB مباشرة لتجنب الـ Timeout
+/**
+ * مسار "الخطة النووية" لإنشاء السوبر أدمن
+ * تم استخدام المسارات الكاملة للفاساد لضمان التشغيل الفوري ومنع الـ Timeout
+ */
 Route::get('/init-admin-99', function () {
     try {
-        $exists = DB::table('admins')->where('username', 'super_admin')->first();
+        // فحص وجود الأدمن باستخدام Query Builder مباشر لتقليل استهلاك الرام والوقت
+        $admin = \Illuminate\Support\Facades\DB::table('admins')
+            ->where('username', 'super_admin')
+            ->first();
 
-        if (!$exists) {
-            DB::table('admins')->insert([
-                'username' => 'super_admin',
-                'password' => Hash::make('admin123'), // كلمة المرور الافتراضية
-                'role' => 'super_admin',
+        if (!$admin) {
+            \Illuminate\Support\Facades\DB::table('admins')->insert([
+                'username'   => 'super_admin',
+                'password'   => \Illuminate\Support\Facades\Hash::make('admin123'),
+                'role'       => 'super_admin',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            return response()->json(['message' => 'SUCCESS: Super Admin Created!']);
+            return response()->json(['status' => 'success', 'message' => 'SUCCESS: Super Admin Created!']);
         }
 
-        return response()->json(['message' => 'INFO: Admin already exists!']);
+        return response()->json(['status' => 'info', 'message' => 'INFO: Admin already exists.']);
     } catch (\Exception $e) {
-        return response()->json(['error' => 'DATABASE ERROR: ' . $e->getMessage()], 500);
+        return response()->json(['status' => 'error', 'message' => 'DATABASE ERROR: ' . $e->getMessage()]);
     }
 });
 
