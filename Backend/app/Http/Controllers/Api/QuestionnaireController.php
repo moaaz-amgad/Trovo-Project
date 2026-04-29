@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\QuestionnaireResponse;
+use Illuminate\Http\JsonResponse;
 
 class QuestionnaireController extends Controller
 {
     /**
      * تخزين إجابة استبيان جديدة
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         // 1. سحب اليوزر من الـ Token
         $user = $request->user();
@@ -46,7 +47,7 @@ class QuestionnaireController extends Controller
     /**
      * عرض تاريخ الاستبيانات الخاص باليوزر الحالي فقط
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
