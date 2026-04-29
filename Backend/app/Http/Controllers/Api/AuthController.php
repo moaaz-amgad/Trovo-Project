@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    /**
+     * تسجيل دخول الطلاب باستخدام كود الطالب
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -22,6 +25,7 @@ class AuthController extends Controller
             'password' => $request->password
         ];
 
+        // محاولة تسجيل الدخول
         if (!Auth::attempt($credentials)) {
             return response()->json([
                 'status' => 'error',
@@ -29,16 +33,10 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // جلب بيانات الطالب بعد التأكد من صحة البيانات
         $user = User::where('student_code', $request->student_code)->firstOrFail();
 
-        if ($user->role !== 'student') {
-            Auth::logout();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'عذراً، هذا الحساب غير مصرح له بالدخول عبر التطبيق.'
-            ], 403);
-        }
-
+        // توليد التوكن الخاص بالدخول
         $token = $user->createToken('student_auth_token')->plainTextToken;
 
         return response()->json([
@@ -54,6 +52,9 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * جلب بيانات الطالب المسجل حالياً
+     */
     public function getUser(Request $request)
     {
         return response()->json([
@@ -62,6 +63,9 @@ class AuthController extends Controller
         ], 200);
     }
 
+    /**
+     * تسجيل الخروج وحذف التوكن
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -70,33 +74,6 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'تم تسجيل الخروج بنجاح'
         ], 200);
-    }
-
-    public function googleLogin(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'google_id' => 'required',
-            'name' => 'required'
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || $user->role !== 'student') {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'عذراً، هذا الحساب غير مسجل ضمن كشوفات الطلاب المعتمدة.'
-            ], 403);
-        }
-
-        $user->update(['google_id' => $request->google_id]);
-        $token = $user->createToken('student_auth_token')->plainTextToken;
-
-        return response()->json([
-            'status' => 'success',
-            'access_token' => $token,
-            'user' => $user
-        ]);
     }
 }
 

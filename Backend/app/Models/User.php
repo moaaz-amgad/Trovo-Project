@@ -14,54 +14,61 @@ class User extends Authenticatable
 {
     use HasApiTokens, Notifiable, HasFactory;
 
+    /**
+     * الحقول المسموح بتعبئتها (تتوافق تماماً مع الميجريشن الحالي)
+     */
     protected $fillable = [
         'name',
-        'student_code',
+        'student_code', // اليوزر نيم والباسورد الافتراضي
         'phone_number',
-        'email',
         'password',
-        'role',
-        'google_id',
     ];
 
+    /**
+     * الحقول المخفية عند جلب البيانات
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    /**
+     * تحويل أنواع البيانات (Casting)
+     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
-    public function isSuperAdmin(): bool
-    {
-        return $this->role === 'super_admin';
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | العلاقات (Relationships)
+    |--------------------------------------------------------------------------
+    */
 
-    public function isAdmin(): bool
-    {
-        return in_array($this->role, ['admin', 'super_admin']);
-    }
-
-    public function isStudent(): bool
-    {
-        return $this->role === 'student';
-    }
-
+    /**
+     * علاقة الطالب ببيانات استخدام الهاتف (تلقائي من التطبيق)
+     * مربوطة بـ usage_id في جدول phone_usage_data
+     */
     public function phoneUsages()
     {
         return $this->hasMany(PhoneUsageData::class, 'user_id');
     }
 
+    /**
+     * علاقة الطالب بإجابات الاستبيان
+     * مربوطة بـ questionnaire_id في جدول questionnaire_responses
+     */
     public function questionnaireResponses()
     {
         return $this->hasMany(QuestionnaireResponse::class, 'user_id', 'id');
     }
 
+    /**
+     * علاقة الطالب بنتائج التشخيص (AI Diagnosis)
+     */
     public function diagnosis()
     {
         return $this->hasMany(Diagnosis::class, 'user_id', 'id');
