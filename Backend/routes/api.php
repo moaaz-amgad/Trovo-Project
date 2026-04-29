@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\DiagnosisController;
 use App\Http\Controllers\Api\Admin\ExcelController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,16 +41,25 @@ Route::get('/fix-all', function () {
     }
 });
 
-// مسار مؤقت لإنشاء السوبر أدمن الأول (يُستخدم مرة واحدة فقط ثم يُحذف)
+// مسار سريع لإنشاء السوبر أدمن باستخدام DB مباشرة لتجنب الـ Timeout
 Route::get('/init-admin-99', function () {
     try {
-        Artisan::call('db:seed', [
-            '--class' => 'AdminSeeder',
-            '--force' => true
-        ]);
-        return response()->json(['message' => 'Super Admin Created Successfully!']);
+        $exists = DB::table('admins')->where('username', 'super_admin')->first();
+
+        if (!$exists) {
+            DB::table('admins')->insert([
+                'username' => 'super_admin',
+                'password' => Hash::make('admin123'), // كلمة المرور الافتراضية
+                'role' => 'super_admin',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            return response()->json(['message' => 'SUCCESS: Super Admin Created!']);
+        }
+
+        return response()->json(['message' => 'INFO: Admin already exists!']);
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return response()->json(['error' => 'DATABASE ERROR: ' . $e->getMessage()], 500);
     }
 });
 
