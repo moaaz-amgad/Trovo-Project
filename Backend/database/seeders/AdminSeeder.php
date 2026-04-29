@@ -11,8 +11,9 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         DB::table('admins')->insert([
-            'username' => 'super_admin', // هذا هو اسم الدخول
-            'password' => Hash::make('admin123'), // هذه كلمة المرور
+            'name' => 'Super Admin User', // الاسم المعروض
+            'username' => 'super_admin',  // اسم المستخدم للدخول
+            'password' => Hash::make('admin123'),
             'role' => 'super_admin',
             'created_at' => now(),
             'updated_at' => now(),

@@ -11,32 +11,32 @@ use Illuminate\Support\Facades\DB;
 class AdminDashboardController extends Controller
 {
     /**
-     * 1. الإحصائيات الشاملة (Dashboard Stats Cards)
-     * تشمل الأرقام، توزيع الحالات، توزيع الجنسين، وآخر النشاطات (Overview)
+     * 1. الإحصائيات الشاملة
+     * تم إزالة شرط 'role' لأن جدول الطلاب مخصص لهم فقط الآن
      */
     public function getStats()
     {
-        $totalStudents = User::where('role', 'student')->count();
+        $totalStudents = User::count();
         $totalDiagnoses = Diagnosis::count();
 
-        // حساب الحالات بناءً على المسميات المعتمدة في موديل الـ AI (Mild, Moderate, Severe)
+        // حساب الحالات بناءً على المسميات المعتمدة (Mild, Moderate, Severe)
         $mild = Diagnosis::where('brainrot_stage', 'like', '%Mild%')->count();
         $moderate = Diagnosis::where('brainrot_stage', 'like', '%Moderate%')->count();
         $severe = Diagnosis::where('brainrot_stage', 'like', '%Severe%')->count();
 
-        // حساب نسبة الإدمان (Moderate + Severe) من إجمالي الطلاب
+        // حساب نسبة الإدمان (Moderate + Severe)
         $addictedCount = $moderate + $severe;
         $addictionRate = $totalStudents > 0
             ? round(($addictedCount / $totalStudents) * 100, 1)
             : 0;
 
-        // توزيع الجنسين (بناءً على سجلات الاستبيان)
+        // توزيع الجنسين
         $genderStats = DB::table('questionnaire_responses')
             ->select('gender', DB::raw('count(*) as total'))
             ->groupBy('gender')
             ->get();
 
-        // جلب آخر 5 نشاطات (تم دمجها من كود الـ AdminStats القديم)
+        // آخر 5 نشاطات
         $recentActivity = Diagnosis::with('user:id,name')
             ->latest('diagnosed_at')
             ->take(5)
@@ -61,11 +61,11 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 2. جدول كل التشخيصات (Main Data Table)
+     * 2. جدول كل التشخيصات
      */
     public function getAllDiagnoses()
     {
-        $diagnoses = Diagnosis::with('user:id,name,student_code,email')
+        $diagnoses = Diagnosis::with('user:id,name,student_code')
                     ->latest('diagnosed_at')
                     ->paginate(15);
 
@@ -76,7 +76,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 3. ملف الطالب التفصيلي (Student Medical Profile)
+     * 3. ملف الطالب التفصيلي
      */
     public function getStudentProfile($id)
     {
@@ -85,7 +85,6 @@ class AdminDashboardController extends Controller
             'questionnaireResponses' => function($q) { $q->latest('answered_at'); },
             'diagnosis' => function($q) { $q->latest('diagnosed_at'); }
         ])
-        ->where('role', 'student')
         ->find($id);
 
         if (!$student) {

@@ -6,19 +6,26 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 
-class UsersImport implements ToModel, WithHeadingRow
+class UsersImport implements ToModel, WithHeadingRow, SkipsEmptyRows
 {
     public function model(array $row)
     {
-        // خد كل صف من الإكسيل واعمل بيه يوزر جديد
-        return new User([
-            'name'         => $row['name'],
-            'student_code' => $row['student_code'],
-            'phone_number' => $row['phone_number'] ?? null,
-            'email'        => $row['email'] ?? null,
-            'password'     => Hash::make($row['student_code']), // الباسورد الافتراضي هو كود الطالب
-            'role'         => 'student', // أي حد بيترفع من هنا هو طالب
-        ]);
+        // التحقق من وجود الكود لمنع التكرار أو الصفوف الفارغة
+        if (!isset($row['student_code'])) {
+            return null;
+        }
+
+        // تحديث أو إنشاء طالب جديد بناءً على الكود
+        return User::updateOrCreate(
+            ['student_code' => $row['student_code']], // حقل البحث لمنع التكرار
+            [
+                'name'         => $row['name'],
+                'phone_number' => $row['phone_number'] ?? null,
+                'password'     => Hash::make($row['student_code']), // الباسورد الافتراضي هو الكود
+            ]
+        );
     }
 }
+
