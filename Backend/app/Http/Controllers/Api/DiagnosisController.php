@@ -7,13 +7,14 @@ use Illuminate\Http\Request;
 use App\Models\Diagnosis;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\JsonResponse;
 
 class DiagnosisController extends Controller
 {
     /**
-     * إنشاء تشخيص جديد باستخدام الذكاء الاصطناعي (خاص بالطالب)
+     * إنشاء تشخيص جديد باستخدام الذكاء الاصطناعي
      */
-    public function generate(Request $request)
+    public function generate(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -28,7 +29,7 @@ class DiagnosisController extends Controller
             ], 400);
         }
 
-        // 2. تجهيز الـ 21 حقل المطلوبة لموديل الـ AI
+        // 2. تجهيز الـ 17 حقل المطلوبة لموديل الـ AI
         $aiInputs = [
             'Daily_Usage_Hours'      => (float) $lastUsage->daily_usage_hours,
             'Sleep_Hours'            => (float) $lastQuestionnaire->sleep_hours,
@@ -113,7 +114,7 @@ class DiagnosisController extends Controller
     /**
      * عرض تاريخ التشخيصات للطالب الحالي فقط
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 

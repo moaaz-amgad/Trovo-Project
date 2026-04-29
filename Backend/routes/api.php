@@ -16,46 +16,54 @@ use Illuminate\Support\Facades\Artisan;
 |--------------------------------------------------------------------------
 */
 
-// --- 1. مسارات الصيانة والنظام ---
+// --- 1. مسارات الصيانة (تُستخدم وقت التطوير فقط) ---
 Route::get('/fix-all', function () {
     try {
         Artisan::call('route:clear');
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
-        return response()->json(['message' => 'System Cache Cleared!']);
+        return response()->json(['status' => 'success', 'message' => 'System Cache Cleared!']);
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
 });
 
-// --- 2. مسارات عامة (Public) للطلاب ---
-Route::post('/login', [AuthController::class, 'login']); // دخول الطلاب بكود الطالب
+// --- 2. المسارات العامة (Public) ---
+// الطالب بيدخل بكود الطالب (student_code) كـ username و password
+Route::post('/login', [AuthController::class, 'login']);
 
-// --- 3. مسارات الإدارة المحمية (Admin Dashboard) ---
-// لاحظ استخدام guard:admin لضمان أن التوكن يخص مدير
-Route::middleware(['auth:sanctum', 'ability:access-admin', 'admin'])->prefix('admin')->group(function () {
+// --- 3. مسارات الإدارة (Admin Dashboard) ---
+// تم تعديل الميدلوير ليعتمد على 'checkAbilities' الخاصة بسانكتوم بدلاً من 'admin' المخصص
+Route::middleware(['auth:sanctum', 'ability:access-admin'])->prefix('admin')->group(function () {
 
     Route::post('/import-students', [ExcelController::class, 'import']);
     Route::post('/add-student-manual', [ExcelController::class, 'storeManual']);
+
+    // إحصائيات الداشبورد (المحدثة بدون تقسيمات الجنسين العامة)
     Route::get('/dashboard-stats', [AdminDashboardController::class, 'getStats']);
     Route::get('/all-diagnoses', [AdminDashboardController::class, 'getAllDiagnoses']);
-    Route::get('/student/{id}', [AdminDashboardController::class, 'getStudentProfile'])->name('admin.student.detail');
-    Route::delete('/diagnosis/{id}', [AdminDashboardController::class, 'deleteDiagnosis'])->name('admin.diagnosis.delete');
+
+    // بروفايل الطالب (بيجلب كل البيانات بما فيها الـ gender للـ AI)
+    Route::get('/student/{id}', [AdminDashboardController::class, 'getStudentProfile']);
+    Route::delete('/diagnosis/{id}', [AdminDashboardController::class, 'deleteDiagnosis']);
 });
 
-// --- 4. مسارات المستخدمين (الطلاب) المحمية ---
+// --- 4. مسارات الطلاب (Students) المحمية ---
 Route::middleware(['auth:sanctum', 'ability:access-student'])->group(function () {
+
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // بيانات السلوك والتشخيص
+    // تسجيل بيانات الاستخدام (Phone Usage)
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);
     Route::get('/phone-usage', [PhoneUsageController::class, 'index']);
+
+    // تسجيل بيانات الاستبيان (Questionnaire) - تحتوي على الـ gender
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
-    // توليد التشخيص (AI)
-    Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate'])->name('diagnosis.generate');
-    Route::get('/diagnosis', [DiagnosisController::class, 'index']);
+    // طلب التحليل من الـ AI وحفظ النتيجة في جدول 'diagnosis'
+    Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate']);
+    Route::get('/diagnosis-history', [DiagnosisController::class, 'index']); // تاريخ تشخيصات الطالب
 });
 
