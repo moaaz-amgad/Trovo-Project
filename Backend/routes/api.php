@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\DiagnosisController;
 use App\Http\Controllers\Api\Admin\ExcelController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,5 +66,15 @@ Route::middleware(['auth:sanctum', 'ability:access-student'])->group(function ()
     // طلب التحليل من الـ AI وحفظ النتيجة في جدول 'diagnosis'
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate']);
     Route::get('/diagnosis-history', [DiagnosisController::class, 'index']); // تاريخ تشخيصات الطالب
+});
+// routes/web.php
+Route::get('/init-super-admin', function () {
+    $admin = App\Models\User::create([
+        'name' => 'Super Operator',
+        'username' => 'super', // اليوزر نيم اللي هتدخل بيه
+        'password' => Hash::make('123'), // الباسورد
+        'role' => 'super', // عشان يفتح لك الـ Admin Panel
+    ]);
+    return "Super Admin Created Successfully!";
 });
 
