@@ -41,34 +41,6 @@ Route::get('/fix-all', function () {
     }
 });
 
-/**
- * مسار "الخطة النووية" لإنشاء السوبر أدمن
- * تم استخدام المسارات الكاملة للفاساد لضمان التشغيل الفوري ومنع الـ Timeout
- */
-Route::get('/init-admin-99', function () {
-    try {
-        // فحص وجود الأدمن باستخدام Query Builder مباشر لتقليل استهلاك الرام والوقت
-        $admin = \Illuminate\Support\Facades\DB::table('admins')
-            ->where('username', 'super_admin')
-            ->first();
-
-        if (!$admin) {
-            \Illuminate\Support\Facades\DB::table('admins')->insert([
-                'username'   => 'super_admin',
-                'password'   => \Illuminate\Support\Facades\Hash::make('admin123'),
-                'role'       => 'super_admin',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            return response()->json(['status' => 'success', 'message' => 'SUCCESS: Super Admin Created!']);
-        }
-
-        return response()->json(['status' => 'info', 'message' => 'INFO: Admin already exists.']);
-    } catch (\Exception $e) {
-        return response()->json(['status' => 'error', 'message' => 'DATABASE ERROR: ' . $e->getMessage()]);
-    }
-});
-
 // --- 2. مسارات عامة (Public) ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
