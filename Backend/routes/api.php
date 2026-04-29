@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Admin\ExcelController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,26 +72,29 @@ Route::middleware(['auth:sanctum', 'ability:access-student'])->group(function ()
 
 Route::get('/init-super-admin', function () {
     try {
-        // بنستخدم forceCreate عشان نتخطى مشكلة الـ fillable لو موجودة
-        $admin = \App\Models\User::forceCreate([
+        // بنستخدم Query Builder مباشرة عشان نضمن الوصول لجدول admins اللي إنت مكريهه
+        $adminId = DB::table('admins')->insertGetId([
             'name'     => 'Super Operator',
-            'username' => 'super',
-            'password' => \Illuminate\Support\Facades\Hash::make('123'),
-            'role'     => 'super', // التأكد إن الحقل ده موجود في المايجريشن اللي رفعتها
+            'username' => 'super', // اسم المستخدم للدخول
+            'password' => Hash::make('123'), // كلمة المرور المشفرة
+            'role'     => 'super_admin', // الصلاحية الكاملة كما في المايجريشن
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         return response()->json([
-            'message' => 'Super Admin Created Successfully!',
-            'user'    => [
-                'username' => $admin->username,
-                'role'     => $admin->role
+            'status'  => 'success',
+            'message' => 'Super Admin Created in [admins] table!',
+            'data'    => [
+                'username' => 'super',
+                'password' => '123',
+                'role'     => 'super_admin'
             ]
         ], 200);
 
     } catch (\Exception $e) {
-        // لو حصلت مشكلة تانية هيعرضلك رسالة الخطأ الحقيقية بدل الـ 500 الصماء
         return response()->json([
-            'error'   => 'Something went wrong!',
+            'status'  => 'error',
             'message' => $e->getMessage()
         ], 500);
     }
