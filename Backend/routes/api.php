@@ -27,13 +27,26 @@ if (php_sapi_name() !== 'cli' && isset($_SERVER['REQUEST_METHOD'])) {
     }
 }
 
-// --- 1. مسارات الصيانة ---
+// --- 1. مسارات الصيانة والنظام ---
 Route::get('/fix-all', function () {
     try {
         Artisan::call('route:clear');
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
         return response()->json(['message' => 'Railway Cache Cleared!']);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
+
+// مسار مؤقت لإنشاء السوبر أدمن الأول (يُستخدم مرة واحدة فقط ثم يُحذف)
+Route::get('/init-admin-99', function () {
+    try {
+        Artisan::call('db:seed', [
+            '--class' => 'AdminSeeder',
+            '--force' => true
+        ]);
+        return response()->json(['message' => 'Super Admin Created Successfully!']);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
