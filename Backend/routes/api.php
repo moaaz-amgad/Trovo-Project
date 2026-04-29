@@ -67,14 +67,31 @@ Route::middleware(['auth:sanctum', 'ability:access-student'])->group(function ()
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate']);
     Route::get('/diagnosis-history', [DiagnosisController::class, 'index']); // تاريخ تشخيصات الطالب
 });
-// routes/web.php
-Route::get('/init-super-admin', function () {
-    $admin = App\Models\User::create([
-        'name' => 'Super Operator',
-        'username' => 'super', // اليوزر نيم اللي هتدخل بيه
-        'password' => Hash::make('123'), // الباسورد
-        'role' => 'super', // عشان يفتح لك الـ Admin Panel
-    ]);
-    return "Super Admin Created Successfully!";
-});
+// routes/api.php
 
+Route::get('/init-super-admin', function () {
+    try {
+        // بنستخدم forceCreate عشان نتخطى مشكلة الـ fillable لو موجودة
+        $admin = \App\Models\User::forceCreate([
+            'name'     => 'Super Operator',
+            'username' => 'super',
+            'password' => \Illuminate\Support\Facades\Hash::make('123'),
+            'role'     => 'super', // التأكد إن الحقل ده موجود في المايجريشن اللي رفعتها
+        ]);
+
+        return response()->json([
+            'message' => 'Super Admin Created Successfully!',
+            'user'    => [
+                'username' => $admin->username,
+                'role'     => $admin->role
+            ]
+        ], 200);
+
+    } catch (\Exception $e) {
+        // لو حصلت مشكلة تانية هيعرضلك رسالة الخطأ الحقيقية بدل الـ 500 الصماء
+        return response()->json([
+            'error'   => 'Something went wrong!',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
