@@ -1,7 +1,7 @@
 /**
- * TROVO Intelligence System - Core Engine v6.0 (FINAL REVISION)
+ * TROVO Intelligence System - Core Engine v6.1 (STABLE REVISION)
  * Project: Digital Dopamine Addiction Diagnosis AI
- * Status: Fixed Super Admin Auth Pathing - Full Unabridged Source
+ * Status: Unified Variable Naming & Auth Keys Sync - FINAL PRODUCTION READY
  */
 
 document.addEventListener('alpine:init', () => {
@@ -12,6 +12,8 @@ document.addEventListener('alpine:init', () => {
         isLoggedIn: false,
         userRole: null, 
         currentUsername: '',
+        errorMessage: '',
+        // استخدام المفتاح الموحد trovo_admin_token للتخزين المحلي
         token: localStorage.getItem('trovo_admin_token'),
         loginForm: { 
             username: '', 
@@ -22,7 +24,7 @@ document.addEventListener('alpine:init', () => {
         // 2. UI NAVIGATION & GLOBAL STATES
         // ==========================================
         screen: 'overview',
-        isLoading: false,
+        isLoading: false, 
         openProfile: false,
         searchQuery: '',
 
@@ -108,18 +110,17 @@ document.addEventListener('alpine:init', () => {
 
         async checkAuthStatus() {
             try {
-                // [FIXED] استخدام مسار /me الخاص بالأدمن للتحقق من التوكن القديم
                 const res = await axios.get('/api/admin/me');
                 if (res.data) {
                     this.isLoggedIn = true;
-                    this.userRole = res.data.role || 'super_admin'; 
+                    // مطابقة المسميات مع رد الميدل وير والكنترولر (userRole و username)
+                    this.userRole = res.data.role; 
                     this.currentUsername = res.data.username || res.data.name;
                     await this.syncDataWithProduction();
                 }
             } catch (e) { 
                 console.log('TROVO: Session Expired. Re-authentication Required.'); 
-                this.isLoggedIn = false;
-                localStorage.removeItem('trovo_admin_token');
+                this.logoutSilently();
             }
         },
 
@@ -127,40 +128,54 @@ document.addEventListener('alpine:init', () => {
         // 9. CORE ACTIONS (LOGIN, SYNC, MANAGE)
         // ==========================================
         
-        async handleLogin() {
+        async performAdminAuth() {
             if (!this.loginForm.username || !this.loginForm.password) return;
             this.isLoading = true;
+            this.errorMessage = '';
+
             try {
-                // التأكد من المسار الكامل الصحيح
+                // إرسال طلب تسجيل الدخول للمسار الصحيح
                 const response = await axios.post('/api/admin/login', {
                     username: this.loginForm.username,
                     password: this.loginForm.password
                 });
 
-                // تعديل المفاتيح لتطابق رد السيرفر (access_token & admin)
-                if (response.data.access_token) {
-                    this.token = response.data.access_token;
+                const data = response.data;
+
+                // مطابقة رد الكنترولر: status === 'success' و access_token
+                if (data.status === 'success' && data.access_token) {
+                    this.token = data.access_token;
                     localStorage.setItem('trovo_admin_token', this.token);
+                    
+                    // تحديث هيدر الأوثنتيكيشن فوراً للطلبات القادمة
                     axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
                     
                     this.isLoggedIn = true;
-                    // الوصول للبيانات من مفتاح admin كما في بوست مان
-                    this.userRole = response.data.admin.role; 
-                    this.currentUsername = response.data.admin.username;
                     
+                    // الوصول لبيانات الأدمن من مفتاح 'admin' كما في الكنترولر وصورة بوست مان
+                    this.userRole = data.admin.role; 
+                    this.currentUsername = data.admin.username;
+                    
+                    // تخزين إضافي للتأكد من استقرار الجلسة عبر الصفحات
+                    localStorage.setItem('trovo_user', this.currentUsername);
+                    localStorage.setItem('trovo_role', this.userRole);
+
                     await this.syncDataWithProduction();
-                    alert('IDENTITY VERIFIED: Welcome Super Operator');
+                    alert('IDENTITY VERIFIED: Welcome ' + (data.admin.name || 'Super Operator'));
                 }
             } catch (error) {
                 console.error('Login Failure:', error.response?.data);
+                // عرض الرسالة القادمة من الـ CheckAdmin Middleware أو الكنترولر (رسائل عربية/إنجليزية)
                 const errorMsg = error.response?.data?.message || 'Access Denied: Invalid Credentials';
                 alert(errorMsg);
+                this.errorMessage = errorMsg;
             } finally {
                 this.isLoading = false;
             }
         },
 
         async syncDataWithProduction() {
+            if (!this.isLoggedIn) return;
             this.isLoading = true;
             try {
                 const [studentRes, statsRes] = await Promise.all([
@@ -183,7 +198,6 @@ document.addEventListener('alpine:init', () => {
             if (!this.enrollForm.name || !this.enrollForm.phone || !this.enrollForm.code) return;
             this.isLoading = true;
             try {
-                // [FIXED] المسار الصحيح لإضافة الطلاب يدوياً من قبل الأدمن
                 const response = await axios.post('/api/admin/add-student-manual', {
                     name: this.enrollForm.name,
                     phone: this.enrollForm.phone,
@@ -221,6 +235,7 @@ document.addEventListener('alpine:init', () => {
                 alert('IMPORT FAILED: Malformed Excel structure detected.');
             } finally {
                 this.isLoading = false;
+                event.target.value = ''; // إعادة تعيين الحقل
             }
         },
 
@@ -273,14 +288,24 @@ document.addEventListener('alpine:init', () => {
         // ==========================================
         logout() {
             if (confirm('Terminate Session and Purge Local Auth Cache?')) {
-                // [FIXED] محاولة تسجيل الخروج من السيرفر أولاً ثم مسح البيانات محلياً
+                this.isLoading = true;
                 axios.post('/api/admin/logout').finally(() => {
-                    localStorage.removeItem('trovo_admin_token');
-                    this.isLoggedIn = false;
-                    this.token = null;
-                    window.location.reload();
+                    this.clearAuthAndReload();
                 });
             }
+        },
+
+        logoutSilently() {
+            this.clearAuthAndReload();
+        },
+
+        clearAuthAndReload() {
+            localStorage.removeItem('trovo_admin_token');
+            localStorage.removeItem('trovo_user');
+            localStorage.removeItem('trovo_role');
+            this.isLoggedIn = false;
+            this.token = null;
+            window.location.reload();
         }
     }));
 });
