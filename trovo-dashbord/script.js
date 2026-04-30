@@ -1,216 +1,283 @@
 /**
- * TROVO Intelligence System - Core Engine v3.0
- * Architecture: Alpine.js + Laravel API Gateway
+ * TROVO Intelligence System - Core Engine v6.0 (FINAL REVISION)
+ * Project: Digital Dopamine Addiction Diagnosis AI
+ * Status: Fixed Super Admin Auth Pathing - Full Unabridged Source
  */
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('dashboardApp', () => ({
-        // --- Authentication & Security ---
+        // ==========================================
+        // 1. AUTHENTICATION & SECURITY STATE
+        // ==========================================
         isLoggedIn: false,
-        userRole: null, // 'super' or 'admin'
+        userRole: null, 
         currentUsername: '',
-        loginForm: { username: '', password: '' },
+        token: localStorage.getItem('trovo_admin_token'),
+        loginForm: { 
+            username: '', 
+            password: '' 
+        },
         
-        // --- Navigation & States ---
+        // ==========================================
+        // 2. UI NAVIGATION & GLOBAL STATES
+        // ==========================================
         screen: 'overview',
         isLoading: false,
         openProfile: false,
         searchQuery: '',
 
-        // --- Data Containers ---
-        students: [],
-        admins: [],
+        // ==========================================
+        // 3. DATA CONTAINERS (NEURAL REPOSITORY)
+        // ==========================================
+        students: [], 
+        admins: [],   
         selectedStudent: {},
         
-        // --- Form Models ---
-        enrollForm: { name: '', phone: '', code: '' },
-        adminForm: { username: '', password: '' },
+        // ==========================================
+        // 4. FORM INTERACTION MODELS
+        // ==========================================
+        enrollForm: { 
+            name: '', 
+            phone: '', 
+            code: '' 
+        },
+        adminForm: { 
+            username: '', 
+            password: '' 
+        },
 
-        // --- Configuration & Constants ---
-        barColors: ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b', '#d97706', '#f87171', '#ef4444', '#dc2626', '#7f1d1d'],
+        // ==========================================
+        // 5. PROJECT CONFIGURATION & CORE METRICS
+        // ==========================================
+        barColors: [
+            '#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b', 
+            '#d97706', '#f87171', '#ef4444', '#dc2626', '#7f1d1d'
+        ],
+        
         fields17: [
-            'daily_usage_hours', 'screen_time_before_bed', 'phone_checks_per_day', 'apps_used_daily', 
-            'time_on_social_media', 'time_on_gaming', 'weekend_usage_hours', 'sleep_hours', 
-            'academic_performance', 'social_interactions', 'exercise_hours', 'anxiety_level', 
-            'depression_level', 'self_esteem', 'time_on_education', 'gender', 'phone_usage_purpose'
+            'daily_usage_hours', 'screen_time_before_bed', 'phone_checks_per_day', 
+            'apps_used_daily', 'time_on_social_media', 'time_on_gaming', 
+            'weekend_usage_hours', 'sleep_hours', 'academic_performance', 
+            'social_interactions', 'exercise_hours', 'anxiety_level', 
+            'depression_level', 'self_esteem', 'time_on_education', 
+            'gender', 'phone_usage_purpose'
         ],
 
-        // --- Computed Properties ---
+        // ==========================================
+        // 6. ANALYTICS & STATISTICAL MODELS
+        // ==========================================
+        stats: { 
+            total: 0, 
+            mild: 0, 
+            moderate: 0, 
+            severe: 0, 
+            avgLevel: 0 
+        },
+        distribution: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        mainIssues: [
+            { label: 'Dopamine Loop', val: 0 },
+            { label: 'Circadian Rhythm', val: 0 },
+            { label: 'Neural Threshold', val: 0 }
+        ],
+
+        // ==========================================
+        // 7. COMPUTED LOGIC (SEARCH & FILTER)
+        // ==========================================
         get filteredStudents() {
             if (!this.searchQuery) return this.students;
             const q = this.searchQuery.toLowerCase();
             return this.students.filter(s => 
-                s.name.toLowerCase().includes(q) || 
-                s.code.toLowerCase().includes(q) || 
-                s.phone.includes(q)
+                (s.student?.name?.toLowerCase().includes(q)) || 
+                (s.student?.student_code?.toLowerCase().includes(q))
             );
         },
 
-        // --- Dashboard Statistics ---
-        stats: { total: 0, mild: 0, moderate: 0, severe: 0, avgLevel: 0 },
-        distribution: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        mainIssues: [
-            { label: 'Dopamine Loop (Doom Scrolling)', val: 0 },
-            { label: 'Circadian Rhythm Disruption', val: 0 },
-            { label: 'Neural Reward Threshold', val: 0 }
-        ],
-
-        // --- Core Methods ---
-
+        // ==========================================
+        // 8. SYSTEM INITIALIZATION
+        // ==========================================
         async init() {
-            console.log('TROVO: System Booting...');
-            // Check for persistent session if needed
-            // this.checkSession();
-        },
-
-        /**
-         * Authentication Handler
-         * In production: fetch('/api/login', {method: 'POST', body: ...})
-         */
-        async handleLogin() {
-            this.isLoading = true;
-            try {
-                // SIMULATED AUTH (Replace with Laravel Passport/Sanctum)
-                if (this.loginForm.username === 'super' && this.loginForm.password === 'trovo2026') {
-                    this.isLoggedIn = true;
-                    this.userRole = 'super';
-                    this.currentUsername = 'Master Operator';
-                    await this.syncDataWithProduction();
-                } else {
-                    // Check against custom created admins
-                    const admin = this.admins.find(a => a.username === this.loginForm.username && a.password === this.loginForm.password);
-                    if (admin) {
-                        this.isLoggedIn = true;
-                        this.userRole = 'admin';
-                        this.currentUsername = admin.username;
-                        await this.syncDataWithProduction();
-                    } else {
-                        alert('CRITICAL ERROR: Credentials not found in Secure Database.');
-                    }
-                }
-            } finally {
-                this.isLoading = false;
-                this.loginForm = { username: '', password: '' };
+            console.log('TROVO: System Synchronizing (Full Spectrum)...');
+            
+            axios.defaults.baseURL = 'https://trovo-project-production.up.railway.app';
+            
+            if (this.token) {
+                axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+                await this.checkAuthStatus();
             }
         },
 
-        /**
-         * Fetch Real Data from Laravel
-         */
+        async checkAuthStatus() {
+            try {
+                // [FIXED] استخدام مسار /me الخاص بالأدمن للتحقق من التوكن القديم
+                const res = await axios.get('/api/admin/me');
+                if (res.data) {
+                    this.isLoggedIn = true;
+                    this.userRole = res.data.role || 'super_admin'; 
+                    this.currentUsername = res.data.username || res.data.name;
+                    await this.syncDataWithProduction();
+                }
+            } catch (e) { 
+                console.log('TROVO: Session Expired. Re-authentication Required.'); 
+                this.isLoggedIn = false;
+                localStorage.removeItem('trovo_admin_token');
+            }
+        },
+
+        // ==========================================
+        // 9. CORE ACTIONS (LOGIN, SYNC, MANAGE)
+        // ==========================================
+        
+        async handleLogin() {
+            if (!this.loginForm.username || !this.loginForm.password) return;
+            this.isLoading = true;
+            try {
+                // [FIXED] التأكد من إرسال الطلب لمسار الـ Admin حصراً لتجنب تعارض الـ Guards
+                const response = await axios.post('/api/admin/login', {
+                    username: this.loginForm.username,
+                    password: this.loginForm.password
+                });
+
+                if (response.data.token) {
+                    this.token = response.data.token;
+                    localStorage.setItem('trovo_admin_token', this.token);
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+                    
+                    this.isLoggedIn = true;
+                    this.userRole = response.data.user.role; 
+                    this.currentUsername = response.data.user.username;
+                    
+                    await this.syncDataWithProduction();
+                    alert('IDENTITY VERIFIED: Welcome to Control Center.');
+                }
+            } catch (error) {
+                console.error('Login Failure:', error.response?.data);
+                const errorMsg = error.response?.data?.message || 'Access Denied: Invalid Credentials';
+                alert(errorMsg);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
         async syncDataWithProduction() {
             this.isLoading = true;
-            console.log('TROVO: Pulling records from Laravel API...');
-            
-            // Example Integration:
-            /*
-            const response = await fetch('/api/v1/subjects', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            this.students = await response.json();
-            */
-            
-            // Mocking for immediate UI feedback
-            setTimeout(() => {
-                this.recalculateAnalytics();
-                this.isLoading = false;
-            }, 1000);
-        },
-
-        /**
-         * Triple Field Enrollment (Name, Phone, Code)
-         */
-        async handleEnrollment() {
-            if (!this.enrollForm.name || !this.enrollForm.phone || !this.enrollForm.code) return;
-            
-            this.isLoading = true;
             try {
-                // Post to Laravel Controller
-                const newStudent = {
-                    id: Date.now(),
-                    name: this.enrollForm.name,
-                    phone: this.enrollForm.phone,
-                    code: this.enrollForm.code,
-                    level: Math.floor(Math.random() * 10) + 1, // Simulated AI diagnosis
-                    matrix: this.generateEmptyMatrix()
-                };
+                const [studentRes, statsRes] = await Promise.all([
+                    axios.get('/api/admin/all-diagnoses'),
+                    axios.get('/api/admin/dashboard-stats')
+                ]);
 
-                this.students.unshift(newStudent);
-                this.recalculateAnalytics();
-                this.enrollForm = { name: '', phone: '', code: '' };
-                alert('SUCCESS: Record encrypted and stored in Database.');
-                this.screen = 'database';
+                this.students = studentRes.data;
+                this.applyServerStats(statsRes.data);
+                this.recalculateLocalAnalytics();
+                
+            } catch (error) {
+                console.error('TROVO Sync Error:', error);
             } finally {
                 this.isLoading = false;
             }
         },
 
-        /**
-         * Admin Account Generation
-         */
-        createAdminAccount() {
-            if (!this.adminForm.username || !this.adminForm.password) return;
-            this.admins.push({ ...this.adminForm });
-            this.adminForm = { username: '', password: '' };
-            alert('ADMIN CREATED: System access granted.');
+        async handleEnrollment() {
+            if (!this.enrollForm.name || !this.enrollForm.phone || !this.enrollForm.code) return;
+            this.isLoading = true;
+            try {
+                // [FIXED] المسار الصحيح لإضافة الطلاب يدوياً من قبل الأدمن
+                const response = await axios.post('/api/admin/add-student-manual', {
+                    name: this.enrollForm.name,
+                    phone: this.enrollForm.phone,
+                    student_code: this.enrollForm.code 
+                });
+
+                if (response.data) {
+                    await this.syncDataWithProduction();
+                    this.enrollForm = { name: '', phone: '', code: '' };
+                    alert('STUDENT REGISTERED: Record successfully injected into database.');
+                    this.screen = 'database';
+                }
+            } catch (error) {
+                alert('REGISTRATION ERROR: Security conflict or duplicate student code.');
+            } finally {
+                this.isLoading = false;
+            }
         },
 
-        /**
-         * Stats Engine
-         */
-        recalculateAnalytics() {
+        async handleBulkImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file); 
+
+            this.isLoading = true;
+            try {
+                await axios.post('/api/admin/import-students', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                await this.syncDataWithProduction();
+                alert('IMPORT COMPLETE: Neural records updated via bulk file.');
+            } catch (e) {
+                alert('IMPORT FAILED: Malformed Excel structure detected.');
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        // ==========================================
+        // 10. DIAGNOSTIC ANALYTICS ENGINE
+        // ==========================================
+        applyServerStats(serverData) {
+            if (serverData.stats) {
+                this.stats = serverData.stats;
+            }
+        },
+
+        recalculateLocalAnalytics() {
             const count = this.students.length;
             if (count === 0) return;
 
             this.stats.total = count;
-            this.stats.mild = this.students.filter(s => s.level <= 3).length;
-            this.stats.moderate = this.students.filter(s => s.level > 3 && s.level <= 7).length;
-            this.stats.severe = this.students.filter(s => s.level > 7).length;
+            this.stats.mild = this.students.filter(s => s.score <= 30).length;
+            this.stats.moderate = this.students.filter(s => s.score > 30 && s.score <= 70).length;
+            this.stats.severe = this.students.filter(s => s.score > 70).length;
             
-            const sum = this.students.reduce((a, b) => a + b.level, 0);
-            this.stats.avgLevel = (sum / count).toFixed(1);
-
             let dist = new Array(10).fill(0);
-            this.students.forEach(s => dist[s.level - 1]++);
+            this.students.forEach(s => {
+                let lvl = Math.ceil(s.score / 10); 
+                if (lvl >= 1 && lvl <= 10) dist[lvl - 1]++;
+            });
             this.distribution = dist;
-
-            // Logic to calculate dominant issues based on the 17 fields
-            this.mainIssues[0].val = Math.floor(Math.random() * 40) + 60; // Just for visual
-            this.mainIssues[1].val = Math.floor(Math.random() * 30) + 40;
-            this.mainIssues[2].val = Math.floor(Math.random() * 50) + 20;
         },
 
-        openSubjectDossier(student) {
-            this.selectedStudent = student;
-            this.openProfile = true;
-        },
-
-        getColor(level) {
-            let index = Math.min(Math.max(Math.round(level) - 1, 0), 9);
-            return this.barColors[index];
-        },
-
-        generateEmptyMatrix() {
-            let matrix = {};
-            this.fields17.forEach(f => matrix[f] = '0.0');
-            return matrix;
-        },
-
-        logout() {
-            if (confirm('Terminate secure session?')) {
-                this.isLoggedIn = false;
-                this.userRole = null;
-                window.location.reload();
+        async openSubjectDossier(studentId) {
+            this.isLoading = true;
+            try {
+                const res = await axios.get(`/api/admin/student/${studentId}`);
+                this.selectedStudent = res.data;
+                this.openProfile = true;
+            } catch (e) {
+                alert('ACCESS DENIED: Detailed neural profile is locked or missing.');
+            } finally {
+                this.isLoading = false;
             }
         },
 
-        handleBulkImport(event) {
-            const file = event.target.files[0];
-            if (file) {
-                this.isLoading = true;
-                setTimeout(() => {
-                    this.isLoading = false;
-                    alert('BULK IMPORT: Data parsed and pushed to Laravel.');
-                }, 2000);
+        getColor(score) {
+            let index = Math.min(Math.max(Math.floor(score / 10), 0), 9);
+            return this.barColors[index];
+        },
+
+        // ==========================================
+        // 11. SESSION CONTROL
+        // ==========================================
+        logout() {
+            if (confirm('Terminate Session and Purge Local Auth Cache?')) {
+                // [FIXED] محاولة تسجيل الخروج من السيرفر أولاً ثم مسح البيانات محلياً
+                axios.post('/api/admin/logout').finally(() => {
+                    localStorage.removeItem('trovo_admin_token');
+                    this.isLoggedIn = false;
+                    this.token = null;
+                    window.location.reload();
+                });
             }
         }
     }));

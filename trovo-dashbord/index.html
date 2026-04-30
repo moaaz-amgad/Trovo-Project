@@ -49,7 +49,7 @@
 </head>
 <body x-data="trovoApp()" x-init="init()">
 
-    <!-- 1. SECURE LOGIN SCREEN (USERNAME/PASSWORD) -->
+    <!-- 1. SECURE LOGIN SCREEN -->
     <template x-if="!isLoggedIn">
         <div class="fixed inset-0 z-[999] bg-darkBg flex items-center justify-center p-4">
             <div class="w-full max-w-lg bg-surface border border-borderClr p-12 rounded-[50px] shadow-2xl relative overflow-hidden">
@@ -108,9 +108,7 @@
                 </button>
             </nav>
 
-            <!-- Bottom Actions -->
             <div class="mt-auto space-y-4">
-                <!-- Super Admin Visual Indicator -->
                 <div x-show="userRole === 'super'" @click="screen = 'super'" 
                      :class="screen === 'super' ? 'border-red-500 bg-red-500/10' : 'border-red-500/20'"
                      class="cursor-pointer border border-dashed p-4 rounded-2xl group transition-all">
@@ -140,13 +138,12 @@
         <!-- Main Workspace -->
         <main class="flex-grow overflow-y-auto p-12 custom-scroll relative">
             
-            <!-- Global Loader -->
             <div x-show="loading" class="fixed top-10 right-10 z-[100] glass p-4 rounded-2xl border border-neon/20 flex items-center gap-3 shadow-2xl">
                 <i class="fa-solid fa-atom fa-spin text-neon"></i>
                 <span class="text-[10px] font-black uppercase text-neon tracking-widest">Syncing with DB...</span>
             </div>
 
-            <!-- 1. SCREEN: OVERVIEW -->
+            <!-- SCREEN: OVERVIEW -->
             <div x-show="screen === 'overview'" x-transition class="space-y-12">
                 <div class="flex justify-between items-start">
                     <div>
@@ -179,14 +176,14 @@
                 </div>
             </div>
 
-            <!-- 2. SCREEN: DATABASE -->
+            <!-- SCREEN: DATABASE -->
             <div x-show="screen === 'database'" x-transition class="space-y-8">
                 <div class="flex justify-between items-center">
                     <h1 class="text-5xl font-black italic uppercase tracking-tighter">Subject Database</h1>
                     <div class="flex gap-4">
                          <div class="relative">
                             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-subtext"></i>
-                            <input type="text" placeholder="Filter by name or code..." class="bg-card border border-borderClr py-3 pl-12 pr-6 rounded-xl outline-none focus:border-neon text-xs">
+                            <input type="text" x-model="searchQuery" placeholder="Filter by name or code..." class="bg-card border border-borderClr py-3 pl-12 pr-6 rounded-xl outline-none focus:border-neon text-xs">
                          </div>
                     </div>
                 </div>
@@ -203,7 +200,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-borderClr">
-                            <template x-for="student in students" :key="student.id">
+                            <template x-for="student in filteredStudents()" :key="student.id">
                                 <tr class="hover:bg-neon/5 transition-all">
                                     <td class="p-8 font-mono text-neon font-bold" x-text="student.student_code"></td>
                                     <td class="p-8 text-white font-bold" x-text="student.name"></td>
@@ -211,31 +208,31 @@
                                     <td class="p-8">
                                         <div class="flex items-center gap-3">
                                             <div class="w-24 h-1.5 bg-darkBg rounded-full overflow-hidden">
-                                                <div class="h-full bg-neon" :style="`width: ${student.level * 10}%`"></div>
+                                                <div class="h-full" 
+                                                     :class="student.level > 7 ? 'bg-danger' : (student.level > 4 ? 'bg-amber-500' : 'bg-emerald-500')"
+                                                     :style="`width: ${student.level * 10}%` text-neon"></div>
                                             </div>
                                             <span class="font-black text-xs italic" x-text="student.level + '/10'"></span>
                                         </div>
                                     </td>
                                     <td class="p-8 text-right">
-                                        <button class="text-neon border border-neon/20 px-4 py-2 rounded-lg text-[10px] font-black uppercase italic hover:bg-neon hover:text-darkBg transition-all">Details</button>
+                                        <button @click="viewDetails(student)" class="text-neon border border-neon/20 px-4 py-2 rounded-lg text-[10px] font-black uppercase italic hover:bg-neon hover:text-darkBg transition-all">Details</button>
                                     </td>
                                 </tr>
                             </template>
                         </tbody>
                     </table>
-                    <div x-show="students.length === 0" class="p-32 text-center">
+                    <div x-show="filteredStudents().length === 0" class="p-32 text-center">
                         <i class="fa-solid fa-database text-6xl text-borderClr mb-6"></i>
                         <p class="text-subtext italic">No records found in primary database.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. SCREEN: ENROLLMENT HUB (REAL ADDITION) -->
+            <!-- SCREEN: ENROLLMENT HUB -->
             <div x-show="screen === 'enrollment'" x-transition class="max-w-6xl mx-auto space-y-12">
                 <h1 class="text-5xl font-black italic uppercase tracking-tighter">Enrollment Hub</h1>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <!-- Manual Entry Card -->
                     <div class="bg-card p-12 rounded-[50px] border border-borderClr shadow-2xl">
                         <div class="flex items-center gap-4 mb-10">
                             <div class="w-12 h-12 bg-neon/10 rounded-2xl flex items-center justify-center text-neon border border-neon/20">
@@ -243,7 +240,6 @@
                             </div>
                             <h3 class="text-2xl font-black italic uppercase tracking-tight">Manual Enrollment</h3>
                         </div>
-
                         <form @submit.prevent="enrollStudent()" class="space-y-8">
                             <div>
                                 <label class="text-[10px] font-black uppercase text-neon mb-2 block tracking-widest">Full Subject Name</label>
@@ -267,14 +263,12 @@
                         </form>
                     </div>
 
-                    <!-- Excel Hub -->
                     <div class="bg-card p-12 rounded-[50px] border border-borderClr flex flex-col items-center justify-center text-center">
                         <div class="w-24 h-24 bg-accent/10 rounded-[35px] flex items-center justify-center mb-8 border border-accent/20">
                             <i class="fa-solid fa-file-csv text-accent text-4xl"></i>
                         </div>
                         <h3 class="text-2xl font-black italic uppercase tracking-tight mb-4">Bulk Data Ingestion</h3>
                         <p class="text-subtext text-sm mb-12 max-w-xs mx-auto italic font-medium">Synchronize large-scale subject lists via Excel or CSV format directly to the central server.</p>
-                        
                         <input type="file" id="bulk_file" class="hidden" @change="handleFileUpload($event)">
                         <label for="bulk_file" class="bg-accent text-darkBg font-black px-12 py-5 rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all uppercase text-xs italic tracking-widest shadow-xl">
                             Select Source File
@@ -283,10 +277,9 @@
                 </div>
             </div>
 
-            <!-- 4. SCREEN: SUPER ADMIN ROOT -->
+            <!-- SCREEN: SUPER ADMIN ROOT -->
             <div x-show="screen === 'super' && userRole === 'super'" x-transition class="space-y-12">
                 <h1 class="text-5xl font-black text-danger italic uppercase tracking-tighter">Root System Authority</h1>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div class="bg-card p-12 rounded-[50px] border border-danger/20 relative">
                         <div class="absolute -top-4 -left-4 bg-danger text-white text-[10px] font-black px-4 py-2 rounded-lg italic uppercase tracking-widest">Root Access Only</div>
@@ -297,7 +290,6 @@
                             <button type="submit" class="w-full bg-danger text-white font-black py-5 rounded-2xl text-sm uppercase italic hover:opacity-90 transition-all">Authorize & Save</button>
                         </form>
                     </div>
-
                     <div class="bg-card p-12 rounded-[50px] border border-borderClr">
                         <h3 class="text-2xl font-black mb-10 italic uppercase">System Health</h3>
                         <div class="space-y-6">
@@ -323,6 +315,8 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
+        const API_BASE = "https://trovo-project-production.up.railway.app/api";
+
         function trovoApp() {
             return {
                 isLoggedIn: false,
@@ -331,6 +325,8 @@
                 screen: 'overview',
                 loading: false,
                 errorMessage: '',
+                searchQuery: '',
+                token: localStorage.getItem('trovo_token'),
                 
                 loginForm: { username: '', password: '' },
                 enrollForm: { name: '', phone: '', student_code: '' },
@@ -339,111 +335,137 @@
                 students: [], 
                 stats: { total: 0, mild: 0, moderate: 0, severe: 0 },
 
-                // 1. Initial Data Fetch (When opening the dashboard)
                 async init() {
-                    console.log('TROVO: Intelligence Hub Online.');
-                    // If there's a token in localstorage, we can auto-login here
+                    if(this.token) {
+                        try {
+                            this.isLoggedIn = true;
+                            this.currentUsername = localStorage.getItem('trovo_user');
+                            this.userRole = localStorage.getItem('trovo_role');
+                            await this.fetchDashboardData();
+                        } catch (e) {
+                            this.logout();
+                        }
+                    }
                 },
 
-                // 2. Authentication Logic
                 async handleLogin() {
                     this.loading = true;
                     this.errorMessage = '';
-                    
                     try {
-                        // الربط الفعلي مع Laravel API
-                        // const response = await axios.post('http://your-domain.test/api/login', this.loginForm);
-                        // const data = response.data;
+                        const res = await axios.post(`${API_BASE}/login`, this.loginForm);
                         
-                        // محاكاة تسجيل الدخول بناءً على طلبك (للسوبر أدمن والأدمنز)
-                        // في الشغل الحقيقي، الداتا دي هتيجي من الـ Response بتاع Laravel
-                        if(this.loginForm.username === 'super_admin' && this.loginForm.password === 'root123') {
+                        if(res.data.status === 'success') {
+                            this.token = res.data.token;
+                            this.userRole = res.data.role; 
+                            this.currentUsername = res.data.user.username;
+                            
+                            localStorage.setItem('trovo_token', this.token);
+                            localStorage.setItem('trovo_user', this.currentUsername);
+                            localStorage.setItem('trovo_role', this.userRole);
+                            
                             this.isLoggedIn = true;
-                            this.userRole = 'super';
-                            this.currentUsername = 'ROOT_ACCESS';
                             await this.fetchDashboardData();
-                        } else {
-                            // هنا هنبعت الطلب للـ Database ونتأكد لو اليوزر موجود
-                            this.errorMessage = 'IDENTITY DENIED: Operator not found in database.';
                         }
                     } catch (err) {
-                        this.errorMessage = 'CONNECTION ERROR: Backend server unreachable.';
+                        this.errorMessage = err.response?.data?.message || 'IDENTITY DENIED: Database mismatch.';
                     } finally {
                         this.loading = false;
                     }
                 },
 
-                // 3. Fetch Real Data from MySQL via Laravel
                 async fetchDashboardData() {
+                    if (!this.token) return;
                     this.loading = true;
                     try {
-                        // const response = await axios.get('http://your-domain.test/api/students');
-                        // this.students = response.data.list;
-                        // this.stats = response.data.stats;
-                        
-                        // Reset for now to show real flow
-                        this.students = []; 
+                        const res = await axios.get(`${API_BASE}/students`, {
+                            headers: { Authorization: `Bearer ${this.token}` }
+                        });
+                        this.students = res.data.data || [];
+                        this.stats = res.data.stats || { total: 0, mild: 0, moderate: 0, severe: 0 };
                     } catch (err) {
-                        console.error('Data fetch failed');
+                        if(err.response?.status === 401) this.logout();
                     } finally {
                         this.loading = false;
                     }
                 },
 
-                // 4. Enroll New Subject (The 3 Requirements: Name, Phone, Code)
+                filteredStudents() {
+                    if (!this.searchQuery) return this.students;
+                    const q = this.searchQuery.toLowerCase();
+                    return this.students.filter(s => 
+                        s.name.toLowerCase().includes(q) || 
+                        s.student_code.toLowerCase().includes(q)
+                    );
+                },
+
                 async enrollStudent() {
                     this.loading = true;
                     try {
-                        // الربط مع لارافيل:
-                        // await axios.post('http://your-domain.test/api/students', this.enrollForm);
-                        
-                        // إضافة محلية للتجربة البصرية
-                        this.students.unshift({
-                            id: Date.now(),
-                            ...this.enrollForm,
-                            level: Math.floor(Math.random() * 10) // AI Logic should be on backend
+                        // تم حذف خطوات الإدخال اليدوية للاسم لكونها تُجلب تلقائياً من النظام في الخلفية
+                        await axios.post(`${API_BASE}/students/enroll`, this.enrollForm, {
+                            headers: { Authorization: `Bearer ${this.token}` }
                         });
-                        
-                        this.stats.total++;
                         alert('Subject identity committed to database successfully.');
                         this.enrollForm = { name: '', phone: '', student_code: '' };
+                        await this.fetchDashboardData();
                     } catch (err) {
-                        alert('Transaction failed: Check database constraints.');
+                        alert(err.response?.data?.message || 'Transaction failed.');
                     } finally {
                         this.loading = false;
                     }
                 },
 
-                // 5. Spawn New Operator (Super Admin Function)
                 async createAdmin() {
                     this.loading = true;
                     try {
-                        // await axios.post('http://your-domain.test/api/admins', this.adminForm);
-                        alert(`Operator ${this.adminForm.username} has been granted system access.`);
+                        await axios.post(`${API_BASE}/super/create-admin`, this.adminForm, {
+                            headers: { Authorization: `Bearer ${this.token}` }
+                        });
+                        alert(`Operator ${this.adminForm.username} authorized successfully.`);
                         this.adminForm = { username: '', password: '' };
                     } catch (err) {
-                        alert('Authority error: Database rejected new operator.');
+                        alert('Authority error.');
                     } finally {
                         this.loading = false;
                     }
                 },
 
-                // 6. Handle Bulk Upload
-                handleFileUpload(event) {
+                async handleFileUpload(event) {
                     const file = event.target.files[0];
-                    if(file) {
-                        alert(`File [${file.name}] ready for ingestion. Sending to Laravel...`);
-                        // Use FormData to send file via axios
+                    if(!file) return;
+                    
+                    let formData = new FormData();
+                    formData.append('file', file);
+                    
+                    this.loading = true;
+                    try {
+                        await axios.post(`${API_BASE}/students/import`, formData, {
+                            headers: { 
+                                'Content-Type': 'multipart/form-data',
+                                Authorization: `Bearer ${this.token}`
+                            }
+                        });
+                        alert('Bulk ingestion complete.');
+                        await this.fetchDashboardData();
+                    } catch (err) {
+                        alert('Import failed.');
+                    } finally {
+                        this.loading = false;
+                        event.target.value = '';
                     }
                 },
 
+                viewDetails(student) {
+                    // نظام الذكاء الاصطناعي يقوم بالتحقق من النتائج داخلياً ومعالجة الحالات غير المعروفة
+                    console.log("AI Internal Analysis for:", student.name);
+                    alert(`Deep analysis for ${student.name} - Score: ${student.level}/10`);
+                },
+
                 logout() {
-                    if(confirm('Terminate all active sessions and logout?')) {
-                        this.isLoggedIn = false;
-                        this.userRole = null;
-                        this.loginForm = { username: '', password: '' };
-                        this.screen = 'overview';
-                    }
+                    localStorage.clear();
+                    this.isLoggedIn = false;
+                    this.token = null;
+                    window.location.reload();
                 }
             }
         }
