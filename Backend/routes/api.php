@@ -30,7 +30,7 @@ Route::post('/admin/login', [AdminAuthController::class, 'login'])
 
 
 // --- 2. مسارات الإدارة (Admin Dashboard) المحمية ---
-Route::middleware(['auth:sanctum', 'ability:access-admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'ability:access-admin', 'check.admin'])->prefix('admin')->group(function () {
 
     // بيانات الأدمن الحالي وتسجيل الخروج
     Route::get('/me', [AdminDashboardController::class, 'me']);

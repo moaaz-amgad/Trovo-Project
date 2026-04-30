@@ -12,18 +12,18 @@ class UsersImport implements ToModel, WithHeadingRow, SkipsEmptyRows
 {
     public function model(array $row)
     {
-        // التحقق من وجود الكود لمنع التكرار أو الصفوف الفارغة
-        if (!isset($row['student_code'])) {
-            return null;
-        }
+        // تنظيف البيانات من المسافات الزائدة
+        $studentCode = trim($row['student_code']);
+        $name = trim($row['name']);
+        $phoneNumber = isset($row['phone_number']) ? trim($row['phone_number']) : null;
 
         // تحديث أو إنشاء طالب جديد بناءً على الكود
         return User::updateOrCreate(
-            ['student_code' => $row['student_code']], // حقل البحث لمنع التكرار
+            ['student_code' => $studentCode],
             [
-                'name'         => $row['name'],
-                'phone_number' => $row['phone_number'] ?? null,
-                'password'     => Hash::make($row['student_code']), // الباسورد الافتراضي هو الكود
+                'name'         => $name,
+                'phone_number' => $phoneNumber,
+                'password'     => Hash::make($studentCode),
             ]
         );
     }

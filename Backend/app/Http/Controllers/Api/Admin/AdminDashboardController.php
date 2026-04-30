@@ -114,6 +114,7 @@ class AdminDashboardController extends Controller
         $admin = $request->user();
 
         return response()->json([
+            'status' => 'success',
             'id'       => $admin->id,
             'name'     => $admin->name,
             'username' => $admin->username,

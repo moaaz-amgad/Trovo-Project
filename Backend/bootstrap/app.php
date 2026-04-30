@@ -12,15 +12,21 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // 1. استثناء مسارات الـ API من فحص الـ CSRF لضمان عمل الـ Login بدون تعارض
+        // 1. استثناء مسارات الـ API من فحص الـ CSRF
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
 
-        // 2. تفعيل الـ Stateful API لدعم المصادقة عبر الـ Cookies والـ Tokens بشكل صحيح
+        // 2. تفعيل الـ Stateful API
         $middleware->statefulApi();
+
+        // 3. تسجيل middleware aliases للاستخدام في الراوت
+        $middleware->alias([
+            'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'check.admin' => \App\Http\Middleware\CheckAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
-

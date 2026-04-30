@@ -24,10 +24,16 @@ COPY . .
 # 4. تنزيل مكتبات المشروع (Vendors)
 RUN composer install --no-dev --optimize-autoloader
 
-# 5. ضبط صلاحيات المجلدات عشان متبقاش Read-only
+# 5. ضبط صلاحيات المجلدات
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# 6. السطر القاضي: تشغيل السيرفر مباشرة على البورت بتاع ريلواي
-# ملحوظة: شلنا الـ migrate عشان متوقعش السيرفر وهنعملها يدوي
+# 6. تحسين الأداء (Optimization)
+# ملحوظة: بنعمل clear الأول عشان نضمن مفيش داتا قديمة
+RUN php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan view:clear && \
+    php artisan optimize
+
+# 7. تشغيل السيرفر
 CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
