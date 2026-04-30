@@ -9,17 +9,19 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\PhoneUsageData;
 use App\Models\QuestionnaireResponse;
 use App\Models\Diagnosis;
+use App\Models\ProgressTracker;
+use App\Models\MiniGameSession;
 
 class User extends Authenticatable
 {
     use HasApiTokens, Notifiable, HasFactory;
 
     /**
-     * الحقول المسموح بتعبئتها (تتوافق تماماً مع الميجريشن الحالي)
+     * الحقول المسموح بتعبئتها
      */
     protected $fillable = [
         'name',
-        'student_code', // اليوزر نيم والباسورد الافتراضي
+        'student_code',
         'phone_number',
         'password',
     ];
@@ -49,8 +51,7 @@ class User extends Authenticatable
     */
 
     /**
-     * علاقة الطالب ببيانات استخدام الهاتف (تلقائي من التطبيق)
-     * مربوطة بـ usage_id في جدول phone_usage_data
+     * علاقة الطالب ببيانات استخدام الهاتف
      */
     public function phoneUsages()
     {
@@ -59,7 +60,6 @@ class User extends Authenticatable
 
     /**
      * علاقة الطالب بإجابات الاستبيان
-     * مربوطة بـ questionnaire_id في جدول questionnaire_responses
      */
     public function questionnaireResponses()
     {
@@ -69,9 +69,24 @@ class User extends Authenticatable
     /**
      * علاقة الطالب بنتائج التشخيص (AI Diagnosis)
      */
-    public function diagnosis()
+    public function diagnoses()
     {
         return $this->hasMany(Diagnosis::class, 'user_id', 'id');
     }
-}
 
+    /**
+     * علاقة الطالب بسجلات التقدم
+     */
+    public function progressTrackers()
+    {
+        return $this->hasMany(ProgressTracker::class, 'user_id');
+    }
+
+    /**
+     * علاقة الطالب بجلسات الميني جيم
+     */
+    public function miniGameSessions()
+    {
+        return $this->hasMany(MiniGameSession::class, 'user_id');
+    }
+}

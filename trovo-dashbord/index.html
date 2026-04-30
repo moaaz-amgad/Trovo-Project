@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TROVO | Digital Dopamine Intelligence Hub</title>
     
-    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -48,7 +46,7 @@
         input:-webkit-autofill { -webkit-box-shadow: 0 0 0 30px #0b0f1a inset !important; -webkit-text-fill-color: white !important; }
     </style>
 </head>
-<body x-data="trovoApp()" x-init="init()">
+<body x-data="dashboardApp" x-init="init()">
 
     <!-- 1. SECURE LOGIN SCREEN -->
     <template x-if="!isLoggedIn">
@@ -94,7 +92,7 @@
         <!-- Sidebar Navigation -->
         <aside class="w-80 bg-darkBg border-r border-borderClr flex flex-col p-8 z-50">
             <div class="text-3xl font-black text-neon mb-12 tracking-tighter flex items-center gap-3">
-                <i class="fa-solid fa-brain"></i> TROVO <span class="text-[10px] bg-neon/10 px-2 py-1 rounded-md text-neon/50">v3.0</span>
+                <i class="fa-solid fa-brain"></i> TROVO <span class="text-[10px] bg-neon/10 px-2 py-1 rounded-md text-neon/50">v7.0</span>
             </div>
 
             <nav class="space-y-3 flex-grow">
@@ -110,7 +108,7 @@
             </nav>
 
             <div class="mt-auto space-y-4">
-                <div x-show="userRole === 'super'" @click="screen = 'super'" 
+                <div x-show="userRole === 'super_admin'" @click="screen = 'super'" 
                      :class="screen === 'super' ? 'border-red-500 bg-red-500/10' : 'border-red-500/20'"
                      class="cursor-pointer border border-dashed p-4 rounded-2xl group transition-all">
                     <div class="flex items-center justify-between mb-1">
@@ -160,19 +158,61 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div class="bg-card p-8 rounded-[35px] border border-borderClr neon-border">
                         <p class="text-subtext text-[10px] font-black uppercase tracking-[0.2em] mb-4">Total Subjects</p>
-                        <div class="text-5xl font-black italic" x-text="stats.total">0</div>
+                        <div class="text-5xl font-black italic" x-text="stats.total_students">0</div>
                     </div>
                     <div class="bg-card p-8 rounded-[35px] border border-emerald-500/20 neon-border">
                         <p class="text-emerald-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Low Risk</p>
-                        <div class="text-5xl font-black italic text-emerald-500" x-text="stats.mild">0</div>
+                        <div class="text-5xl font-black italic text-emerald-500" x-text="stats.case_distribution?.mild || 0">0</div>
                     </div>
                     <div class="bg-card p-8 rounded-[35px] border border-amber-500/20 neon-border">
                         <p class="text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Moderate</p>
-                        <div class="text-5xl font-black italic text-amber-500" x-text="stats.moderate">0</div>
+                        <div class="text-5xl font-black italic text-amber-500" x-text="stats.case_distribution?.moderate || 0">0</div>
                     </div>
                     <div class="bg-card p-8 rounded-[35px] border border-danger/20 neon-border">
                         <p class="text-danger text-[10px] font-black uppercase tracking-[0.2em] mb-4">Severe Risk</p>
-                        <div class="text-5xl font-black italic text-danger" x-text="stats.severe">0</div>
+                        <div class="text-5xl font-black italic text-danger" x-text="stats.case_distribution?.severe || 0">0</div>
+                    </div>
+                </div>
+
+                <!-- Addiction Rate & Top Factors -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-card p-8 rounded-[35px] border border-borderClr neon-border">
+                        <p class="text-subtext text-[10px] font-black uppercase tracking-[0.2em] mb-4">Addiction Rate</p>
+                        <div class="text-4xl font-black italic text-accent" x-text="stats.addiction_rate || '0%'">0%</div>
+                    </div>
+                    <div class="bg-card p-8 rounded-[35px] border border-borderClr neon-border">
+                        <p class="text-subtext text-[10px] font-black uppercase tracking-[0.2em] mb-4">Top Impact Factors</p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <template x-for="factor in (stats.top_impact_factors || [])" :key="factor">
+                                <span class="bg-neon/10 text-neon text-xs font-bold px-3 py-1 rounded-full border border-neon/20" x-text="factor"></span>
+                            </template>
+                            <span x-show="!stats.top_impact_factors?.length" class="text-subtext text-xs italic">No data yet</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-card p-8 rounded-[35px] border border-borderClr">
+                    <p class="text-subtext text-[10px] font-black uppercase tracking-[0.2em] mb-6">Recent Diagnostic Activity</p>
+                    <div class="space-y-3">
+                        <template x-for="activity in (stats.recent_activity || [])" :key="activity.diagnosis_id">
+                            <div class="flex items-center justify-between p-4 bg-darkBg rounded-2xl">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-neon/10 flex items-center justify-center text-neon text-xs font-black">
+                                        <i class="fa-solid fa-brain"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold" x-text="activity.user?.name || 'Unknown'"></p>
+                                        <p class="text-[10px] text-subtext" x-text="activity.user?.student_code"></p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs font-black" :class="activity.brainrot_stage?.includes('Severe') ? 'text-danger' : (activity.brainrot_stage?.includes('Moderate') ? 'text-amber-500' : 'text-emerald-500')" x-text="activity.brainrot_stage"></p>
+                                    <p class="text-[10px] text-subtext" x-text="activity.addiction_level + '/10'"></p>
+                                </div>
+                            </div>
+                        </template>
+                        <p x-show="!stats.recent_activity?.length" class="text-subtext text-center text-xs italic py-8">No diagnostic activity recorded yet.</p>
                     </div>
                 </div>
             </div>
@@ -181,11 +221,9 @@
             <div x-show="screen === 'database'" x-transition class="space-y-8">
                 <div class="flex justify-between items-center">
                     <h1 class="text-5xl font-black italic uppercase tracking-tighter">Subject Database</h1>
-                    <div class="flex gap-4">
-                         <div class="relative">
-                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-subtext"></i>
-                            <input type="text" x-model="searchQuery" placeholder="Filter by name or code..." class="bg-card border border-borderClr py-3 pl-12 pr-6 rounded-xl outline-none focus:border-neon text-xs">
-                         </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-subtext"></i>
+                        <input type="text" x-model="searchQuery" placeholder="Filter by name or code..." class="bg-card border border-borderClr py-3 pl-12 pr-6 rounded-xl outline-none focus:border-neon text-xs">
                     </div>
                 </div>
 
@@ -195,29 +233,33 @@
                             <tr class="bg-darkBg/50 text-subtext text-[10px] uppercase font-black tracking-widest">
                                 <th class="p-8">Student Code</th>
                                 <th class="p-8">Subject Identity</th>
-                                <th class="p-8">Mobile Contact</th>
-                                <th class="p-8">Addiction Score</th>
+                                <th class="p-8">Stage</th>
+                                <th class="p-8">Addiction Level</th>
                                 <th class="p-8 text-right">Operation</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-borderClr">
-                            <template x-for="student in filteredStudents()" :key="student.id">
+                            <template x-for="record in filteredStudents()" :key="record.diagnosis_id">
                                 <tr class="hover:bg-neon/5 transition-all">
-                                    <td class="p-8 font-mono text-neon font-bold" x-text="student.student_code"></td>
-                                    <td class="p-8 text-white font-bold" x-text="student.name"></td>
-                                    <td class="p-8 text-subtext font-medium" x-text="student.phone"></td>
+                                    <td class="p-8 font-mono text-neon font-bold" x-text="record.user?.student_code || '—'"></td>
+                                    <td class="p-8 text-white font-bold" x-text="record.user?.name || '—'"></td>
+                                    <td class="p-8">
+                                        <span class="text-xs font-black px-3 py-1 rounded-full"
+                                              :class="record.brainrot_stage?.includes('Severe') ? 'bg-danger/20 text-danger' : (record.brainrot_stage?.includes('Moderate') ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-500/20 text-emerald-500')"
+                                              x-text="record.brainrot_stage || '—'"></span>
+                                    </td>
                                     <td class="p-8">
                                         <div class="flex items-center gap-3">
                                             <div class="w-24 h-1.5 bg-darkBg rounded-full overflow-hidden">
                                                 <div class="h-full" 
-                                                     :class="student.level > 7 ? 'bg-danger' : (student.level > 4 ? 'bg-amber-500' : 'bg-emerald-500')"
-                                                     :style="`width: ${student.level * 10}%` text-neon"></div>
+                                                     :class="record.addiction_level > 7 ? 'bg-danger' : (record.addiction_level > 4 ? 'bg-amber-500' : 'bg-emerald-500')"
+                                                     :style="`width: ${Math.min(record.addiction_level * 10, 100)}%`"></div>
                                             </div>
-                                            <span class="font-black text-xs italic" x-text="student.level + '/10'"></span>
+                                            <span class="font-black text-xs italic" x-text="(record.addiction_level || 0) + '/10'"></span>
                                         </div>
                                     </td>
                                     <td class="p-8 text-right">
-                                        <button @click="viewDetails(student)" class="text-neon border border-neon/20 px-4 py-2 rounded-lg text-[10px] font-black uppercase italic hover:bg-neon hover:text-darkBg transition-all">Details</button>
+                                        <button @click="viewDetails(record.user_id)" class="text-neon border border-neon/20 px-4 py-2 rounded-lg text-[10px] font-black uppercase italic hover:bg-neon hover:text-darkBg transition-all">Details</button>
                                     </td>
                                 </tr>
                             </template>
@@ -241,7 +283,7 @@
                             </div>
                             <h3 class="text-2xl font-black italic uppercase tracking-tight">Manual Enrollment</h3>
                         </div>
-                        <form @submit.prevent="enrollStudent()" class="space-y-8">
+                        <form @submit.prevent="handleEnrollment()" class="space-y-8">
                             <div>
                                 <label class="text-[10px] font-black uppercase text-neon mb-2 block tracking-widest">Full Subject Name</label>
                                 <input type="text" x-model="enrollForm.name" required 
@@ -249,7 +291,7 @@
                             </div>
                             <div>
                                 <label class="text-[10px] font-black uppercase text-neon mb-2 block tracking-widest">Mobile Phone Number</label>
-                                <input type="text" x-model="enrollForm.phone" required 
+                                <input type="text" x-model="enrollForm.phone_number"
                                        class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-neon transition-all text-white shadow-inner">
                             </div>
                             <div>
@@ -269,8 +311,8 @@
                             <i class="fa-solid fa-file-csv text-accent text-4xl"></i>
                         </div>
                         <h3 class="text-2xl font-black italic uppercase tracking-tight mb-4">Bulk Data Ingestion</h3>
-                        <p class="text-subtext text-sm mb-12 max-w-xs mx-auto italic font-medium">Synchronize large-scale subject lists via Excel or CSV format directly to the central server.</p>
-                        <input type="file" id="bulk_file" class="hidden" @change="handleFileUpload($event)">
+                        <p class="text-subtext text-sm mb-12 max-w-xs mx-auto italic font-medium">Synchronize large-scale subject lists via Excel or CSV format.</p>
+                        <input type="file" id="bulk_file" class="hidden" @change="handleBulkImport($event)">
                         <label for="bulk_file" class="bg-accent text-darkBg font-black px-12 py-5 rounded-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all uppercase text-xs italic tracking-widest shadow-xl">
                             Select Source File
                         </label>
@@ -279,15 +321,15 @@
             </div>
 
             <!-- SCREEN: SUPER ADMIN ROOT -->
-            <div x-show="screen === 'super' && userRole === 'super'" x-transition class="space-y-12">
+            <div x-show="screen === 'super' && userRole === 'super_admin'" x-transition class="space-y-12">
                 <h1 class="text-5xl font-black text-danger italic uppercase tracking-tighter">Root System Authority</h1>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div class="bg-card p-12 rounded-[50px] border border-danger/20 relative">
                         <div class="absolute -top-4 -left-4 bg-danger text-white text-[10px] font-black px-4 py-2 rounded-lg italic uppercase tracking-widest">Root Access Only</div>
                         <h3 class="text-2xl font-black mb-10 italic uppercase">Spawn Operator Account</h3>
                         <form @submit.prevent="createAdmin()" class="space-y-6">
-                            <input type="text" x-model="adminForm.username" placeholder="New Operator Name" required class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-danger text-white">
-                            <input type="password" x-model="adminForm.password" placeholder="System Key" required class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-danger text-white">
+                            <input type="text" x-model="adminForm.username" placeholder="New Operator Username" required class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-danger text-white">
+                            <input type="password" x-model="adminForm.password" placeholder="System Key (min 6 chars)" required class="w-full bg-darkBg border border-borderClr p-5 rounded-2xl outline-none focus:border-danger text-white">
                             <button type="submit" :disabled="isLoading" class="w-full bg-danger text-white font-black py-5 rounded-2xl text-sm uppercase italic hover:opacity-90 transition-all">Authorize & Save</button>
                         </form>
                     </div>
@@ -303,9 +345,33 @@
                                 <span class="text-xs font-black text-neon italic">OPTIMIZED</span>
                             </div>
                             <div class="flex justify-between items-center p-4 bg-darkBg rounded-2xl">
-                                <span class="text-xs font-bold text-subtext uppercase">Storage Capacity</span>
-                                <span class="text-xs font-black text-accent italic">94% FREE</span>
+                                <span class="text-xs font-bold text-subtext uppercase">API Version</span>
+                                <span class="text-xs font-black text-accent italic">v7.0 Refactored</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STUDENT PROFILE MODAL -->
+            <div x-show="openProfile" x-transition class="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4" @click.self="openProfile = false">
+                <div class="bg-surface border border-borderClr rounded-[40px] p-10 max-w-2xl w-full max-h-[80vh] overflow-y-auto custom-scroll">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-black italic uppercase">Student Profile</h2>
+                        <button @click="openProfile = false" class="text-subtext hover:text-danger transition-all"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between p-4 bg-darkBg rounded-2xl">
+                            <span class="text-subtext text-xs uppercase font-bold">Name</span>
+                            <span class="text-white font-bold text-sm" x-text="selectedStudent?.data?.name || selectedStudent?.name || '—'"></span>
+                        </div>
+                        <div class="flex justify-between p-4 bg-darkBg rounded-2xl">
+                            <span class="text-subtext text-xs uppercase font-bold">Student Code</span>
+                            <span class="text-neon font-mono font-bold text-sm" x-text="selectedStudent?.data?.student_code || selectedStudent?.student_code || '—'"></span>
+                        </div>
+                        <div class="flex justify-between p-4 bg-darkBg rounded-2xl">
+                            <span class="text-subtext text-xs uppercase font-bold">Total Diagnoses</span>
+                            <span class="text-white font-bold text-sm" x-text="selectedStudent?.data?.diagnoses?.length || 0"></span>
                         </div>
                     </div>
                 </div>
@@ -314,157 +380,7 @@
         </main>
     </div>
 
-    <!-- JAVASCRIPT LOGIC - UPDATED & CLEANED -->
-    <script>
-        axios.defaults.withCredentials = true;
-        const API_BASE = "https://trovo-project-production.up.railway.app/api";
-
-        function trovoApp() {
-            return {
-                isLoggedIn: false,
-                userRole: null, 
-                currentUsername: '',
-                screen: 'overview',
-                isLoading: false, 
-                errorMessage: '',
-                searchQuery: '',
-                accessToken: localStorage.getItem('trovo_token'), 
-                
-                loginForm: { username: '', password: '' },
-                enrollForm: { name: '', phone: '', student_code: '' },
-                adminForm: { username: '', password: '' },
-                
-                students: [], 
-                stats: { total: 0, mild: 0, moderate: 0, severe: 0 },
-
-                async init() {
-                    if(this.accessToken) {
-                        this.isLoggedIn = true;
-                        this.currentUsername = localStorage.getItem('trovo_user');
-                        this.userRole = localStorage.getItem('trovo_role');
-                        await this.fetchDashboardData();
-                    }
-                },
-
-                async performAdminAuth() {
-                    this.isLoading = true;
-                    this.errorMessage = '';
-                    try {
-                        const res = await axios.post(`${API_BASE}/admin/login`, this.loginForm);
-                        if(res.data.status === 'success') {
-                            this.accessToken = res.data.token;
-                            this.userRole = res.data.role; 
-                            this.currentUsername = res.data.user.username;
-                            
-                            localStorage.setItem('trovo_token', this.accessToken);
-                            localStorage.setItem('trovo_user', this.currentUsername);
-                            localStorage.setItem('trovo_role', this.userRole);
-                            
-                            this.isLoggedIn = true;
-                            await this.fetchDashboardData();
-                        }
-                    } catch (err) {
-                        this.errorMessage = err.response?.data?.message || 'IDENTITY DENIED: Database mismatch.';
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-
-                async fetchDashboardData() {
-                    if (!this.accessToken) return;
-                    this.isLoading = true;
-                    try {
-                        const res = await axios.get(`${API_BASE}/students`, {
-                            headers: { Authorization: `Bearer ${this.accessToken}` }
-                        });
-                        this.students = res.data.data || [];
-                        this.stats = res.data.stats || { total: 0, mild: 0, moderate: 0, severe: 0 };
-                    } catch (err) {
-                        if(err.response?.status === 401) this.logout();
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-
-                filteredStudents() {
-                    if (!this.searchQuery) return this.students;
-                    const q = this.searchQuery.toLowerCase();
-                    return this.students.filter(s => 
-                        (s.name && s.name.toLowerCase().includes(q)) || 
-                        (s.student_code && s.student_code.toLowerCase().includes(q))
-                    );
-                },
-
-                async enrollStudent() {
-                    this.isLoading = true;
-                    try {
-                        await axios.post(`${API_BASE}/students/enroll`, this.enrollForm, {
-                            headers: { Authorization: `Bearer ${this.accessToken}` }
-                        });
-                        alert('Subject identity committed to database successfully.');
-                        this.enrollForm = { name: '', phone: '', student_code: '' };
-                        await this.fetchDashboardData();
-                    } catch (err) {
-                        alert(err.response?.data?.message || 'Transaction failed.');
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-
-                async createAdmin() {
-                    this.isLoading = true;
-                    try {
-                        await axios.post(`${API_BASE}/super/create-admin`, this.adminForm, {
-                            headers: { Authorization: `Bearer ${this.accessToken}` }
-                        });
-                        alert(`Operator ${this.adminForm.username} authorized successfully.`);
-                        this.adminForm = { username: '', password: '' };
-                    } catch (err) {
-                        alert('Authority error.');
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-
-                async handleFileUpload(event) {
-                    const file = event.target.files[0];
-                    if(!file) return;
-                    
-                    let formData = new FormData();
-                    formData.append('file', file);
-                    
-                    this.isLoading = true;
-                    try {
-                        await axios.post(`${API_BASE}/students/import`, formData, {
-                            headers: { 
-                                'Content-Type': 'multipart/form-data',
-                                Authorization: `Bearer ${this.accessToken}`
-                            }
-                        });
-                        alert('Bulk ingestion complete.');
-                        await this.fetchDashboardData();
-                    } catch (err) {
-                        alert('Import failed.');
-                    } finally {
-                        this.isLoading = false;
-                        event.target.value = '';
-                    }
-                },
-
-                viewDetails(student) {
-                    // Logic updated: System now relies on internal AI metrics
-                    console.log("AI Internal Analysis for:", student.name);
-                    alert(`Deep analysis for ${student.name} - Current Level: ${student.level}/10`);
-                },
-
-                logout() {
-                    localStorage.clear();
-                    this.isLoggedIn = false;
-                    this.accessToken = null;
-                    window.location.reload();
-                }
-            }
-        }
-    </script>
+    <!-- Unified Script -->
+    <script src="script.js"></script>
 </body>
 </html>

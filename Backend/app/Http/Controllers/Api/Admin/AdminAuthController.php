@@ -20,10 +20,8 @@ class AdminAuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // البحث في جدول admins وليس users
         $admin = Admin::where('username', $request->username)->first();
 
-        // التحقق من وجوده ومطابقة الباسورد المشفر
         if (!$admin || !Hash::check($request->password, $admin->password)) {
             return response()->json([
                 'status' => 'error',
@@ -31,7 +29,6 @@ class AdminAuthController extends Controller
             ], 401);
         }
 
-        // توليد توكن بصلاحية access-admin (مهمة جداً للميدل وير)
         $token = $admin->createToken('admin_auth_token', ['access-admin'])->plainTextToken;
 
         return response()->json([
@@ -45,5 +42,45 @@ class AdminAuthController extends Controller
                 'role' => $admin->role
             ]
         ], 200);
+    }
+
+    /**
+     * إنشاء أدمن جديد (Super Admin فقط)
+     */
+    public function createAdmin(Request $request): JsonResponse
+    {
+        $currentAdmin = $request->user();
+
+        // التحقق من أن الشخص هو سوبر أدمن
+        if (!$currentAdmin || $currentAdmin->role !== 'super_admin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'هذه العملية متاحة فقط للسوبر أدمن.'
+            ], 403);
+        }
+
+        $request->validate([
+            'username' => 'required|string|unique:admins,username|min:3',
+            'password' => 'required|string|min:6',
+            'name'     => 'nullable|string|max:255',
+        ]);
+
+        $admin = Admin::create([
+            'name'     => $request->name ?? $request->username,
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+            'role'     => 'admin',
+        ]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم إنشاء حساب الأدمن بنجاح.',
+            'admin'   => [
+                'id'       => $admin->id,
+                'name'     => $admin->name,
+                'username' => $admin->username,
+                'role'     => $admin->role,
+            ]
+        ], 201);
     }
 }

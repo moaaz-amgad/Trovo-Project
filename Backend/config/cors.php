@@ -6,7 +6,8 @@ return [
     'allowed_origins' => [
         'http://127.0.0.1:5500',
         'http://localhost:5500',
-        'http://localhost:3000', // احتياطي لو غيرت المنفذ
+        'http://localhost:3000',
+        'https://trovo-project-production.up.railway.app',
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
@@ -14,4 +15,3 @@ return [
     'max_age' => 0,
     'supports_credentials' => true,
 ];
-

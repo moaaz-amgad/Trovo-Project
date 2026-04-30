@@ -6,51 +6,23 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Diagnosis;
 use App\Models\User;
+use App\Services\DashboardService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
+    public function __construct(
+        private DashboardService $dashboardService
+    ) {}
+
     /**
      * 1. الإحصائيات الشاملة (Dashboard Home)
-     * تم تحديث الحسبة لتكون أكثر دقة وإضافة العوامل الأكثر تأثيراً
      */
     public function getStats(): JsonResponse
     {
-        // إجمالي الطلاب المسجلين وإجمالي الفحوصات المكتملة
-        $totalStudents = User::count();
-        $totalDiagnoses = Diagnosis::count();
+        $stats = $this->dashboardService->getStats();
 
-        // تصنيف الحالات بناءً على مخرجات موديل الـ AI
-        $mild = Diagnosis::where('brainrot_stage', 'like', '%Mild%')->count();
-        $moderate = Diagnosis::where('brainrot_stage', 'like', '%Moderate%')->count();
-        $severe = Diagnosis::where('brainrot_stage', 'like', '%Severe%')->count();
-
-        // حساب نسبة الإدمان الرقمي بناءً على الحالات المتوسطة والحادة مقارنة بمن تم فحصهم
-        $addictedCount = $moderate + $severe;
-        $addictionRate = $totalDiagnoses > 0
-            ? round(($addictedCount / $totalDiagnoses) * 100, 1)
-            : 0;
-
-        // --- حساب الـ Top Factors (تحليل العوامل الأكثر تكراراً في التشخيصات) ---
-        // بنجيب كل الـ top_factors المسجلة، بنقسم الكلمات، ونعد أكتر حاجات اتكررت
-        $allFactors = Diagnosis::pluck('top_factors')->filter()->toArray();
-        $factorCounts = [];
-
-        foreach ($allFactors as $row) {
-            // تقسيم الكلمات بناءً على الفاصلة أو المسافة
-            $tags = preg_split('/[, ]+/', $row);
-            foreach ($tags as $tag) {
-                $tag = trim($tag);
-                if (!empty($tag) && strlen($tag) > 2) {
-                    $factorCounts[$tag] = ($factorCounts[$tag] ?? 0) + 1;
-                }
-            }
-        }
-        arsort($factorCounts); // ترتيب من الأكثر تكراراً للأقل
-        $topFactors = array_slice(array_keys($factorCounts), 0, 3); // أخذ أهم 3 عوامل
-
-        // آخر 5 نشاطات تشخيصية مع جلب كود الطالب للتمييز
+        // آخر 5 نشاطات تشخيصية
         $recentActivity = Diagnosis::with('user:id,name,student_code')
             ->latest('diagnosed_at')
             ->take(5)
@@ -58,24 +30,14 @@ class AdminDashboardController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'stats' => [
-                'total_students'    => $totalStudents,
-                'total_diagnoses'   => $totalDiagnoses,
-                'addiction_rate'    => $addictionRate . '%',
-                'accuracy_rate'     => '94.8%',
-                'top_impact_factors' => $topFactors, // العوامل الأهم المكتشفة
-                'case_distribution' => [
-                    'mild'     => $mild,
-                    'moderate' => $moderate,
-                    'severe'   => $severe,
-                ],
-                'recent_activity'   => $recentActivity
-            ]
+            'stats' => array_merge($stats, [
+                'recent_activity' => $recentActivity
+            ])
         ], 200);
     }
 
     /**
-     * 2. جدول كل التشخيصات (Logs)
+     * 2. جدول كل التشخيصات (Logs) — مع Pagination
      */
     public function getAllDiagnoses(): JsonResponse
     {
@@ -101,7 +63,7 @@ class AdminDashboardController extends Controller
             'questionnaireResponses' => function($q) {
                 $q->latest('answered_at');
             },
-            'diagnosis' => function($q) {
+            'diagnoses' => function($q) {
                 $q->latest('diagnosed_at');
             }
         ])->find($id);
@@ -135,10 +97,40 @@ class AdminDashboardController extends Controller
 
         $diagnosis->delete();
 
+        // مسح كاش الداشبورد بعد الحذف
+        $this->dashboardService->clearCache();
+
         return response()->json([
             'status' => 'success',
             'message' => 'تم حذف سجل التشخيص بنجاح.'
         ], 200);
     }
-}
 
+    /**
+     * 5. جلب بيانات الأدمن الحالي
+     */
+    public function me(Request $request): JsonResponse
+    {
+        $admin = $request->user();
+
+        return response()->json([
+            'id'       => $admin->id,
+            'name'     => $admin->name,
+            'username' => $admin->username,
+            'role'     => $admin->role,
+        ], 200);
+    }
+
+    /**
+     * 6. تسجيل خروج الأدمن
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم تسجيل الخروج بنجاح.'
+        ], 200);
+    }
+}

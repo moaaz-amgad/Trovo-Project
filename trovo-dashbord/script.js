@@ -1,7 +1,7 @@
 /**
- * TROVO Intelligence System - Core Engine v6.1 (STABLE REVISION)
+ * TROVO Intelligence System - Core Engine v7.0 (REFACTORED)
  * Project: Digital Dopamine Addiction Diagnosis AI
- * Status: Unified Variable Naming & Auth Keys Sync - FINAL PRODUCTION READY
+ * Status: Unified, cleaned, all API mismatches fixed
  */
 
 document.addEventListener('alpine:init', () => {
@@ -13,8 +13,7 @@ document.addEventListener('alpine:init', () => {
         userRole: null, 
         currentUsername: '',
         errorMessage: '',
-        // استخدام المفتاح الموحد trovo_admin_token للتخزين المحلي
-        token: localStorage.getItem('trovo_admin_token'),
+        token: localStorage.getItem('trovo_token'),
         loginForm: { 
             username: '', 
             password: '' 
@@ -29,10 +28,9 @@ document.addEventListener('alpine:init', () => {
         searchQuery: '',
 
         // ==========================================
-        // 3. DATA CONTAINERS (NEURAL REPOSITORY)
+        // 3. DATA CONTAINERS
         // ==========================================
         students: [], 
-        admins: [],   
         selectedStudent: {},
         
         // ==========================================
@@ -40,8 +38,8 @@ document.addEventListener('alpine:init', () => {
         // ==========================================
         enrollForm: { 
             name: '', 
-            phone: '', 
-            code: '' 
+            phone_number: '', 
+            student_code: '' 
         },
         adminForm: { 
             username: '', 
@@ -56,41 +54,28 @@ document.addEventListener('alpine:init', () => {
             '#d97706', '#f87171', '#ef4444', '#dc2626', '#7f1d1d'
         ],
         
-        fields17: [
-            'daily_usage_hours', 'screen_time_before_bed', 'phone_checks_per_day', 
-            'apps_used_daily', 'time_on_social_media', 'time_on_gaming', 
-            'weekend_usage_hours', 'sleep_hours', 'academic_performance', 
-            'social_interactions', 'exercise_hours', 'anxiety_level', 
-            'depression_level', 'self_esteem', 'time_on_education', 
-            'gender', 'phone_usage_purpose'
-        ],
-
         // ==========================================
         // 6. ANALYTICS & STATISTICAL MODELS
         // ==========================================
         stats: { 
-            total: 0, 
-            mild: 0, 
-            moderate: 0, 
-            severe: 0, 
-            avgLevel: 0 
+            total_students: 0, 
+            total_diagnoses: 0,
+            addiction_rate: '0%',
+            case_distribution: { mild: 0, moderate: 0, severe: 0 },
+            top_impact_factors: [],
+            recent_activity: []
         },
-        distribution: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        mainIssues: [
-            { label: 'Dopamine Loop', val: 0 },
-            { label: 'Circadian Rhythm', val: 0 },
-            { label: 'Neural Threshold', val: 0 }
-        ],
 
         // ==========================================
         // 7. COMPUTED LOGIC (SEARCH & FILTER)
         // ==========================================
-        get filteredStudents() {
+        filteredStudents() {
+            if (!this.students || !this.students.length) return [];
             if (!this.searchQuery) return this.students;
             const q = this.searchQuery.toLowerCase();
             return this.students.filter(s => 
-                (s.student?.name?.toLowerCase().includes(q)) || 
-                (s.student?.student_code?.toLowerCase().includes(q))
+                (s.user?.name?.toLowerCase().includes(q)) || 
+                (s.user?.student_code?.toLowerCase().includes(q))
             );
         },
 
@@ -98,9 +83,7 @@ document.addEventListener('alpine:init', () => {
         // 8. SYSTEM INITIALIZATION
         // ==========================================
         async init() {
-            console.log('TROVO: System Synchronizing (Full Spectrum)...');
-            
-            axios.defaults.baseURL = 'https://trovo-project-production.up.railway.app';
+            console.log('TROVO: System Initializing v7.0...');
             
             if (this.token) {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
@@ -110,18 +93,22 @@ document.addEventListener('alpine:init', () => {
 
         async checkAuthStatus() {
             try {
-                const res = await axios.get('/api/admin/me');
+                const res = await axios.get(`${this.apiBase}/admin/me`);
                 if (res.data) {
                     this.isLoggedIn = true;
-                    // مطابقة المسميات مع رد الميدل وير والكنترولر (userRole و username)
                     this.userRole = res.data.role; 
                     this.currentUsername = res.data.username || res.data.name;
-                    await this.syncDataWithProduction();
+                    await this.fetchDashboardData();
                 }
             } catch (e) { 
                 console.log('TROVO: Session Expired. Re-authentication Required.'); 
                 this.logoutSilently();
             }
+        },
+
+        // API base URL — computed property
+        get apiBase() {
+            return 'https://trovo-project-production.up.railway.app/api';
         },
 
         // ==========================================
@@ -134,84 +121,83 @@ document.addEventListener('alpine:init', () => {
             this.errorMessage = '';
 
             try {
-                // إرسال طلب تسجيل الدخول للمسار الصحيح
-                const response = await axios.post('/api/admin/login', {
+                const response = await axios.post(`${this.apiBase}/admin/login`, {
                     username: this.loginForm.username,
                     password: this.loginForm.password
                 });
 
                 const data = response.data;
 
-                // مطابقة رد الكنترولر: status === 'success' و access_token
                 if (data.status === 'success' && data.access_token) {
                     this.token = data.access_token;
-                    localStorage.setItem('trovo_admin_token', this.token);
+                    localStorage.setItem('trovo_token', this.token);
                     
-                    // تحديث هيدر الأوثنتيكيشن فوراً للطلبات القادمة
                     axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
                     
                     this.isLoggedIn = true;
-                    
-                    // الوصول لبيانات الأدمن من مفتاح 'admin' كما في الكنترولر وصورة بوست مان
                     this.userRole = data.admin.role; 
                     this.currentUsername = data.admin.username;
                     
-                    // تخزين إضافي للتأكد من استقرار الجلسة عبر الصفحات
                     localStorage.setItem('trovo_user', this.currentUsername);
                     localStorage.setItem('trovo_role', this.userRole);
 
-                    await this.syncDataWithProduction();
-                    alert('IDENTITY VERIFIED: Welcome ' + (data.admin.name || 'Super Operator'));
+                    await this.fetchDashboardData();
+                    alert('IDENTITY VERIFIED: Welcome ' + (data.admin.name || 'Operator'));
                 }
             } catch (error) {
                 console.error('Login Failure:', error.response?.data);
-                // عرض الرسالة القادمة من الـ CheckAdmin Middleware أو الكنترولر (رسائل عربية/إنجليزية)
                 const errorMsg = error.response?.data?.message || 'Access Denied: Invalid Credentials';
-                alert(errorMsg);
                 this.errorMessage = errorMsg;
             } finally {
                 this.isLoading = false;
             }
         },
 
-        async syncDataWithProduction() {
+        async fetchDashboardData() {
             if (!this.isLoggedIn) return;
             this.isLoading = true;
             try {
-                const [studentRes, statsRes] = await Promise.all([
-                    axios.get('/api/admin/all-diagnoses'),
-                    axios.get('/api/admin/dashboard-stats')
+                const [diagnosesRes, statsRes] = await Promise.all([
+                    axios.get(`${this.apiBase}/admin/all-diagnoses`),
+                    axios.get(`${this.apiBase}/admin/dashboard-stats`)
                 ]);
 
-                this.students = studentRes.data;
-                this.applyServerStats(statsRes.data);
-                this.recalculateLocalAnalytics();
+                // all-diagnoses returns paginated data
+                this.students = diagnosesRes.data?.data?.data || diagnosesRes.data?.data || [];
+                
+                if (statsRes.data?.stats) {
+                    this.stats = statsRes.data.stats;
+                }
                 
             } catch (error) {
                 console.error('TROVO Sync Error:', error);
+                if (error.response?.status === 401) {
+                    this.logoutSilently();
+                }
             } finally {
                 this.isLoading = false;
             }
         },
 
         async handleEnrollment() {
-            if (!this.enrollForm.name || !this.enrollForm.phone || !this.enrollForm.code) return;
+            if (!this.enrollForm.name || !this.enrollForm.student_code) return;
             this.isLoading = true;
             try {
-                const response = await axios.post('/api/admin/add-student-manual', {
+                const response = await axios.post(`${this.apiBase}/admin/add-student-manual`, {
                     name: this.enrollForm.name,
-                    phone: this.enrollForm.phone,
-                    student_code: this.enrollForm.code 
+                    phone_number: this.enrollForm.phone_number,
+                    student_code: this.enrollForm.student_code 
                 });
 
                 if (response.data) {
-                    await this.syncDataWithProduction();
-                    this.enrollForm = { name: '', phone: '', code: '' };
+                    await this.fetchDashboardData();
+                    this.enrollForm = { name: '', phone_number: '', student_code: '' };
                     alert('STUDENT REGISTERED: Record successfully injected into database.');
                     this.screen = 'database';
                 }
             } catch (error) {
-                alert('REGISTRATION ERROR: Security conflict or duplicate student code.');
+                const msg = error.response?.data?.message || 'REGISTRATION ERROR: Security conflict or duplicate student code.';
+                alert(msg);
             } finally {
                 this.isLoading = false;
             }
@@ -226,58 +212,50 @@ document.addEventListener('alpine:init', () => {
 
             this.isLoading = true;
             try {
-                await axios.post('/api/admin/import-students', formData, {
+                await axios.post(`${this.apiBase}/admin/import-students`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
-                await this.syncDataWithProduction();
+                await this.fetchDashboardData();
                 alert('IMPORT COMPLETE: Neural records updated via bulk file.');
             } catch (e) {
                 alert('IMPORT FAILED: Malformed Excel structure detected.');
             } finally {
                 this.isLoading = false;
-                event.target.value = ''; // إعادة تعيين الحقل
+                event.target.value = '';
             }
         },
 
-        // ==========================================
-        // 10. DIAGNOSTIC ANALYTICS ENGINE
-        // ==========================================
-        applyServerStats(serverData) {
-            if (serverData.stats) {
-                this.stats = serverData.stats;
-            }
-        },
-
-        recalculateLocalAnalytics() {
-            const count = this.students.length;
-            if (count === 0) return;
-
-            this.stats.total = count;
-            this.stats.mild = this.students.filter(s => s.score <= 30).length;
-            this.stats.moderate = this.students.filter(s => s.score > 30 && s.score <= 70).length;
-            this.stats.severe = this.students.filter(s => s.score > 70).length;
-            
-            let dist = new Array(10).fill(0);
-            this.students.forEach(s => {
-                let lvl = Math.ceil(s.score / 10); 
-                if (lvl >= 1 && lvl <= 10) dist[lvl - 1]++;
-            });
-            this.distribution = dist;
-        },
-
-        async openSubjectDossier(studentId) {
+        async viewDetails(studentId) {
             this.isLoading = true;
             try {
-                const res = await axios.get(`/api/admin/student/${studentId}`);
-                this.selectedStudent = res.data;
+                const res = await axios.get(`${this.apiBase}/admin/student/${studentId}`);
+                this.selectedStudent = res.data?.data || res.data;
                 this.openProfile = true;
             } catch (e) {
-                alert('ACCESS DENIED: Detailed neural profile is locked or missing.');
+                alert('ACCESS DENIED: Detailed profile is locked or missing.');
             } finally {
                 this.isLoading = false;
             }
         },
 
+        async createAdmin() {
+            if (!this.adminForm.username || !this.adminForm.password) return;
+            this.isLoading = true;
+            try {
+                const res = await axios.post(`${this.apiBase}/admin/create-admin`, this.adminForm);
+                alert(`Operator ${this.adminForm.username} authorized successfully.`);
+                this.adminForm = { username: '', password: '' };
+            } catch (err) {
+                const msg = err.response?.data?.message || 'Authority error.';
+                alert(msg);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        // ==========================================
+        // 10. UTILITY FUNCTIONS
+        // ==========================================
         getColor(score) {
             let index = Math.min(Math.max(Math.floor(score / 10), 0), 9);
             return this.barColors[index];
@@ -289,7 +267,7 @@ document.addEventListener('alpine:init', () => {
         logout() {
             if (confirm('Terminate Session and Purge Local Auth Cache?')) {
                 this.isLoading = true;
-                axios.post('/api/admin/logout').finally(() => {
+                axios.post(`${this.apiBase}/admin/logout`).finally(() => {
                     this.clearAuthAndReload();
                 });
             }
@@ -300,11 +278,12 @@ document.addEventListener('alpine:init', () => {
         },
 
         clearAuthAndReload() {
-            localStorage.removeItem('trovo_admin_token');
+            localStorage.removeItem('trovo_token');
             localStorage.removeItem('trovo_user');
             localStorage.removeItem('trovo_role');
             this.isLoggedIn = false;
             this.token = null;
+            delete axios.defaults.headers.common['Authorization'];
             window.location.reload();
         }
     }));

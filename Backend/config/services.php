@@ -28,6 +28,16 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | AI Prediction Server
+    |--------------------------------------------------------------------------
+    */
+    'ai' => [
+        'url' => env('AI_SERVER_URL', 'https://brain-rot-prediction-and-classification-production.up.railway.app'),
+        'timeout' => env('AI_TIMEOUT', 60),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

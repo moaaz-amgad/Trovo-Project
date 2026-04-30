@@ -10,8 +10,7 @@ class Diagnosis extends Model
 {
     use HasFactory;
 
-    // إجبار لارفيل على استخدام اسم الجدول المفرد كما في الميجريشن
-    protected $table = 'diagnosis';
+    protected $table = 'diagnoses';
     protected $primaryKey = 'diagnosis_id';
 
     protected $fillable = [
@@ -19,16 +18,16 @@ class Diagnosis extends Model
         'usage_id',
         'questionnaire_id',
         'addiction_level',
-        'brainrot_stage',   // تم التعديل ليطابق الـ JSON والميجريشن
-        'analysis_intro',    // تم التعديل ليطابق الـ JSON والميجريشن
-        'top_factors',      // إضافة العمود الجديد الخاص بالعوامل
+        'brainrot_stage',
+        'analysis_intro',
+        'top_factors',
         'recommendations',
         'diagnosed_at'
     ];
 
     protected $casts = [
         'addiction_level' => 'float',
-        'top_factors'     => 'array', // تحويل العوامل لمصفوفة تلقائياً
+        'top_factors'     => 'array',
         'recommendations' => 'array',
         'diagnosed_at'    => 'datetime',
     ];
@@ -57,4 +56,3 @@ class Diagnosis extends Model
         return $this->belongsTo(QuestionnaireResponse::class, 'questionnaire_id', 'questionnaire_id');
     }
 }
-

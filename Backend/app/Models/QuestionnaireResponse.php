@@ -9,6 +9,7 @@ class QuestionnaireResponse extends Model
 {
     protected $table = 'questionnaire_responses';
     protected $primaryKey = 'questionnaire_id';
+    public $timestamps = false;
 
     protected $fillable = [
         'user_id',
@@ -43,6 +44,4 @@ class QuestionnaireResponse extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-public $timestamps = false;
-
 }

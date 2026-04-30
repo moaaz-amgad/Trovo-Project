@@ -27,7 +27,6 @@ class PhoneUsageController extends Controller
             'weekend_usage_hours'    => 'required|numeric|min:0|max:24',
         ]);
 
-        // تنفيذ التخزين من خلال العلاقة المعرفة في موديل اليوزر
         $usage = $user->phoneUsages()->create(array_merge($validatedData, [
             'collected_at' => now(),
         ]));
@@ -40,21 +39,20 @@ class PhoneUsageController extends Controller
     }
 
     /**
-     * عرض تاريخ الاستخدام الخاص باليوزر الحالي فقط
+     * عرض تاريخ الاستخدام الخاص باليوزر الحالي فقط — مع Pagination
      */
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        // جلب البيانات مرتبة من الأحدث للأقدم
-        $history = $user->phoneUsages()->latest('collected_at')->get();
+        $history = $user->phoneUsages()
+            ->latest('collected_at')
+            ->paginate(15);
 
         return response()->json([
             'status' => 'success',
             'user'   => $user->name,
-            'count'  => $history->count(),
             'data'   => $history
         ], 200);
     }
 }
-
