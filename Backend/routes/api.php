@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\DiagnosisController;
 use App\Http\Controllers\Api\Admin\ExcelController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
+use App\Http\Controllers\Api\Admin\AdminAuthController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -31,24 +32,29 @@ Route::get('/fix-all', function () {
 });
 
 // --- 2. المسارات العامة (Public) ---
-// الطالب بيدخل بكود الطالب (student_code) كـ username و password
+
+// دخول الطلاب (جدول users)
 Route::post('/login', [AuthController::class, 'login']);
 
-// --- 3. مسارات الإدارة (Admin Dashboard) ---
-// تم تعديل الميدلوير ليعتمد على 'checkAbilities' الخاصة بسانكتوم بدلاً من 'admin' المخصص
+// دخول الإدارة (جدول admins) - تم إضافته ليفصل بين الطالب والأدمن
+Route::post('/admin/login', [AdminAuthController::class, 'login']);
+
+
+// --- 3. مسارات الإدارة (Admin Dashboard) المحمية ---
 Route::middleware(['auth:sanctum', 'ability:access-admin'])->prefix('admin')->group(function () {
 
     Route::post('/import-students', [ExcelController::class, 'import']);
     Route::post('/add-student-manual', [ExcelController::class, 'storeManual']);
 
-    // إحصائيات الداشبورد (المحدثة بدون تقسيمات الجنسين العامة)
+    // إحصائيات الداشبورد
     Route::get('/dashboard-stats', [AdminDashboardController::class, 'getStats']);
     Route::get('/all-diagnoses', [AdminDashboardController::class, 'getAllDiagnoses']);
 
-    // بروفايل الطالب (بيجلب كل البيانات بما فيها الـ gender للـ AI)
+    // بروفايل الطالب
     Route::get('/student/{id}', [AdminDashboardController::class, 'getStudentProfile']);
     Route::delete('/diagnosis/{id}', [AdminDashboardController::class, 'deleteDiagnosis']);
 });
+
 
 // --- 4. مسارات الطلاب (Students) المحمية ---
 Route::middleware(['auth:sanctum', 'ability:access-student'])->group(function () {
@@ -60,24 +66,23 @@ Route::middleware(['auth:sanctum', 'ability:access-student'])->group(function ()
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);
     Route::get('/phone-usage', [PhoneUsageController::class, 'index']);
 
-    // تسجيل بيانات الاستبيان (Questionnaire) - تحتوي على الـ gender
+    // تسجيل بيانات الاستبيان (Questionnaire)
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
-    // طلب التحليل من الـ AI وحفظ النتيجة في جدول 'diagnosis'
+    // طلب التحليل من الـ AI
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate']);
-    Route::get('/diagnosis-history', [DiagnosisController::class, 'index']); // تاريخ تشخيصات الطالب
+    Route::get('/diagnosis-history', [DiagnosisController::class, 'index']);
 });
-// routes/api.php
 
+// --- 5. تهيئة السوبر أدمن (Initialization) ---
 Route::get('/init-super-admin', function () {
     try {
-        // بنستخدم Query Builder مباشرة عشان نضمن الوصول لجدول admins اللي إنت مكريهه
         $adminId = DB::table('admins')->insertGetId([
-            'name'     => 'Super Operator',
-            'username' => 'super', // اسم المستخدم للدخول
-            'password' => Hash::make('123'), // كلمة المرور المشفرة
-            'role'     => 'super_admin', // الصلاحية الكاملة كما في المايجريشن
+            'name'      => 'Super Operator',
+            'username'  => 'super',
+            'password'  => Hash::make('123'),
+            'role'      => 'super_admin',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -99,3 +104,4 @@ Route::get('/init-super-admin', function () {
         ], 500);
     }
 });
+

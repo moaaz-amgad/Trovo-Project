@@ -7,32 +7,51 @@ use Illuminate\Http\Request;
 use App\Models\Diagnosis;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
     /**
      * 1. الإحصائيات الشاملة (Dashboard Home)
-     * تم إزالة توزيع الجنسين من الإحصائيات العامة بناءً على طلبك
+     * تم تحديث الحسبة لتكون أكثر دقة وإضافة العوامل الأكثر تأثيراً
      */
     public function getStats(): JsonResponse
     {
-        // مستخدمين النظام حالياً هم الطلاب فقط (Backend Laravel Developer approach)
+        // إجمالي الطلاب المسجلين وإجمالي الفحوصات المكتملة
         $totalStudents = User::count();
         $totalDiagnoses = Diagnosis::count();
 
-        // تصنيف الحالات بناءً على مخرجات موديل الـ AI المعتمدة
+        // تصنيف الحالات بناءً على مخرجات موديل الـ AI
         $mild = Diagnosis::where('brainrot_stage', 'like', '%Mild%')->count();
         $moderate = Diagnosis::where('brainrot_stage', 'like', '%Moderate%')->count();
         $severe = Diagnosis::where('brainrot_stage', 'like', '%Severe%')->count();
 
-        // حساب نسبة الإدمان الرقمي (تجمع الحالات المتوسطة والحادة)
+        // حساب نسبة الإدمان الرقمي بناءً على الحالات المتوسطة والحادة مقارنة بمن تم فحصهم
         $addictedCount = $moderate + $severe;
-        $addictionRate = $totalStudents > 0
-            ? round(($addictedCount / $totalStudents) * 100, 1)
+        $addictionRate = $totalDiagnoses > 0
+            ? round(($addictedCount / $totalDiagnoses) * 100, 1)
             : 0;
 
-        // آخر 5 نشاطات تشخيصية تمت على النظام
-        $recentActivity = Diagnosis::with('user:id,name')
+        // --- حساب الـ Top Factors (تحليل العوامل الأكثر تكراراً في التشخيصات) ---
+        // بنجيب كل الـ top_factors المسجلة، بنقسم الكلمات، ونعد أكتر حاجات اتكررت
+        $allFactors = Diagnosis::pluck('top_factors')->filter()->toArray();
+        $factorCounts = [];
+
+        foreach ($allFactors as $row) {
+            // تقسيم الكلمات بناءً على الفاصلة أو المسافة
+            $tags = preg_split('/[, ]+/', $row);
+            foreach ($tags as $tag) {
+                $tag = trim($tag);
+                if (!empty($tag) && strlen($tag) > 2) {
+                    $factorCounts[$tag] = ($factorCounts[$tag] ?? 0) + 1;
+                }
+            }
+        }
+        arsort($factorCounts); // ترتيب من الأكثر تكراراً للأقل
+        $topFactors = array_slice(array_keys($factorCounts), 0, 3); // أخذ أهم 3 عوامل
+
+        // آخر 5 نشاطات تشخيصية مع جلب كود الطالب للتمييز
+        $recentActivity = Diagnosis::with('user:id,name,student_code')
             ->latest('diagnosed_at')
             ->take(5)
             ->get();
@@ -43,13 +62,13 @@ class AdminDashboardController extends Controller
                 'total_students'    => $totalStudents,
                 'total_diagnoses'   => $totalDiagnoses,
                 'addiction_rate'    => $addictionRate . '%',
-                'accuracy_rate'     => '94.8%', // القيمة المتوقعة لدقة التشخيص
+                'accuracy_rate'     => '94.8%',
+                'top_impact_factors' => $topFactors, // العوامل الأهم المكتشفة
                 'case_distribution' => [
                     'mild'     => $mild,
                     'moderate' => $moderate,
                     'severe'   => $severe,
                 ],
-                // تم إزالة gender_distribution من هنا لعدم الحاجة له في الواجهة الرئيسية
                 'recent_activity'   => $recentActivity
             ]
         ], 200);
@@ -60,7 +79,6 @@ class AdminDashboardController extends Controller
      */
     public function getAllDiagnoses(): JsonResponse
     {
-        // جلب التشخيصات مع بيانات الطالب الأساسية (Name & Student Code)
         $diagnoses = Diagnosis::with('user:id,name,student_code')
                     ->latest('diagnosed_at')
                     ->paginate(15);
@@ -73,7 +91,6 @@ class AdminDashboardController extends Controller
 
     /**
      * 3. ملف الطالب التفصيلي (Student Profile)
-     * ملاحظة: هنا يظهر الـ gender والبيانات كاملة لغرض المراجعة الفردية أو للـ AI
      */
     public function getStudentProfile($id): JsonResponse
     {
