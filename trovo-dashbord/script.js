@@ -131,23 +131,25 @@ document.addEventListener('alpine:init', () => {
             if (!this.loginForm.username || !this.loginForm.password) return;
             this.isLoading = true;
             try {
-                // [FIXED] التأكد من إرسال الطلب لمسار الـ Admin حصراً لتجنب تعارض الـ Guards
+                // التأكد من المسار الكامل الصحيح
                 const response = await axios.post('/api/admin/login', {
                     username: this.loginForm.username,
                     password: this.loginForm.password
                 });
 
-                if (response.data.token) {
-                    this.token = response.data.token;
+                // تعديل المفاتيح لتطابق رد السيرفر (access_token & admin)
+                if (response.data.access_token) {
+                    this.token = response.data.access_token;
                     localStorage.setItem('trovo_admin_token', this.token);
                     axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
                     
                     this.isLoggedIn = true;
-                    this.userRole = response.data.user.role; 
-                    this.currentUsername = response.data.user.username;
+                    // الوصول للبيانات من مفتاح admin كما في بوست مان
+                    this.userRole = response.data.admin.role; 
+                    this.currentUsername = response.data.admin.username;
                     
                     await this.syncDataWithProduction();
-                    alert('IDENTITY VERIFIED: Welcome to Control Center.');
+                    alert('IDENTITY VERIFIED: Welcome Super Operator');
                 }
             } catch (error) {
                 console.error('Login Failure:', error.response?.data);
