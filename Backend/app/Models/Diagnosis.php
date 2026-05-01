@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Diagnosis extends Model
 {
@@ -17,42 +16,23 @@ class Diagnosis extends Model
         'user_id',
         'usage_id',
         'questionnaire_id',
-        'addiction_level',
-        'brainrot_stage',
+        'addiction_level',    // الـ Score الرقمي
+        'brainrot_stage',     // الحالة (Mild, Severe...)
         'analysis_intro',
-        'top_factors',
-        'recommendations',
+        'top_factors',        // JSON array
+        'recommendations',    // JSON array
         'diagnosed_at'
     ];
 
     protected $casts = [
-        'addiction_level' => 'float',
-        'top_factors'     => 'array',
+        'top_factors' => 'array',
         'recommendations' => 'array',
-        'diagnosed_at'    => 'datetime',
+        'addiction_level' => 'float',
+        'diagnosed_at' => 'datetime',
     ];
 
-    /**
-     * علاقة التشخيص بالمستخدم
-     */
-    public function user(): BelongsTo
+    public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    /**
-     * علاقة التشخيص ببيانات استخدام الهاتف
-     */
-    public function phoneUsage(): BelongsTo
-    {
-        return $this->belongsTo(PhoneUsageData::class, 'usage_id', 'usage_id');
-    }
-
-    /**
-     * علاقة التشخيص باستجابات الاستبيان
-     */
-    public function questionnaire(): BelongsTo
-    {
-        return $this->belongsTo(QuestionnaireResponse::class, 'questionnaire_id', 'questionnaire_id');
+        return $this->belongsTo(User::class);
     }
 }

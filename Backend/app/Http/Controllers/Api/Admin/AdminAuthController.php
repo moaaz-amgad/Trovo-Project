@@ -62,11 +62,9 @@ class AdminAuthController extends Controller
         $request->validate([
             'username' => 'required|string|unique:admins,username|min:3',
             'password' => 'required|string|min:6',
-            'name'     => 'nullable|string|max:255',
         ]);
 
         $admin = Admin::create([
-            'name'     => $request->name ?? $request->username,
             'username' => $request->username,
             'password' => Hash::make($request->password),
             'role'     => 'admin',
@@ -77,7 +75,6 @@ class AdminAuthController extends Controller
             'message' => 'تم إنشاء حساب الأدمن بنجاح.',
             'admin'   => [
                 'id'       => $admin->id,
-                'name'     => $admin->name,
                 'username' => $admin->username,
                 'role'     => $admin->role,
             ]

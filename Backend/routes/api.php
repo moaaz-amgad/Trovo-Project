@@ -30,7 +30,7 @@ Route::post('/admin/login', [AdminAuthController::class, 'login'])
 
 
 // --- 2. مسارات الإدارة (Admin Dashboard) المحمية ---
-Route::middleware(['auth:sanctum', 'ability:access-admin', 'check.admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'check.admin'])->prefix('admin')->group(function () {
 
     // بيانات الأدمن الحالي وتسجيل الخروج
     Route::get('/me', [AdminDashboardController::class, 'me']);
@@ -49,7 +49,7 @@ Route::middleware(['auth:sanctum', 'ability:access-admin', 'check.admin'])->pref
     Route::delete('/diagnosis/{id}', [AdminDashboardController::class, 'deleteDiagnosis']);
 
     // إنشاء أدمن جديد (Super Admin فقط)
-    Route::post('/create-admin', [AdminAuthController::class, 'createAdmin']);
+    Route::post('create-admin', [AdminAuthController::class, 'createAdmin'])->name('admin.create');
 });
 
 

@@ -17,10 +17,10 @@ class DashboardService
             $totalStudents = User::count();
             $totalDiagnoses = Diagnosis::count();
 
-            // تصنيف الحالات بناءً على مخرجات الـ AI
-            $mild = Diagnosis::where('brainrot_stage', 'like', '%Mild%')->count();
-            $moderate = Diagnosis::where('brainrot_stage', 'like', '%Moderate%')->count();
-            $severe = Diagnosis::where('brainrot_stage', 'like', '%Severe%')->count();
+            // تصنيف الحالات بناءً على الـ addiction_level (الرقمي)
+            $mild = Diagnosis::where('addiction_level', '<', 40)->count();
+            $moderate = Diagnosis::whereBetween('addiction_level', [40, 70])->count();
+            $severe = Diagnosis::where('addiction_level', '>', 70)->count();
 
             // حساب نسبة الإدمان
             $addictedCount = $moderate + $severe;

@@ -75,6 +75,14 @@ class User extends Authenticatable
     }
 
     /**
+     * أحدث تشخيص للطالب
+     */
+    public function latestDiagnosis()
+    {
+        return $this->hasOne(Diagnosis::class)->latestOfMany('diagnosed_at');
+    }
+
+    /**
      * علاقة الطالب بسجلات التقدم
      */
     public function progressTrackers()

@@ -22,7 +22,7 @@ class AdminDashboardController extends Controller
     {
         $stats = $this->dashboardService->getStats();
 
-        // آخر 5 نشاطات تشخيصية
+        // عرض أجدد 5 نشاطات فقط في الملخص السريع (Overview)
         $recentActivity = Diagnosis::with('user:id,name,student_code')
             ->latest('diagnosed_at')
             ->take(5)
@@ -37,17 +37,18 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 2. جدول كل التشخيصات (Logs) — مع Pagination
+     * 2. جدول الطلاب (Database) — عرض كل الطلاب مع أحدث تشخيص لهم
      */
     public function getAllDiagnoses(): JsonResponse
     {
-        $diagnoses = Diagnosis::with('user:id,name,student_code')
-                    ->latest('diagnosed_at')
+        // جلب كل الطلاب مع أحدث تشخيص لهم، مرتبين حسب تاريخ الإضافة (الأحدث أولاً)
+        $users = User::with('latestDiagnosis')
+                    ->latest()
                     ->paginate(15);
 
         return response()->json([
             'status' => 'success',
-            'data'   => $diagnoses
+            'data'   => $users
         ], 200);
     }
 
@@ -65,7 +66,8 @@ class AdminDashboardController extends Controller
             },
             'diagnoses' => function($q) {
                 $q->latest('diagnosed_at');
-            }
+            },
+            'latestDiagnosis' // جلب أحدث تشخيص منفصل لعرضه في الـ Modal
         ])->find($id);
 
         if (!$student) {

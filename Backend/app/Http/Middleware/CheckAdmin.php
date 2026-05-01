@@ -19,7 +19,7 @@ class CheckAdmin
         if (!Auth::check()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthenticated.'
+                'message' => '.'
             ], 401);
         }
 

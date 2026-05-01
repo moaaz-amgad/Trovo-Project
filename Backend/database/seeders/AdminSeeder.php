@@ -3,21 +3,31 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('admins')->insert([
-            'name' => 'Super Admin User', // الاسم المعروض
-            'username' => 'super_admin',  // اسم المستخدم للدخول
-            'password' => Hash::make('admin123'),
-            'role' => 'super_admin',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // 1. Super Admin
+        Admin::updateOrCreate(
+            ['username' => 'super_admin'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('admin123'),
+                'role' => 'super_admin',
+            ]
+        );
+
+        // 2. Regular Admin
+        Admin::updateOrCreate(
+            ['username' => 'operator_1'],
+            [
+                'name' => 'Operator One',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+            ]
+        );
     }
 }
-

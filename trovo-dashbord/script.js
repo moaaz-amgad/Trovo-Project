@@ -65,18 +65,30 @@ document.addEventListener('alpine:init', () => {
             top_impact_factors: [],
             recent_activity: []
         },
+        
+        // Pagination state
+        currentPage: 1,
+        lastPage: 1,
+        totalRecords: 0,
 
         // ==========================================
         // 7. COMPUTED LOGIC (SEARCH & FILTER)
         // ==========================================
         filteredStudents() {
             if (!this.students || !this.students.length) return [];
+            
+            // لو مفيش بحث، رجع الكل
             if (!this.searchQuery) return this.students;
-            const q = this.searchQuery.toLowerCase();
-            return this.students.filter(s => 
-                (s.user?.name?.toLowerCase().includes(q)) || 
-                (s.user?.student_code?.toLowerCase().includes(q))
-            );
+            
+            const q = this.searchQuery.toLowerCase().trim();
+            const filtered = this.students.filter(s => {
+                const nameMatch = s.name?.toLowerCase().includes(q);
+                const codeMatch = s.student_code?.toLowerCase().includes(q);
+                return nameMatch || codeMatch;
+            });
+
+            console.log(`TROVO Filter: Query "${q}" | Before: ${this.students.length} | After: ${filtered.length}`);
+            return filtered;
         },
 
         // ==========================================
@@ -107,8 +119,14 @@ document.addEventListener('alpine:init', () => {
         },
 
         // API base URL — computed property
+        // API base URL — dynamic detection
         get apiBase() {
-            return 'https://trovo-project-production.up.railway.app/api';
+            const host = window.location.hostname;
+            const isLocal = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.');
+            // لو محلي، بنروح لبورت 8000 (بورت لارفيل الافتراضي)
+            return isLocal 
+                ? 'http://localhost:8000/api' 
+                : 'https://trovo-project-production.up.railway.app/api';
         },
 
         // ==========================================
@@ -153,24 +171,41 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async fetchDashboardData() {
+        async fetchDashboardData(page = 1) {
             if (!this.isLoggedIn) return;
             this.isLoading = true;
+            this.currentPage = page;
+            console.log(`TROVO: Fetching page ${page} from ${this.apiBase}...`);
+
             try {
                 const [diagnosesRes, statsRes] = await Promise.all([
-                    axios.get(`${this.apiBase}/admin/all-diagnoses`),
+                    axios.get(`${this.apiBase}/admin/all-diagnoses?page=${page}`),
                     axios.get(`${this.apiBase}/admin/dashboard-stats`)
                 ]);
 
-                // all-diagnoses returns paginated data
-                this.students = diagnosesRes.data?.data?.data || diagnosesRes.data?.data || [];
+                console.log('TROVO: API Raw Data:', diagnosesRes.data);
+
+                // استخراج البيانات من Pagination لارفيل
+                const apiResponse = diagnosesRes.data;
+                const diagData = apiResponse.data;
+
+                if (diagData && diagData.data) {
+                    this.students = diagData.data;
+                    console.log('TROVO: Students array populated with:', this.students.length, 'items');
+                    this.currentPage = diagData.current_page || 1;
+                    this.lastPage = diagData.last_page || 1;
+                    this.totalRecords = diagData.total || 0;
+                } else {
+                    console.warn('TROVO: Unexpected API structure', apiResponse);
+                    this.students = [];
+                }
                 
                 if (statsRes.data?.stats) {
                     this.stats = statsRes.data.stats;
                 }
                 
             } catch (error) {
-                console.error('TROVO Sync Error:', error);
+                console.error('TROVO: Sync Error:', error.response?.data || error.message);
                 if (error.response?.status === 401) {
                     this.logoutSilently();
                 }
