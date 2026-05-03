@@ -11,7 +11,45 @@ use Illuminate\Http\JsonResponse;
 class AuthController extends Controller
 {
     /**
-     * تسجيل دخول الطلاب باستخدام الـ Username والـ Password
+     * تسجيل طالب جديد (Self Registration)
+     * الطالب يسجل نفسه من الأبلكيشن — ويبدأ يستخدم فوراً
+     * لكن حالته تكون "غير معتمد" حتى يوافق الأدمن من الداشبورد
+     */
+    public function register(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name'         => 'required|string|max:255',
+            'student_code' => 'required|string|unique:users,student_code',
+            'phone_number' => 'nullable|string|max:20',
+            'password'     => 'required|string|min:6',
+        ]);
+
+        $user = User::create([
+            'name'         => $request->name,
+            'student_code' => $request->student_code,
+            'phone_number' => $request->phone_number,
+            'password'     => Hash::make($request->password),
+            'is_approved'  => false,
+        ]);
+
+        $token = $user->createToken('student_auth_token', ['access-student'])->plainTextToken;
+
+        return response()->json([
+            'status'       => 'success',
+            'message'      => 'تم إنشاء حسابك بنجاح! يمكنك استخدام التطبيق الآن.',
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'user'         => [
+                'id'           => $user->id,
+                'name'         => $user->name,
+                'student_code' => $user->student_code,
+                'phone_number' => $user->phone_number,
+            ]
+        ], 201);
+    }
+
+    /**
+     * تسجيل دخول الطلاب باستخدام كود الطالب والباسورد
      */
     public function login(Request $request): JsonResponse
     {
@@ -26,8 +64,8 @@ class AuthController extends Controller
         // التحقق من وجود المستخدم ومطابقة الباسورد المشفر
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'بيانات الدخول غير صحيحة. يرجى مراجعة الدكتور للتأكد من تسجيل بياناتك وتفعيل حسابك.'
+                'status'  => 'error',
+                'message' => 'بيانات الدخول غير صحيحة.'
             ], 401);
         }
 
@@ -35,13 +73,14 @@ class AuthController extends Controller
         $token = $user->createToken('student_auth_token', ['access-student'])->plainTextToken;
 
         return response()->json([
-            'status' => 'success',
+            'status'       => 'success',
             'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'phone_number' => $user->phone_number
+            'token_type'   => 'Bearer',
+            'user'         => [
+                'id'           => $user->id,
+                'name'         => $user->name,
+                'student_code' => $user->student_code,
+                'phone_number' => $user->phone_number,
             ]
         ]);
     }
@@ -53,7 +92,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'status' => 'success',
-            'data' => $request->user()
+            'data'   => $request->user()
         ], 200);
     }
 
@@ -65,7 +104,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'تم تسجيل الخروج بنجاح'
         ], 200);
     }

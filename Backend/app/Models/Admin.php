@@ -24,12 +24,10 @@ class Admin extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * التحقق إذا كان سوبر أدمن
-     */
-    public function isSuperAdmin(): bool
+    protected function casts(): array
     {
-        return $this->role === 'super_admin';
+        return [
+            'password' => 'hashed',
+        ];
     }
 }
-

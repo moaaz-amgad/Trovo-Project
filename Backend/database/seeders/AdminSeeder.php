@@ -8,26 +8,38 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
+    /**
+     * إنشاء حسابات الأدمن الثابتة — حسابان فقط
+     * يتم تشغيلهم مرة واحدة: php artisan db:seed --class=AdminSeeder
+     */
     public function run(): void
     {
-        // 1. Super Admin
+        $admin1User = env('ADMIN1_USER', 'admin1');
+        $admin1Pass = env('ADMIN1_PASS', 'admin123');
+
+        $admin2User = env('ADMIN2_USER', 'admin2');
+        $admin2Pass = env('ADMIN2_PASS', 'admin123');
+
+        // الأدمن الأول
         Admin::updateOrCreate(
-            ['username' => 'super_admin'],
+            ['username' => $admin1User],
             [
-                'name' => 'Super Admin',
-                'password' => Hash::make('admin123'),
-                'role' => 'super_admin',
+                'name'     => 'Main Admin',
+                'password' => Hash::make($admin1Pass),
+                'role'     => 'admin',
             ]
         );
 
-        // 2. Regular Admin
+        // الأدمن الثاني
         Admin::updateOrCreate(
-            ['username' => 'operator_1'],
+            ['username' => $admin2User],
             [
-                'name' => 'Operator One',
-                'password' => Hash::make('admin123'),
-                'role' => 'admin',
+                'name'     => 'Secondary Admin',
+                'password' => Hash::make($admin2Pass),
+                'role'     => 'admin',
             ]
         );
+
+        $this->command->info('✅ 2 Admin accounts created/updated successfully from .env');
     }
 }

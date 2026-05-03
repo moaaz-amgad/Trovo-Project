@@ -28,7 +28,7 @@ class CheckAdmin
 
         // فحص مزدوج بـ AND: يجب أن يكون التوكن من نوع admin + المستخدم لديه role فعلي
         $isAdminToken = method_exists($user, 'tokenCan') && $user->tokenCan('access-admin');
-        $hasAdminRole = isset($user->role) && in_array($user->role, ['admin', 'super_admin']);
+        $hasAdminRole = isset($user->role) && $user->role === 'admin';
 
         if ($isAdminToken && $hasAdminRole) {
             return $next($request);

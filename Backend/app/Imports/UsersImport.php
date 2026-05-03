@@ -24,6 +24,7 @@ class UsersImport implements ToModel, WithHeadingRow, SkipsEmptyRows
                 'name'         => $name,
                 'phone_number' => $phoneNumber,
                 'password'     => Hash::make($studentCode),
+                'is_approved'  => true, // الأدمن تأكد من بياناتهم بالفعل
             ]
         );
     }

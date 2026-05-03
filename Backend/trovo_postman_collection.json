@@ -1,0 +1,498 @@
+{
+	"info": {
+		"_postman_id": "b34e5672-8d93-47a8-b649-6f9f4a5a0f2b",
+		"name": "Trovo Dashboard API V10",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Student Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Ahmed Ali\",\n    \"student_code\": \"2024001\",\n    \"password\": \"password123\",\n    \"phone_number\": \"01012345678\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Student Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if(jsonData.access_token){",
+									"   pm.environment.set(\"student_token\", jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"2024001\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if(jsonData.access_token){",
+									"   pm.environment.set(\"admin_token\", jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"moaaz\",\n    \"password\": \"5060\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Student Area",
+			"item": [
+				{
+					"name": "Submit Phone Usage",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"daily_usage_hours\": 8.5,\n    \"screen_time_before_bed\": 2.0,\n    \"phone_checks_per_day\": 120,\n    \"apps_used_daily\": 15,\n    \"time_on_social_media\": 5.0,\n    \"time_on_gaming\": 1.5,\n    \"weekend_usage_hours\": 10.0,\n    \"phone_usage_purpose\": \"Social Media\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/phone-usage",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"phone-usage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Questionnaire",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"gender\": \"male\",\n    \"sleep_hours\": 5.5,\n    \"academic_performance\": 65,\n    \"social_interactions\": 3,\n    \"exercise_hours\": 0.5,\n    \"anxiety_level\": 7,\n    \"depression_level\": 6,\n    \"self_esteem\": 40,\n    \"time_on_education\": 1.0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/questionnaire",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"questionnaire"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Diagnosis (AI)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/diagnosis/generate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagnosis",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "View Diagnosis History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/diagnosis-history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagnosis-history"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Admin Area",
+			"item": [
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/dashboard-stats?filter=all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"dashboard-stats"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "all"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Students",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/all-students",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"all-students"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Diagnoses",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/all-diagnoses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"all-diagnoses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Approve Student",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/student/1/approve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"student",
+								"1",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Student Manual",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Ziad Ahmed\",\n    \"student_code\": \"2024005\",\n    \"phone_number\": \"01000000000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/add-student-manual",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"add-student-manual"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Export Students",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/export/students",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"export",
+								"students"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Maintenance",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"down\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/toggle-maintenance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"toggle-maintenance"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "student_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

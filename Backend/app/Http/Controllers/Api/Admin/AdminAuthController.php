@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 class AdminAuthController extends Controller
 {
     /**
-     * تسجيل دخول الأدمن/السوبر أدمن فقط
+     * تسجيل دخول الأدمن
      */
     public function login(Request $request): JsonResponse
     {
@@ -25,7 +25,7 @@ class AdminAuthController extends Controller
         if (!$admin || !Hash::check($request->password, $admin->password)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'عذراً، بيانات دخول الإدارة غير صحيحة.'
+                'message' => 'بيانات دخول الإدارة غير صحيحة.'
             ], 401);
         }
 
@@ -45,26 +45,18 @@ class AdminAuthController extends Controller
     }
 
     /**
-     * إنشاء أدمن جديد (Super Admin فقط)
+     * إنشاء أدمن جديد — أي أدمن مسجل دخول يقدر يعمل أدمن تاني
      */
     public function createAdmin(Request $request): JsonResponse
     {
-        $currentAdmin = $request->user();
-
-        // التحقق من أن الشخص هو سوبر أدمن
-        if (!$currentAdmin || $currentAdmin->role !== 'super_admin') {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'هذه العملية متاحة فقط للسوبر أدمن.'
-            ], 403);
-        }
-
         $request->validate([
+            'name'     => 'nullable|string|max:255',
             'username' => 'required|string|unique:admins,username|min:3',
             'password' => 'required|string|min:6',
         ]);
 
         $admin = Admin::create([
+            'name'     => $request->name ?? $request->username,
             'username' => $request->username,
             'password' => Hash::make($request->password),
             'role'     => 'admin',
@@ -75,6 +67,7 @@ class AdminAuthController extends Controller
             'message' => 'تم إنشاء حساب الأدمن بنجاح.',
             'admin'   => [
                 'id'       => $admin->id,
+                'name'     => $admin->name,
                 'username' => $admin->username,
                 'role'     => $admin->role,
             ]

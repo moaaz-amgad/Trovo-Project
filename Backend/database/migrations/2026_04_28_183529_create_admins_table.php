@@ -18,10 +18,8 @@ return new class extends Migration
             $table->string('username')->unique(); // اسم المستخدم للدخول
             $table->string('password'); // كلمة المرور المشفرة
 
-            // تحديد الصلاحيات:
-            // super_admin: له كل الصلاحيات (حذف، تعديل، إضافة مديرين)
-            // admin: لمتابعة الإحصائيات وتشخيصات الطلاب فقط
-            $table->enum('role', ['super_admin', 'admin'])->default('admin');
+            // صلاحية واحدة فقط — admin — لأن الحسابات ثابتة ومحددة
+            $table->string('role')->default('admin');
 
             $table->rememberToken(); // مهم لو فعلت خاصية "تذكرني" في لوحة التحكم
             $table->timestamps(); // تاريخ الإنشاء والتحديث

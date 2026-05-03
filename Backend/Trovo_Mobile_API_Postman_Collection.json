@@ -1,0 +1,645 @@
+{
+	"info": {
+		"_postman_id": "a9341400-d872-4d1a-b615-1888e2c21213",
+		"name": "Trovo Mobile App API",
+		"description": "API Collection for Trovo Mobile App. Contains auto-saving token scripts and environment variables.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Auth",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201 || pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.access_token) {",
+									"        pm.collectionVariables.set(\"auth_token\", jsonData.access_token);",
+									"        console.log(\"Token auto-saved!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Student Name",
+									"type": "text"
+								},
+								{
+									"key": "student_code",
+									"value": "20230001",
+									"type": "text"
+								},
+								{
+									"key": "phone_number",
+									"value": "01000000000",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "password123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.access_token) {",
+									"        pm.collectionVariables.set(\"auth_token\", jsonData.access_token);",
+									"        console.log(\"Token auto-saved!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "20230001",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "password123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Phone Usage",
+			"item": [
+				{
+					"name": "Store Phone Usage",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "daily_usage_hours",
+									"value": "5",
+									"type": "text"
+								},
+								{
+									"key": "screen_time_before_bed",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "phone_checks_per_day",
+									"value": "50",
+									"type": "text"
+								},
+								{
+									"key": "apps_used_daily",
+									"value": "10",
+									"type": "text"
+								},
+								{
+									"key": "time_on_social_media",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "time_on_gaming",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "phone_usage_purpose",
+									"value": "Social Media",
+									"description": "Social Media, Gaming, Education, Other",
+									"type": "text"
+								},
+								{
+									"key": "weekend_usage_hours",
+									"value": "8",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/phone-usage",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"phone-usage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Phone Usage History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/phone-usage",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"phone-usage"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Questionnaire",
+			"item": [
+				{
+					"name": "Store Questionnaire",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "gender",
+									"value": "male",
+									"description": "male, female, other",
+									"type": "text"
+								},
+								{
+									"key": "sleep_hours",
+									"value": "6",
+									"type": "text"
+								},
+								{
+									"key": "academic_performance",
+									"value": "85",
+									"type": "text"
+								},
+								{
+									"key": "social_interactions",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "exercise_hours",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "anxiety_level",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "depression_level",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "self_esteem",
+									"value": "70",
+									"type": "text"
+								},
+								{
+									"key": "time_on_education",
+									"value": "4",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/questionnaire",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"questionnaire"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Questionnaire History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/questionnaire",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"questionnaire"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Diagnosis",
+			"item": [
+				{
+					"name": "Generate Diagnosis",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/diagnosis/generate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagnosis",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Diagnosis History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/diagnosis-history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"diagnosis-history"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Progress Tracker",
+			"item": [
+				{
+					"name": "Get Progress Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/progress",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"progress"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Progress History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/progress/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"progress",
+								"history"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Mini Games",
+			"item": [
+				{
+					"name": "Store Game Result",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "game_type",
+									"value": "memory",
+									"description": "memory, reaction, focus, pattern",
+									"type": "text"
+								},
+								{
+									"key": "score",
+									"value": "1500",
+									"type": "text"
+								},
+								{
+									"key": "reaction_time_ms",
+									"value": "350",
+									"type": "text"
+								},
+								{
+									"key": "accuracy_percentage",
+									"value": "95",
+									"type": "text"
+								},
+								{
+									"key": "difficulty_level",
+									"value": "medium",
+									"description": "easy, medium, hard",
+									"type": "text"
+								},
+								{
+									"key": "duration_seconds",
+									"value": "120",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/mini-game",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"mini-game"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/mini-game/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"mini-game",
+								"history"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/mini-game/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"mini-game",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://brandy-bronzelike-lai.ngrok-free.dev/api",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

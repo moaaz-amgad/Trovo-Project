@@ -48,6 +48,7 @@ class ExcelController extends Controller
                 'student_code' => $request->student_code,
                 'phone_number' => $request->phone_number,
                 'password'     => Hash::make($request->student_code), // تلقائياً الباسورد هو الكود
+                'is_approved'  => true, // الأدمن تأكد من بياناته بالفعل
             ]);
 
             return response()->json([

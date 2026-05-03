@@ -24,6 +24,7 @@ class User extends Authenticatable
         'student_code',
         'phone_number',
         'password',
+        'is_approved',
     ];
 
     /**
@@ -40,7 +41,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
+            'password'    => 'hashed',
+            'is_approved' => 'boolean',
         ];
     }
 

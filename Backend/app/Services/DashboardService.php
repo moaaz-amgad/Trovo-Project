@@ -4,23 +4,42 @@ namespace App\Services;
 
 use App\Models\Diagnosis;
 use App\Models\User;
+use App\Models\PhoneUsageData;
+use App\Models\QuestionnaireResponse;
 use Illuminate\Support\Facades\Cache;
 
 class DashboardService
 {
     /**
-     * الإحصائيات الشاملة للداشبورد مع كاش 5 دقائق
+     * الإحصائيات الشاملة للداشبورد
+     * يدعم فلتر approved فقط أو الكل
      */
-    public function getStats(): array
+    public function getStats(string $filter = 'all'): array
     {
-        return Cache::remember('dashboard_stats', 300, function () {
-            $totalStudents = User::count();
-            $totalDiagnoses = Diagnosis::count();
+        $cacheKey = "dashboard_stats_{$filter}";
 
-            // تصنيف الحالات بناءً على الـ addiction_level (الرقمي)
-            $mild = Diagnosis::where('addiction_level', '<', 40)->count();
-            $moderate = Diagnosis::whereBetween('addiction_level', [40, 70])->count();
-            $severe = Diagnosis::where('addiction_level', '>', 70)->count();
+        return Cache::remember($cacheKey, 300, function () use ($filter) {
+            $totalStudents  = $this->getUserQuery($filter)->count();
+            $diagnosisQuery = $this->getDiagnosisQuery($filter);
+            $totalDiagnoses = $diagnosisQuery->count();
+
+            // تصنيف الحالات — مقياس تعفن الدماغ (Brain Rot Stage)
+            $mild     = (clone $diagnosisQuery)->whereRaw('LOWER(brainrot_stage) LIKE ?', ['%mild%'])->count();
+            $moderate = (clone $diagnosisQuery)->whereRaw('LOWER(brainrot_stage) LIKE ?', ['%moderate%'])->count();
+            $severe   = (clone $diagnosisQuery)->whereRaw('LOWER(brainrot_stage) LIKE ?', ['%severe%'])->count();
+
+            // متوسط مستوى الإدمان
+            $avgAddiction = $totalDiagnoses > 0
+                ? round((clone $diagnosisQuery)->avg('addiction_level'), 1)
+                : 0;
+
+            // توزيع مستويات الإدمان من 1 لـ 10 (للرسم البياني)
+            $levelDistribution = [];
+            for ($i = 1; $i <= 10; $i++) {
+                $levelDistribution[$i] = (clone $diagnosisQuery)
+                    ->whereRaw('CAST(addiction_level AS INTEGER) = ?', [$i])
+                    ->count();
+            }
 
             // حساب نسبة الإدمان
             $addictedCount = $moderate + $severe;
@@ -28,15 +47,17 @@ class DashboardService
                 ? round(($addictedCount / $totalDiagnoses) * 100, 1)
                 : 0;
 
-            // حساب الـ Top Factors بشكل صحيح — top_factors هو JSON array وليس string
-            $topFactors = $this->calculateTopFactors();
+            // Top Factors مع النسب
+            $topFactors = $this->calculateTopFactors($filter);
 
             return [
-                'total_students'     => $totalStudents,
-                'total_diagnoses'    => $totalDiagnoses,
-                'addiction_rate'     => $addictionRate . '%',
-                'top_impact_factors' => $topFactors,
-                'case_distribution'  => [
+                'total_students'       => $totalStudents,
+                'total_diagnoses'      => $totalDiagnoses,
+                'avg_addiction_level'   => $avgAddiction,
+                'addiction_rate'        => $addictionRate . '%',
+                'top_impact_factors'    => $topFactors,
+                'level_distribution'    => $levelDistribution,
+                'case_distribution'     => [
                     'mild'     => $mild,
                     'moderate' => $moderate,
                     'severe'   => $severe,
@@ -46,18 +67,95 @@ class DashboardService
     }
 
     /**
-     * حساب العوامل الأكثر تكراراً بشكل صحيح
-     * top_factors مخزنة كـ JSON array في الداتابيز
+     * حساب متوسطات الـ 17 فيتشر
      */
-    private function calculateTopFactors(): array
+    public function getFeatureAverages(string $filter = 'all'): array
     {
-        $factorCounts = [];
+        $userIds = $this->getUserQuery($filter)->pluck('id');
 
-        // جلب كل الـ top_factors بدون تحميل كل الموديل
-        Diagnosis::whereNotNull('top_factors')
-            ->pluck('top_factors')
-            ->each(function ($factors) use (&$factorCounts) {
-                // $factors قد يكون مصفوفة (بفضل الـ cast) أو string
+        // Phone Usage Features
+        $phoneAvg = PhoneUsageData::whereIn('user_id', $userIds)
+            ->selectRaw("
+                ROUND(AVG(daily_usage_hours), 2) as avg_daily_usage_hours,
+                ROUND(AVG(screen_time_before_bed), 2) as avg_screen_time_before_bed,
+                ROUND(AVG(phone_checks_per_day), 0) as avg_phone_checks_per_day,
+                ROUND(AVG(apps_used_daily), 0) as avg_apps_used_daily,
+                ROUND(AVG(time_on_social_media), 2) as avg_time_on_social_media,
+                ROUND(AVG(time_on_gaming), 2) as avg_time_on_gaming,
+                ROUND(AVG(weekend_usage_hours), 2) as avg_weekend_usage_hours,
+                COUNT(*) as total_records
+            ")
+            ->first();
+
+        // Questionnaire Features
+        $questAvg = QuestionnaireResponse::whereIn('user_id', $userIds)
+            ->selectRaw("
+                ROUND(AVG(sleep_hours), 2) as avg_sleep_hours,
+                ROUND(AVG(academic_performance), 2) as avg_academic_performance,
+                ROUND(AVG(social_interactions), 2) as avg_social_interactions,
+                ROUND(AVG(exercise_hours), 2) as avg_exercise_hours,
+                ROUND(AVG(anxiety_level), 2) as avg_anxiety_level,
+                ROUND(AVG(depression_level), 2) as avg_depression_level,
+                ROUND(AVG(self_esteem), 2) as avg_self_esteem,
+                ROUND(AVG(time_on_education), 2) as avg_time_on_education,
+                COUNT(*) as total_records
+            ")
+            ->first();
+
+        // Gender distribution
+        $genderDist = QuestionnaireResponse::whereIn('user_id', $userIds)
+            ->selectRaw("gender, COUNT(*) as count")
+            ->groupBy('gender')
+            ->pluck('count', 'gender');
+
+        // Phone usage purpose distribution
+        $purposeDist = PhoneUsageData::whereIn('user_id', $userIds)
+            ->selectRaw("phone_usage_purpose, COUNT(*) as count")
+            ->groupBy('phone_usage_purpose')
+            ->pluck('count', 'phone_usage_purpose');
+
+        return [
+            'phone_usage' => [
+                ['name' => 'Daily Usage Hours',       'value' => $phoneAvg->avg_daily_usage_hours ?? 0,       'unit' => 'hours'],
+                ['name' => 'Screen Time Before Bed',  'value' => $phoneAvg->avg_screen_time_before_bed ?? 0,  'unit' => 'hours'],
+                ['name' => 'Phone Checks Per Day',    'value' => $phoneAvg->avg_phone_checks_per_day ?? 0,    'unit' => 'times'],
+                ['name' => 'Apps Used Daily',          'value' => $phoneAvg->avg_apps_used_daily ?? 0,          'unit' => 'apps'],
+                ['name' => 'Time on Social Media',    'value' => $phoneAvg->avg_time_on_social_media ?? 0,    'unit' => 'hours'],
+                ['name' => 'Time on Gaming',           'value' => $phoneAvg->avg_time_on_gaming ?? 0,           'unit' => 'hours'],
+                ['name' => 'Weekend Usage Hours',      'value' => $phoneAvg->avg_weekend_usage_hours ?? 0,      'unit' => 'hours'],
+            ],
+            'questionnaire' => [
+                ['name' => 'Sleep Hours',              'value' => $questAvg->avg_sleep_hours ?? 0,              'unit' => 'hours'],
+                ['name' => 'Academic Performance',     'value' => $questAvg->avg_academic_performance ?? 0,     'unit' => '/100'],
+                ['name' => 'Social Interactions',      'value' => $questAvg->avg_social_interactions ?? 0,      'unit' => '/10'],
+                ['name' => 'Exercise Hours',           'value' => $questAvg->avg_exercise_hours ?? 0,           'unit' => 'hours'],
+                ['name' => 'Anxiety Level',            'value' => $questAvg->avg_anxiety_level ?? 0,            'unit' => 'level'],
+                ['name' => 'Depression Level',         'value' => $questAvg->avg_depression_level ?? 0,         'unit' => 'level'],
+                ['name' => 'Self Esteem',              'value' => $questAvg->avg_self_esteem ?? 0,              'unit' => '/100'],
+                ['name' => 'Time on Education',        'value' => $questAvg->avg_time_on_education ?? 0,        'unit' => 'hours'],
+            ],
+            'distributions' => [
+                'gender'  => $genderDist,
+                'purpose' => $purposeDist,
+            ],
+            'total_phone_records'         => $phoneAvg->total_records ?? 0,
+            'total_questionnaire_records' => $questAvg->total_records ?? 0,
+        ];
+    }
+
+    /**
+     * حساب العوامل الأكثر تكراراً مع النسب
+     */
+    private function calculateTopFactors(string $filter = 'all'): array
+    {
+        $factorCounts  = [];
+        $totalDiagnoses = 0;
+
+        $query = $this->getDiagnosisQuery($filter)->whereNotNull('top_factors');
+
+        $query->pluck('top_factors')
+            ->each(function ($factors) use (&$factorCounts, &$totalDiagnoses) {
+                $totalDiagnoses++;
                 $items = is_array($factors) ? $factors : json_decode($factors, true);
 
                 if (!is_array($items)) {
@@ -74,14 +172,53 @@ class DashboardService
 
         arsort($factorCounts);
 
-        return array_slice(array_keys($factorCounts), 0, 5);
+        // إرجاع كل الفاكتورز مع النسب
+        $result = [];
+        foreach ($factorCounts as $factor => $count) {
+            $percentage = $totalDiagnoses > 0
+                ? round(($count / $totalDiagnoses) * 100, 1)
+                : 0;
+            $result[] = [
+                'factor'     => $factor,
+                'count'      => $count,
+                'percentage' => $percentage,
+            ];
+        }
+
+        return $result;
     }
 
     /**
-     * مسح كاش الداشبورد (يُستدعى عند إنشاء تشخيص جديد)
+     * استعلام المستخدمين حسب الفلتر
+     */
+    private function getUserQuery(string $filter)
+    {
+        $query = User::query();
+        if ($filter === 'approved') {
+            $query->where('is_approved', true);
+        }
+        return $query;
+    }
+
+    /**
+     * استعلام التشخيصات حسب الفلتر
+     */
+    private function getDiagnosisQuery(string $filter)
+    {
+        $query = Diagnosis::query();
+        if ($filter === 'approved') {
+            $userIds = User::where('is_approved', true)->pluck('id');
+            $query->whereIn('user_id', $userIds);
+        }
+        return $query;
+    }
+
+    /**
+     * مسح كاش الداشبورد
      */
     public function clearCache(): void
     {
-        Cache::forget('dashboard_stats');
+        Cache::forget('dashboard_stats_all');
+        Cache::forget('dashboard_stats_approved');
     }
 }

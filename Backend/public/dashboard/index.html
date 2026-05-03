@@ -19,7 +19,7 @@
             <div class="login-box">
                 <div class="login-glow-line"></div>
                 <div class="login-header">
-                    <img src="logo.svg" alt="Trovo" class="login-logo-img">
+                    <img src="logo.png" alt="Trovo" class="login-logo-img">
                     <div class="login-logo-text">TROVO</div>
                     <p class="login-subtitle">Admin Dashboard · Authorization Required</p>
                 </div>
@@ -48,8 +48,9 @@
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <img src="logo.svg" alt="Trovo">
+                <img src="logo.png" alt="Trovo">
                 <span>TROVO</span>
+                <span class="version-badge">v10</span>
             </div>
             <nav class="sidebar-nav">
                 <button @click="switchScreen('requests')" :class="screen==='requests' && 'nav-active'" class="nav-btn" id="nav-requests">
@@ -150,7 +151,7 @@
             <!-- ==================== SCREEN: OVERVIEW ==================== -->
             <div x-show="screen==='overview'" x-transition class="screen-content">
                 <div class="screen-header">
-                    <div><h1 class="screen-title">Overview</h1><p class="screen-subtitle">Diagnostic analytics for Digital Dopamine Addiction</p></div>
+                    <div><h1 class="screen-title">Strategic Overview</h1><p class="screen-subtitle">Diagnostic analytics for Digital Dopamine Addiction</p></div>
                     <div class="status-pill"><span class="pulse-dot"></span> System Online</div>
                 </div>
                 <!-- Stats Cards -->

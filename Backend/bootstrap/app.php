@@ -20,7 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // 2. تفعيل الـ Stateful API
         $middleware->statefulApi();
 
-        // 3. تسجيل middleware aliases للاستخدام في الراوت
+        // 3. تفعيل CORS لجميع طلبات API (بما فيها file:// origin)
+        $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+
+        // 4. تسجيل middleware aliases للاستخدام في الراوت
         $middleware->alias([
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,

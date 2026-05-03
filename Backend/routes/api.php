@@ -18,13 +18,17 @@ use App\Http\Controllers\Api\Admin\AdminAuthController;
 |--------------------------------------------------------------------------
 */
 
-// --- 1. المسارات العامة (Public) مع حماية Rate Limiting ---
+// --- 1. المسارات العامة (Public) ---
 
-// دخول الطلاب (جدول users)
+// تسجيل طالب جديد (Self Registration)
+Route::post('/register', [AuthController::class, 'register'])
+    ->middleware('throttle:10,1');
+
+// دخول الطلاب
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1');
 
-// دخول الإدارة (جدول admins)
+// دخول الإدارة (الداشبورد)
 Route::post('/admin/login', [AdminAuthController::class, 'login'])
     ->middleware('throttle:5,1');
 
@@ -36,20 +40,35 @@ Route::middleware(['auth:sanctum', 'check.admin'])->prefix('admin')->group(funct
     Route::get('/me', [AdminDashboardController::class, 'me']);
     Route::post('/logout', [AdminDashboardController::class, 'logout']);
 
-    // إدارة الطلاب
-    Route::post('/import-students', [ExcelController::class, 'import']);
-    Route::post('/add-student-manual', [ExcelController::class, 'storeManual']);
-
     // إحصائيات الداشبورد
     Route::get('/dashboard-stats', [AdminDashboardController::class, 'getStats']);
-    Route::get('/all-diagnoses', [AdminDashboardController::class, 'getAllDiagnoses']);
 
-    // بروفايل الطالب
+    // إدارة الطلاب
+    Route::get('/all-students', [AdminDashboardController::class, 'getAllStudents']);
+    Route::post('/student/{id}/approve', [AdminDashboardController::class, 'approveStudent']);
+    Route::post('/student/{id}/reject', [AdminDashboardController::class, 'rejectStudent']);
+    Route::delete('/student/{id}', [AdminDashboardController::class, 'deleteStudent']);
+
+    // ملف الطالب التفصيلي
     Route::get('/student/{id}', [AdminDashboardController::class, 'getStudentProfile']);
+
+    // التشخيصات
+    Route::get('/all-diagnoses', [AdminDashboardController::class, 'getAllDiagnoses']);
     Route::delete('/diagnosis/{id}', [AdminDashboardController::class, 'deleteDiagnosis']);
 
-    // إنشاء أدمن جديد (Super Admin فقط)
-    Route::post('create-admin', [AdminAuthController::class, 'createAdmin'])->name('admin.create');
+    // متوسطات الفيتشرز
+    Route::get('/feature-averages', [AdminDashboardController::class, 'getFeatureAverages']);
+
+    // وضع الصيانة
+    Route::post('/toggle-maintenance', [AdminDashboardController::class, 'toggleMaintenance']);
+
+    // التصدير
+    Route::get('/export/students', [AdminDashboardController::class, 'exportStudents']);
+    Route::get('/export/diagnoses', [AdminDashboardController::class, 'exportDiagnoses']);
+
+    // إضافة طلاب يدوياً أو من إكسيل
+    Route::post('/add-student-manual', [ExcelController::class, 'storeManual']);
+    Route::post('/import-students', [ExcelController::class, 'import']);
 });
 
 
@@ -59,15 +78,15 @@ Route::middleware(['auth:sanctum', 'ability:access-student'])->group(function ()
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // تسجيل بيانات الاستخدام (Phone Usage)
+    // بيانات الاستخدام (Phone Usage)
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);
     Route::get('/phone-usage', [PhoneUsageController::class, 'index']);
 
-    // تسجيل بيانات الاستبيان (Questionnaire)
+    // الاستبيان (Questionnaire)
     Route::post('/questionnaire', [QuestionnaireController::class, 'store']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'index']);
 
-    // طلب التحليل من الـ AI
+    // التشخيص بالذكاء الاصطناعي
     Route::post('/diagnosis/generate', [DiagnosisController::class, 'generate'])
         ->middleware('throttle:10,1');
     Route::get('/diagnosis-history', [DiagnosisController::class, 'index']);

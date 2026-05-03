@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trovo Mobile App API Documentation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0f766e;
+            text-align: center;
+            border-bottom: 2px solid #0f766e;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #115e59;
+            margin-top: 40px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #0d9488;
+            margin-top: 25px;
+        }
+        .endpoint {
+            background-color: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #0d9488;
+            margin-bottom: 20px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        .get { background-color: #3b82f6; }
+        .post { background-color: #10b981; }
+        
+        .url {
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #1e293b;
+            word-break: break-all;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+        }
+        .required {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .optional {
+            color: #64748b;
+            font-style: italic;
+        }
+        .note {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        pre {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .badge {
+            display: inline-block;
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        @media print {
+            body { background-color: #fff; }
+            .container { box-shadow: none; padding: 0; }
+            .endpoint { page-break-inside: avoid; }
+            pre { border: 1px solid #cbd5e1; color: #000; background-color: #f8fafc; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Trovo Mobile App - API Documentation</h1>
+    <p>This document contains all the necessary API endpoints for the Trovo Mobile Application (Students Side). It is intended for the mobile app development team.</p>
+    
+    <div class="note">
+        <strong>Base URL:</strong> <code>https://your-domain.com/api</code><br>
+        <strong>Authentication:</strong> All endpoints (except Register and Login) require a Bearer Token in the headers: <br>
+        <code>Authorization: Bearer {access_token}</code><br>
+        <code>Accept: application/json</code>
+    </div>
+
+    <h2>1. Authentication</h2>
+
+    <!-- Register -->
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="url">/register</span>
+        <p>Register a new student account from the mobile app.</p>
+        
+        <h4>Request Body</h4>
+        <table>
+            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            <tr><td>name</td><td>String</td><td>Student's full name <span class="required">(Required)</span></td></tr>
+            <tr><td>student_code</td><td>String</td><td>Unique university student code <span class="required">(Required)</span></td></tr>
+            <tr><td>phone_number</td><td>String</td><td>Contact number <span class="optional">(Optional)</span></td></tr>
+            <tr><td>password</td><td>String</td><td>Account password (min: 6 chars) <span class="required">(Required)</span></td></tr>
+        </table>
+        
+        <h4>Success Response (201 Created)</h4>
+        <pre>
+{
+  "status": "success",
+  "message": "تم إنشاء حسابك بنجاح! يمكنك استخدام التطبيق الآن.",
+  "access_token": "1|xyz...",
+  "token_type": "Bearer",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "student_code": "20231001",
+    "phone_number": "01000000000"
+  }
+}
+        </pre>
+    </div>
+
+    <!-- Login -->
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="url">/login</span>
+        <p>Login to the app using the student code and password.</p>
+        
+        <h4>Request Body</h4>
+        <table>
+            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            <tr><td>username</td><td>String</td><td>Student code <span class="required">(Required)</span></td></tr>
+            <tr><td>password</td><td>String</td><td>Account password <span class="required">(Required)</span></td></tr>
+        </table>
+        
+        <h4>Success Response (200 OK)</h4>
+        <pre>
+{
+  "status": "success",
+  "access_token": "2|xyz...",
+  "token_type": "Bearer",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "student_code": "20231001",
+    "phone_number": "01000000000"
+  }
+}
+        </pre>
+    </div>
+
+    <!-- Get User -->
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/user</span> <span class="badge">Auth Required</span>
+        <p>Get the currently authenticated student's profile data.</p>
+        
+        <h4>Success Response (200 OK)</h4>
+        <pre>
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "student_code": "20231001",
+    "is_approved": 0,
+    ...
+  }
+}
+        </pre>
+    </div>
+
+    <!-- Logout -->
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="url">/logout</span> <span class="badge">Auth Required</span>
+        <p>Logout and invalidate the current access token.</p>
+        
+        <h4>Success Response (200 OK)</h4>
+        <pre>
+{
+  "status": "success",
+  "message": "تم تسجيل الخروج بنجاح"
+}
+        </pre>
+    </div>
+
+
+    <h2>2. Phone Usage Data</h2>
+
+    <!-- Store Phone Usage -->
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="url">/phone-usage</span> <span class="badge">Auth Required</span>
+        <p>Submit daily phone usage statistics from the student.</p>
+        
+        <h4>Request Body</h4>
+        <table>
+            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            <tr><td>daily_usage_hours</td><td>Numeric</td><td>Hours per day (0-24) <span class="required">(Required)</span></td></tr>
+            <tr><td>screen_time_before_bed</td><td>Numeric</td><td>Hours before bed (0-24) <span class="required">(Required)</span></td></tr>
+            <tr><td>phone_checks_per_day</td><td>Integer</td><td>Number of times phone is checked <span class="required">(Required)</span></td></tr>
+            <tr><td>apps_used_daily</td><td>Integer</td><td>Number of apps used <span class="required">(Required)</span></td></tr>
+            <tr><td>time_on_social_media</td><td>Numeric</td><td>Hours on social media (0-24) <span class="required">(Required)</span></td></tr>
+            <tr><td>time_on_gaming</td><td>Numeric</td><td>Hours on gaming (0-24) <span class="required">(Required)</span></td></tr>
+            <tr><td>phone_usage_purpose</td><td>String</td><td>'Social Media', 'Gaming', 'Education', 'Other' <span class="required">(Required)</span></td></tr>
+            <tr><td>weekend_usage_hours</td><td>Numeric</td><td>Weekend usage hours (0-24) <span class="required">(Required)</span></td></tr>
+        </table>
+        
+        <h4>Success Response (201 Created)</h4>
+        <pre>
+{
+  "status": "success",
+  "message": "تم تسجيل بيانات الاستخدام بنجاح للطالب: John Doe",
+  "data": { ... }
+}
+        </pre>
+    </div>
+
+    <!-- Get Phone Usage History -->
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/phone-usage</span> <span class="badge">Auth Required</span>
+        <p>Get a paginated history of the student's phone usage submissions.</p>
+        
+        <h4>Success Response (200 OK)</h4>
+        <pre>
+{
+  "status": "success",
+  "user": "John Doe",
+  "data": {
+    "current_page": 1,
+    "data": [ { ... }, { ... } ],
+    "total": 5
+    ...
+  }
+}
+        </pre>
+    </div>
+
+
+    <h2>3. Questionnaire</h2>
+
+    <!-- Store Questionnaire -->
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="url">/questionnaire</span> <span class="badge">Auth Required</span>
+        <p>Submit student's psychological and lifestyle questionnaire answers.</p>
+        
+        <h4>Request Body</h4>
+        <table>
+            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            <tr><td>gender</td><td>String</td><td>'male', 'female', 'other' <span class="required">(Required)</span></td></tr>
+            <tr><td>sleep_hours</td><td>Numeric</td><td>(0-24) <span class="required">(Required)</span></td></tr>
+            <tr><td>academic_performance</td><td>Numeric</td><td>(0-100) <span class="required">(Required)</span></td></tr>
+            <tr><td>social_interactions</td><td>Numeric</td><td>(0-10) <span class="required">(Required)</span></td></tr>
+            <tr><td>exercise_hours</td><td>Numeric</td><td>(0-24) <span class="required">(Required)</span></td></tr>
+            <tr><td>anxiety_level</td><td>Numeric</td><td>Minimum 0 <span class="required">(Required)</span></td></tr>
+            <tr><td>depression_level</td><td>Numeric</td><td>Minimum 0 <span class="required">(Required)</span></td></tr>
+            <tr><td>self_esteem</td><td>Numeric</td><td>(0-100) <span class="required">(Required)</span></td></tr>
+            <tr><td>time_on_education</td><td>Numeric</td><td>(0-24) <span class="required">(Required)</span></td></tr>
+        </table>
+        
+        <h4>Success Response (201 Created)</h4>
+        <pre>
+{
+  "status": "success",
+  "message": "Questionnaire recorded successfully for John Doe",
+  "data": { ... }
+}
+        </pre>
+    </div>
+
+    <!-- Get Questionnaire History -->
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/questionnaire</span> <span class="badge">Auth Required</span>
+        <p>Get a paginated history of the student's questionnaire submissions.</p>
+    </div>
+
+
+    <h2>4. Diagnosis (AI Powered)</h2>
+
+    <!-- Generate Diagnosis -->
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="url">/diagnosis/generate</span> <span class="badge">Auth Required</span>
+        <p>Triggers the AI to generate a diagnosis based on the latest phone usage and questionnaire data. Automatically tracks progress upon success.</p>
+        
+        <h4>Request Body</h4>
+        <p><em>No body required. Uses existing database records.</em></p>
+        
+        <h4>Success Response (201 Created)</h4>
+        <pre>
+{
+  "status": "success",
+  "message": "Diagnosis generated successfully.",
+  "data": {
+    "addiction_level": "High",
+    "brainrot_stage": "Stage 2",
+    "analysis_intro": "...",
+    "top_factors": [...],
+    "recommendations": [...]
+  }
+}
+        </pre>
+    </div>
+
+    <!-- Get Diagnosis History -->
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/diagnosis-history</span> <span class="badge">Auth Required</span>
+        <p>Get a paginated list of all past diagnoses for the student.</p>
+    </div>
+
+
+    <h2>5. Progress Tracker</h2>
+
+    <!-- Get Progress Summary -->
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/progress</span> <span class="badge">Auth Required</span>
+        <p>Get a summary of the student's progress (improvement or decline).</p>
+        
+        <h4>Success Response (200 OK)</h4>
+        <pre>
+{
+  "status": "success",
+  "user": "John Doe",
+  "data": {
+    "status": "improving",
+    "details": "..."
+  }
+}
+        </pre>
+    </div>
+
+    <!-- Get Progress History -->
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/progress/history</span> <span class="badge">Auth Required</span>
+        <p>Get a detailed paginated history of the student's progress over time.</p>
+    </div>
+
+
+    <h2>6. Mini Games (Brain Training)</h2>
+
+    <!-- Store Game Result -->
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="url">/mini-game</span> <span class="badge">Auth Required</span>
+        <p>Submit the results of a mini-game played by the student.</p>
+        
+        <h4>Request Body</h4>
+        <table>
+            <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+            <tr><td>game_type</td><td>String</td><td>'memory', 'reaction', 'focus', 'pattern' <span class="required">(Required)</span></td></tr>
+            <tr><td>score</td><td>Integer</td><td>Points scored <span class="required">(Required)</span></td></tr>
+            <tr><td>reaction_time_ms</td><td>Integer</td><td>In milliseconds <span class="optional">(Optional)</span></td></tr>
+            <tr><td>accuracy_percentage</td><td>Numeric</td><td>(0-100) <span class="optional">(Optional)</span></td></tr>
+            <tr><td>difficulty_level</td><td>String</td><td>'easy', 'medium', 'hard' <span class="required">(Required)</span></td></tr>
+            <tr><td>duration_seconds</td><td>Integer</td><td>Time spent playing (1-3600) <span class="required">(Required)</span></td></tr>
+        </table>
+        
+        <h4>Success Response (201 Created)</h4>
+        <pre>
+{
+  "status": "success",
+  "message": "تم تسجيل نتيجة اللعبة بنجاح.",
+  "data": { ... }
+}
+        </pre>
+    </div>
+
+    <!-- Get Mini Game History -->
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/mini-game/history</span> <span class="badge">Auth Required</span>
+        <p>Get a paginated history of all mini-games played.</p>
+    </div>
+
+    <!-- Get Mini Game Stats -->
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="url">/mini-game/stats</span> <span class="badge">Auth Required</span>
+        <p>Get aggregated statistics (average score, best score, etc.) grouped by game type.</p>
+    </div>
+
+</div>
+
+</body>
+</html>
