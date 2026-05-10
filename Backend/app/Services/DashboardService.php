@@ -12,7 +12,7 @@ class DashboardService
 {
     /**
      * الإحصائيات الشاملة للداشبورد
-     * يدعم فلتر approved فقط أو الكل
+     * يدعم فلتر verified فقط أو الكل
      */
     public function getStats(string $filter = 'all'): array
     {
@@ -194,8 +194,8 @@ class DashboardService
     private function getUserQuery(string $filter)
     {
         $query = User::query();
-        if ($filter === 'approved') {
-            $query->where('is_approved', true);
+        if ($filter === 'verified') {
+            $query->whereNotNull('email_verified_at');
         }
         return $query;
     }
@@ -206,8 +206,8 @@ class DashboardService
     private function getDiagnosisQuery(string $filter)
     {
         $query = Diagnosis::query();
-        if ($filter === 'approved') {
-            $userIds = User::where('is_approved', true)->pluck('id');
+        if ($filter === 'verified') {
+            $userIds = User::whereNotNull('email_verified_at')->pluck('id');
             $query->whereIn('user_id', $userIds);
         }
         return $query;
@@ -219,6 +219,6 @@ class DashboardService
     public function clearCache(): void
     {
         Cache::forget('dashboard_stats_all');
-        Cache::forget('dashboard_stats_approved');
+        Cache::forget('dashboard_stats_verified');
     }
 }
