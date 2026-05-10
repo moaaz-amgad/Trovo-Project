@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'check.admin' => \App\Http\Middleware\CheckAdmin::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

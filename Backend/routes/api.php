@@ -18,7 +18,9 @@ use App\Http\Controllers\Api\Admin\AdminAuthController;
 |--------------------------------------------------------------------------
 */
 
-// --- 1. المسارات العامة (Public Auth) ---
+// =============================================
+// 1. المسارات العامة (Public Auth — No Token)
+// =============================================
 
 // تسجيل حساب جديد
 Route::post('/register', [AuthController::class, 'register'])
@@ -53,7 +55,9 @@ Route::post('/admin/login', [AdminAuthController::class, 'login'])
     ->middleware('throttle:5,1');
 
 
-// --- 2. مسارات الإدارة (Admin Dashboard) المحمية ---
+// =============================================
+// 2. مسارات الإدارة (Admin Dashboard) المحمية
+// =============================================
 Route::middleware(['auth:sanctum', 'check.admin'])->prefix('admin')->group(function () {
 
     // بيانات الأدمن الحالي وتسجيل الخروج
@@ -90,11 +94,26 @@ Route::middleware(['auth:sanctum', 'check.admin'])->prefix('admin')->group(funct
 });
 
 
-// --- 3. مسارات المستخدمين (Students) المحمية ---
+// =============================================
+// 3. مسارات تتطلب تسجيل دخول فقط (بدون تأكيد الإيميل)
+// =============================================
 Route::middleware(['auth:sanctum', 'ability:access-student'])->group(function () {
 
+    // جلب بيانات المستخدم (يشتغل حتى لو الإيميل مش مأكد)
     Route::get('/user', [AuthController::class, 'getUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
+});
+
+
+// =============================================
+// 4. مسارات المستخدمين الكاملة (تتطلب تأكيد الإيميل)
+// =============================================
+Route::middleware(['auth:sanctum', 'ability:access-student', 'verified'])->group(function () {
+
+    // إدارة الحساب
+    Route::put('/user/update-profile', [AuthController::class, 'updateProfile']);
+    Route::post('/user/change-password', [AuthController::class, 'changePassword']);
+    Route::delete('/user/delete-account', [AuthController::class, 'deleteAccount']);
 
     // بيانات الاستخدام (Phone Usage)
     Route::post('/phone-usage', [PhoneUsageController::class, 'store']);

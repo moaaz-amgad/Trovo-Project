@@ -471,4 +471,165 @@ class AuthController extends Controller
             'message' => 'تم تسجيل الخروج بنجاح.',
         ]);
     }
+
+    /**
+     * ========================================
+     * 10. تعديل بيانات الحساب (Update Profile)
+     * ========================================
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'name'   => 'sometimes|string|min:2|max:255',
+            'avatar' => 'sometimes|nullable|url|max:500',
+        ], [
+            'name.min'    => 'الاسم يجب أن يكون حرفين على الأقل.',
+            'name.max'    => 'الاسم طويل جداً.',
+            'avatar.url'  => 'رابط الصورة غير صحيح.',
+        ]);
+
+        $updated = [];
+
+        if ($request->has('name')) {
+            $user->name = $request->name;
+            $updated[] = 'الاسم';
+        }
+
+        if ($request->has('avatar')) {
+            $user->avatar = $request->avatar;
+            $updated[] = 'الصورة';
+        }
+
+        if (empty($updated)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'لم يتم إرسال أي بيانات للتحديث.',
+            ], 422);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم تحديث ' . implode(' و', $updated) . ' بنجاح.',
+            'user'    => [
+                'id'     => $user->id,
+                'name'   => $user->name,
+                'email'  => $user->email,
+                'avatar' => $user->avatar,
+            ],
+        ]);
+    }
+
+    /**
+     * ========================================
+     * 11. تغيير كلمة المرور (Change Password)
+     * ========================================
+     * للمستخدم المسجل دخول — يحتاج كلمة المرور القديمة
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // لو المستخدم مسجل بجوجل فقط وما عندوش باسورد
+        if ($user->isGoogleUser() && !$user->password) {
+            // السماح بإنشاء باسورد جديد بدون القديم
+            $request->validate([
+                'password' => 'required|string|min:6|confirmed',
+            ], [
+                'password.required'  => 'كلمة المرور الجديدة مطلوبة.',
+                'password.min'       => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.',
+                'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
+            ]);
+
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'تم إنشاء كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بالإيميل والباسورد أيضاً.',
+            ]);
+        }
+
+        // المستخدم العادي — يحتاج الباسورد القديم
+        $request->validate([
+            'current_password' => 'required|string',
+            'password'         => 'required|string|min:6|confirmed',
+        ], [
+            'current_password.required' => 'كلمة المرور الحالية مطلوبة.',
+            'password.required'         => 'كلمة المرور الجديدة مطلوبة.',
+            'password.min'              => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.',
+            'password.confirmed'        => 'تأكيد كلمة المرور غير مطابق.',
+        ]);
+
+        // التحقق من كلمة المرور الحالية
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'كلمة المرور الحالية غير صحيحة.',
+            ], 401);
+        }
+
+        // التحقق من أن الباسورد الجديد مختلف عن القديم
+        if (Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'كلمة المرور الجديدة يجب أن تكون مختلفة عن الحالية.',
+            ], 422);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        // حذف كل التوكنات ما عدا الحالي
+        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم تغيير كلمة المرور بنجاح.',
+        ]);
+    }
+
+    /**
+     * ========================================
+     * 12. حذف الحساب نهائياً (Delete Account)
+     * ========================================
+     */
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // لو عندو باسورد، يحتاج يأكد
+        if ($user->password) {
+            $request->validate([
+                'password' => 'required|string',
+            ], [
+                'password.required' => 'كلمة المرور مطلوبة لتأكيد حذف الحساب.',
+            ]);
+
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'كلمة المرور غير صحيحة.',
+                ], 401);
+            }
+        }
+
+        // حذف كل البيانات المرتبطة
+        $user->tokens()->delete();
+        $user->progressTrackers()->delete();
+        $user->miniGameSessions()->delete();
+
+        $userName = $user->name;
+        $user->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم حذف حساب ' . $userName . ' وجميع البيانات المرتبطة نهائياً.',
+        ]);
+    }
 }
