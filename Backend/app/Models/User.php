@@ -21,10 +21,11 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'student_code',
-        'phone_number',
+        'email',
         'password',
-        'is_approved',
+        'email_verified_at',
+        'google_id',
+        'avatar',
     ];
 
     /**
@@ -33,6 +34,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'google_id',
     ];
 
     /**
@@ -41,9 +43,25 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password'    => 'hashed',
-            'is_approved' => 'boolean',
+            'password'          => 'hashed',
+            'email_verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * التحقق من تأكيد الإيميل
+     */
+    public function isVerified(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+
+    /**
+     * التحقق من أن الحساب مرتبط بجوجل
+     */
+    public function isGoogleUser(): bool
+    {
+        return $this->google_id !== null;
     }
 
     /*
@@ -53,7 +71,7 @@ class User extends Authenticatable
     */
 
     /**
-     * علاقة الطالب ببيانات استخدام الهاتف
+     * علاقة المستخدم ببيانات استخدام الهاتف
      */
     public function phoneUsages()
     {
@@ -61,7 +79,7 @@ class User extends Authenticatable
     }
 
     /**
-     * علاقة الطالب بإجابات الاستبيان
+     * علاقة المستخدم بإجابات الاستبيان
      */
     public function questionnaireResponses()
     {
@@ -69,7 +87,7 @@ class User extends Authenticatable
     }
 
     /**
-     * علاقة الطالب بنتائج التشخيص (AI Diagnosis)
+     * علاقة المستخدم بنتائج التشخيص (AI Diagnosis)
      */
     public function diagnoses()
     {
@@ -77,7 +95,7 @@ class User extends Authenticatable
     }
 
     /**
-     * أحدث تشخيص للطالب
+     * أحدث تشخيص للمستخدم
      */
     public function latestDiagnosis()
     {
@@ -85,7 +103,7 @@ class User extends Authenticatable
     }
 
     /**
-     * علاقة الطالب بسجلات التقدم
+     * علاقة المستخدم بسجلات التقدم
      */
     public function progressTrackers()
     {
@@ -93,7 +111,7 @@ class User extends Authenticatable
     }
 
     /**
-     * علاقة الطالب بجلسات الميني جيم
+     * علاقة المستخدم بجلسات الميني جيم
      */
     public function miniGameSessions()
     {

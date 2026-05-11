@@ -4,25 +4,20 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * This migration is kept as a no-op for migration history compatibility.
+ * The is_approved column has been removed from the users table
+ * and replaced with email_verified_at in the new auth system.
+ */
 return new class extends Migration
 {
-    /**
-     * إضافة عمود is_approved لجدول المستخدمين
-     * للتفريق بين الطلاب المعتمدين وغير المعتمدين في الداشبورد
-     */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_approved')->default(false)->after('password');
-            $table->index('is_approved', 'idx_users_approved');
-        });
+        // No-op: is_approved removed in auth revamp
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex('idx_users_approved');
-            $table->dropColumn('is_approved');
-        });
+        // No-op
     }
 };

@@ -19,7 +19,7 @@ class AdminDashboardController extends Controller
 
     /**
      * 1. الإحصائيات الشاملة (Dashboard Overview)
-     * يدعم ?filter=approved لعرض المعتمدين فقط
+     * يدعم ?filter=verified لعرض المؤكدين فقط
      */
     public function getStats(Request $request): JsonResponse
     {
@@ -27,10 +27,10 @@ class AdminDashboardController extends Controller
         $stats  = $this->dashboardService->getStats($filter);
 
         // أحدث 5 نشاطات
-        $recentQuery = Diagnosis::with('user:id,name,student_code');
-        if ($filter === 'approved') {
-            $approvedIds = User::where('is_approved', true)->pluck('id');
-            $recentQuery->whereIn('user_id', $approvedIds);
+        $recentQuery = Diagnosis::with('user:id,name,email');
+        if ($filter === 'verified') {
+            $verifiedIds = User::whereNotNull('email_verified_at')->pluck('id');
+            $recentQuery->whereIn('user_id', $verifiedIds);
         }
         $recentActivity = $recentQuery->latest('diagnosed_at')->take(5)->get();
 
@@ -43,8 +43,8 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 2. جدول الطلاب — كل الطلاب مع حالة الموافقة وأحدث تشخيص
-     * يدعم ?filter=approved|pending|all و ?search=...
+     * 2. جدول المستخدمين — كل المستخدمين مع حالة التأكيد وأحدث تشخيص
+     * يدعم ?filter=verified|unverified|all و ?search=...
      */
     public function getAllStudents(Request $request): JsonResponse
     {
@@ -54,16 +54,16 @@ class AdminDashboardController extends Controller
         $query = User::with('latestDiagnosis')
                      ->withCount('diagnoses');
 
-        if ($filter === 'approved') {
-            $query->where('is_approved', true);
-        } elseif ($filter === 'pending') {
-            $query->where('is_approved', false);
+        if ($filter === 'verified') {
+            $query->whereNotNull('email_verified_at');
+        } elseif ($filter === 'unverified') {
+            $query->whereNull('email_verified_at');
         }
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('student_code', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -76,57 +76,19 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 3. الموافقة على طالب
-     */
-    public function approveStudent($id): JsonResponse
-    {
-        $student = User::find($id);
-        if (!$student) {
-            return response()->json(['status' => 'error', 'message' => 'الطالب غير موجود.'], 404);
-        }
-
-        $student->update(['is_approved' => true]);
-        $this->dashboardService->clearCache();
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'تم اعتماد الطالب ' . $student->name . ' بنجاح.',
-        ], 200);
-    }
-
-    /**
-     * 4. رفض / إلغاء اعتماد طالب
-     */
-    public function rejectStudent($id): JsonResponse
-    {
-        $student = User::find($id);
-        if (!$student) {
-            return response()->json(['status' => 'error', 'message' => 'الطالب غير موجود.'], 404);
-        }
-
-        $student->update(['is_approved' => false]);
-        $this->dashboardService->clearCache();
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'تم إلغاء اعتماد الطالب ' . $student->name,
-        ], 200);
-    }
-
-    /**
-     * 5. حذف طالب نهائياً مع كل بياناته
+     * 3. حذف مستخدم نهائياً مع كل بياناته
      * cascade في المايجريشنز بيحذف phone_usage, questionnaire, diagnoses تلقائياً
      */
     public function deleteStudent($id): JsonResponse
     {
         $student = User::find($id);
         if (!$student) {
-            return response()->json(['status' => 'error', 'message' => 'الطالب غير موجود.'], 404);
+            return response()->json(['status' => 'error', 'message' => 'المستخدم غير موجود.'], 404);
         }
 
         $name = $student->name;
 
-        // حذف التوكنات أولاً ثم الطالب (cascade يحذف الباقي)
+        // حذف التوكنات أولاً ثم المستخدم (cascade يحذف الباقي)
         $student->tokens()->delete();
         $student->progressTrackers()->delete();
         $student->miniGameSessions()->delete();
@@ -135,12 +97,12 @@ class AdminDashboardController extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'تم حذف الطالب ' . $name . ' وجميع بياناته نهائياً.',
+            'message' => 'تم حذف المستخدم ' . $name . ' وجميع بياناته نهائياً.',
         ], 200);
     }
 
     /**
-     * 6. كل التشخيصات (Diagnoses List)
+     * 4. كل التشخيصات (Diagnoses List)
      * يدعم search و filter
      */
     public function getAllDiagnoses(Request $request): JsonResponse
@@ -148,18 +110,18 @@ class AdminDashboardController extends Controller
         $filter = $request->query('filter', 'all');
         $search = $request->query('search', '');
 
-        $query = Diagnosis::with('user:id,name,student_code')
+        $query = Diagnosis::with('user:id,name,email')
                           ->latest('diagnosed_at');
 
-        if ($filter === 'approved') {
-            $approvedIds = User::where('is_approved', true)->pluck('id');
-            $query->whereIn('user_id', $approvedIds);
+        if ($filter === 'verified') {
+            $verifiedIds = User::whereNotNull('email_verified_at')->pluck('id');
+            $query->whereIn('user_id', $verifiedIds);
         }
 
         if (!empty($search)) {
             $query->whereHas('user', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('student_code', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -172,7 +134,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 7. ملف الطالب التفصيلي (Student Profile)
+     * 5. ملف المستخدم التفصيلي (Student Profile)
      */
     public function getStudentProfile($id): JsonResponse
     {
@@ -191,7 +153,7 @@ class AdminDashboardController extends Controller
         if (!$student) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'الطالب غير موجود في النظام.'
+                'message' => 'المستخدم غير موجود في النظام.'
             ], 404);
         }
 
@@ -202,7 +164,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 8. حذف تشخيص معين — يستخدم diagnosis_id كمفتاح أساسي
+     * 6. حذف تشخيص معين — يستخدم diagnosis_id كمفتاح أساسي
      */
     public function deleteDiagnosis($id): JsonResponse
     {
@@ -222,7 +184,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 9. متوسطات الفيتشرز (Feature Averages)
+     * 7. متوسطات الفيتشرز (Feature Averages)
      */
     public function getFeatureAverages(Request $request): JsonResponse
     {
@@ -236,7 +198,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 10. تفعيل / إلغاء وضع الصيانة (Maintenance Mode)
+     * 8. تفعيل / إلغاء وضع الصيانة (Maintenance Mode)
      */
     public function toggleMaintenance(Request $request): JsonResponse
     {
@@ -267,30 +229,30 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 11. تصدير بيانات الطلاب CSV
+     * 9. تصدير بيانات المستخدمين CSV
      */
     public function exportStudents(Request $request): StreamedResponse
     {
         $filter = $request->query('filter', 'all');
 
         $query = User::withCount('diagnoses');
-        if ($filter === 'approved') {
-            $query->where('is_approved', true);
+        if ($filter === 'verified') {
+            $query->whereNotNull('email_verified_at');
         }
         $students = $query->latest()->get();
 
         return response()->streamDownload(function () use ($students) {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($handle, ['ID', 'Name', 'Student Code', 'Phone', 'Approved', 'Diagnoses Count', 'Registered At']);
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Email Verified', 'Google Account', 'Diagnoses Count', 'Registered At']);
 
             foreach ($students as $s) {
                 fputcsv($handle, [
                     $s->id,
                     $s->name,
-                    $s->student_code,
-                    $s->phone_number ?? '',
-                    $s->is_approved ? 'Yes' : 'No',
+                    $s->email,
+                    $s->email_verified_at ? 'Yes' : 'No',
+                    $s->google_id ? 'Yes' : 'No',
                     $s->diagnoses_count,
                     $s->created_at?->format('Y-m-d H:i'),
                 ]);
@@ -302,29 +264,29 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 12. تصدير بيانات التشخيصات CSV
+     * 10. تصدير بيانات التشخيصات CSV
      */
     public function exportDiagnoses(Request $request): StreamedResponse
     {
         $filter = $request->query('filter', 'all');
 
-        $query = Diagnosis::with('user:id,name,student_code')->latest('diagnosed_at');
-        if ($filter === 'approved') {
-            $approvedIds = User::where('is_approved', true)->pluck('id');
-            $query->whereIn('user_id', $approvedIds);
+        $query = Diagnosis::with('user:id,name,email')->latest('diagnosed_at');
+        if ($filter === 'verified') {
+            $verifiedIds = User::whereNotNull('email_verified_at')->pluck('id');
+            $query->whereIn('user_id', $verifiedIds);
         }
         $diagnoses = $query->get();
 
         return response()->streamDownload(function () use ($diagnoses) {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($handle, ['Diagnosis ID', 'Student Name', 'Student Code', 'Addiction Level', 'Brain Rot Stage', 'Analysis Intro', 'Top Factors', 'Recommendations', 'Diagnosed At']);
+            fputcsv($handle, ['Diagnosis ID', 'User Name', 'Email', 'Addiction Level', 'Brain Rot Stage', 'Analysis Intro', 'Top Factors', 'Recommendations', 'Diagnosed At']);
 
             foreach ($diagnoses as $d) {
                 fputcsv($handle, [
                     $d->diagnosis_id,
                     $d->user?->name ?? 'Unknown',
-                    $d->user?->student_code ?? '',
+                    $d->user?->email ?? '',
                     $d->addiction_level,
                     $d->brainrot_stage,
                     $d->analysis_intro ?? '',
@@ -340,7 +302,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 13. جلب بيانات الأدمن الحالي
+     * 11. جلب بيانات الأدمن الحالي
      */
     public function me(Request $request): JsonResponse
     {
@@ -356,7 +318,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * 14. تسجيل خروج الأدمن
+     * 12. تسجيل خروج الأدمن
      */
     public function logout(Request $request): JsonResponse
     {

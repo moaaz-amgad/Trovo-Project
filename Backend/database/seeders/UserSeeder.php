@@ -10,21 +10,21 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $students = [
-            ['name' => 'Ahmed Ali', 'student_code' => 'ST001', 'phone' => '01011111111'],
-            ['name' => 'Sara Hassan', 'student_code' => 'ST002', 'phone' => '01222222222'],
-            ['name' => 'Mohamed Ibrahim', 'student_code' => 'ST003', 'phone' => '01555555555'],
-            ['name' => 'Mona Zaki', 'student_code' => 'ST004', 'phone' => '01111111111'],
-            ['name' => 'Youssef Mansour', 'student_code' => 'ST005', 'phone' => '01000000000'],
+        $users = [
+            ['name' => 'Ahmed Ali',         'email' => 'ahmed@trovo.test'],
+            ['name' => 'Sara Hassan',        'email' => 'sara@trovo.test'],
+            ['name' => 'Mohamed Ibrahim',    'email' => 'mohamed@trovo.test'],
+            ['name' => 'Mona Zaki',          'email' => 'mona@trovo.test'],
+            ['name' => 'Youssef Mansour',    'email' => 'youssef@trovo.test'],
         ];
 
-        foreach ($students as $student) {
+        foreach ($users as $userData) {
             User::updateOrCreate(
-                ['student_code' => $student['student_code']],
+                ['email' => $userData['email']],
                 [
-                    'name' => $student['name'],
-                    'phone_number' => $student['phone'],
-                    'password' => Hash::make($student['student_code']),
+                    'name'              => $userData['name'],
+                    'password'          => Hash::make('password'),
+                    'email_verified_at' => now(),
                 ]
             );
         }
