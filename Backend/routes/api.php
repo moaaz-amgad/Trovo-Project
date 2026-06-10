@@ -136,4 +136,5 @@ Route::middleware(['auth:sanctum', 'ability:access-student', 'verified'])->group
     Route::post('/mini-game', [MiniGameController::class, 'store']);
     Route::get('/mini-game/history', [MiniGameController::class, 'index']);
     Route::get('/mini-game/stats', [MiniGameController::class, 'stats']);
+    Route::get('/mini-game/dashboard', [MiniGameController::class, 'dashboard']);
 });

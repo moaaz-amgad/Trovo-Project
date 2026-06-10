@@ -17,6 +17,7 @@ class MiniGameSession extends Model
         'accuracy_percentage',
         'difficulty_level',
         'duration_seconds',
+        'detailed_metrics',
         'played_at',
     ];
 
@@ -25,6 +26,7 @@ class MiniGameSession extends Model
         'reaction_time_ms'    => 'integer',
         'accuracy_percentage' => 'float',
         'duration_seconds'    => 'integer',
+        'detailed_metrics'    => 'array',
         'played_at'           => 'datetime',
     ];
 

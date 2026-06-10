@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * جدول جلسات الميني جيم للتقييم الإدراكي
+     * جدول جلسات الألعاب الإدراكية (Cognitive Games)
      */
     public function up(): void
     {
@@ -18,12 +18,15 @@ return new class extends Migration
                   ->constrained('users')
                   ->onDelete('cascade');
 
-            $table->enum('game_type', ['memory', 'reaction', 'focus', 'pattern']);
+            $table->string('game_type'); // e.g. stroop, number_letter, attention_span, memory_sequence
             $table->integer('score')->default(0);
             $table->integer('reaction_time_ms')->nullable();
             $table->decimal('accuracy_percentage', 5, 2)->nullable();
-            $table->enum('difficulty_level', ['easy', 'medium', 'hard'])->default('medium');
-            $table->integer('duration_seconds');
+            $table->string('difficulty_level')->default('medium'); // easy, medium, hard, etc.
+            $table->integer('duration_seconds')->default(0);
+            
+            // NEW: Detailed metrics specific to each game (JSON)
+            $table->json('detailed_metrics')->nullable();
 
             $table->timestamp('played_at')->useCurrent();
             $table->timestamps();
