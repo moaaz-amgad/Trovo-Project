@@ -1,0 +1,121 @@
+{
+    "@@locale": "ar",
+    "appTitle": "LYVRA",
+    "createNewAccount": "إنشاء حساب جديد",
+    "profileImage": "الصورة الشخصية",
+    "allowedFiles": "الملفات المسموح بيها : JPEG , PNG",
+    "maxSize": "الحد الاقصي : 5MB",
+    "username": "اسم المستخدم",
+    "usernamePlaceholder": "user22",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "user@gmail.com",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "haveAccount": "لديك حساب؟ ",
+    "login": "تسجيل الدخول",
+    "registrationSuccessful": "تم التسجيل بنجاح",
+    "registrationFailed": "فشل التسجيل",
+    "rememberMe": "تذكرني",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "dontHaveAccount": "ليس لديك حساب؟ ",
+    "createAccount": "إنشاء حساب جديد",
+    "loginSuccessful": "تم تسجيل الدخول بنجاح",
+    "loginFailed": "فشل تسجيل الدخول",
+    "language": "اللغة",
+    "arabic": "اللغة العربية",
+    "english": "English",
+    "apply": "تطبيق",
+    "otpVerification": "رمز التحقق",
+    "otpDescription": "لاستكمال فتح حسابك ادخل رمز التحقق المرسل عبر البريد الإلكتروني",
+    "didntReceiveCode": "لم يصلك رمز ؟ ",
+    "resendCode": "إعادة ارسال",
+    "continueButton": "المتابعة",
+    "otpSuccessful": "تم التحقق بنجاح",
+    "otpFailed": "فشل التحقق",
+    "home": "الرئيسية",
+    "myAccount": "حسابي",
+    "welcomeMessage": "مرحباً بك في LYVRA!",
+    "profileTitle": "الملف الشخصي",
+    "oldPassword": "كلمة المرور القديمة",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+    "saveChanges": "حفظ التغيرات",
+    "networkError": "لا يوجد اتصال بالإنترنت. يرجى التحقق من إعدادات الشبكة.",
+    "timeoutError": "انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.",
+    "cancelledError": "تم إلغاء الطلب.",
+    "serverError": "حدث خطأ في الخادم. يرجى المحاولة لاحقاً.",
+    "notFoundError": "المورد المطلوب غير موجود.",
+    "unauthorizedError": "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+    "forbiddenError": "ليس لديك صلاحية للوصول لهذا المورد.",
+    "badRequestError": "طلب غير صالح. يرجى التحقق من البيانات المدخلة.",
+    "validationError": "فشل التحقق من البيانات. يرجى مراجعة الحقول.",
+    "cacheError": "حدث خطأ في التخزين المحلي.",
+    "unknownError": "حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.",
+    "selectImageSource": "اختر مصدر الصورة",
+    "camera": "الكاميرا",
+    "gallery": "المعرض",
+    "takeNewPhoto": "التقط صورة جديدة",
+    "chooseFromGallery": "اختر من الصور الموجودة",
+    "select": "اختيار",
+    "thisFieldRequired": "هذا الحقل مطلوب",
+    "fieldRequired": "{fieldName} مطلوب",
+    "@fieldRequired": {
+        "placeholders": {
+            "fieldName": {
+                "type": "String"
+            }
+        }
+    },
+    "invalidUsername": "اسم المستخدم يجب أن يكون 3-20 حرف (أحرف، أرقام، شرطة سفلية)",
+    "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
+    "passwordTooShort": "كلمة المرور يجب أن تكون {minLength} أحرف على الأقل",
+    "@passwordTooShort": {
+        "placeholders": {
+            "minLength": {
+                "type": "int"
+            }
+        }
+    },
+    "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين",
+    "phoneNumber": "رقم الهاتف",
+    "invalidPhoneNumber": "يرجى إدخال رقم هاتف صالح",
+    "otpCode": "رمز التحقق",
+    "invalidOtp": "يرجى إدخال رمز مكون من {length} أرقام",
+    "@invalidOtp": {
+        "placeholders": {
+            "length": {
+                "type": "int"
+            }
+        }
+    },
+    "minLengthError": "يجب أن يكون {min} أحرف على الأقل",
+    "@minLengthError": {
+        "placeholders": {
+            "min": {
+                "type": "int"
+            }
+        }
+    },
+    "maxLengthError": "يجب ألا يتجاوز {max} حرف",
+    "@maxLengthError": {
+        "placeholders": {
+            "max": {
+                "type": "int"
+            }
+        }
+    },
+    "invalidUrl": "يرجى إدخال رابط صالح",
+    "imageTooLarge": "حجم الصورة يتجاوز {maxSize} ميجابايت. يرجى اختيار صورة أصغر.",
+    "@imageTooLarge": {
+        "placeholders": {
+            "maxSize": {
+                "type": "double"
+            }
+        }
+    },
+    "tryAgain": "حاول مرة أخرى",
+    "oldPasswordRequired": "كلمة المرور القديمة مطلوبة لتغيير كلمة المرور",
+    "profileUpdateSuccess": "تم تحديث الملف الشخصي بنجاح",
+    "noChangesToSave": "لا توجد تغييرات للحفظ",
+    "logout": "تسجيل الخروج"
+}

@@ -1,0 +1,121 @@
+{
+    "@@locale": "en",
+    "appTitle": "LYVRA",
+    "createNewAccount": "Create New Account",
+    "profileImage": "Profile Image",
+    "allowedFiles": "Allowed files: JPEG, PNG",
+    "maxSize": "Max size: 5MB",
+    "username": "Username",
+    "usernamePlaceholder": "user22",
+    "email": "Email",
+    "emailPlaceholder": "user@gmail.com",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "haveAccount": "Have an account? ",
+    "login": "Login",
+    "registrationSuccessful": "Registration Successful",
+    "registrationFailed": "Registration Failed",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot Password?",
+    "dontHaveAccount": "Don't have an account? ",
+    "createAccount": "Create new account",
+    "loginSuccessful": "Login Successful",
+    "loginFailed": "Login Failed",
+    "language": "Language",
+    "arabic": "Arabic",
+    "english": "English",
+    "apply": "Apply",
+    "otpVerification": "Verification Code",
+    "otpDescription": "To complete opening your account, enter the verification code sent via email",
+    "didntReceiveCode": "Didn't receive code? ",
+    "resendCode": "Resend",
+    "continueButton": "Continue",
+    "otpSuccessful": "Verification Successful",
+    "otpFailed": "Verification Failed",
+    "home": "Home",
+    "myAccount": "My Account",
+    "welcomeMessage": "Welcome to LYVRA!",
+    "profileTitle": "Profile",
+    "oldPassword": "Old Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "saveChanges": "Save Changes",
+    "networkError": "No internet connection. Please check your network settings.",
+    "timeoutError": "Connection timeout. Please try again.",
+    "cancelledError": "Request cancelled.",
+    "serverError": "Server error occurred. Please try again later.",
+    "notFoundError": "Requested resource not found.",
+    "unauthorizedError": "Session expired. Please login again.",
+    "forbiddenError": "You don't have permission to access this resource.",
+    "badRequestError": "Invalid request. Please check your input data.",
+    "validationError": "Validation failed. Please review the fields.",
+    "cacheError": "Local storage error occurred.",
+    "unknownError": "An unexpected error occurred. Please try again later.",
+    "selectImageSource": "Select Image Source",
+    "camera": "Camera",
+    "gallery": "Gallery",
+    "takeNewPhoto": "Take a new photo",
+    "chooseFromGallery": "Choose from existing photos",
+    "select": "Select",
+    "thisFieldRequired": "This field is required",
+    "fieldRequired": "{fieldName} is required",
+    "@fieldRequired": {
+        "placeholders": {
+            "fieldName": {
+                "type": "String"
+            }
+        }
+    },
+    "invalidUsername": "Username must be 3-20 characters (letters, numbers, underscore)",
+    "invalidEmail": "Please enter a valid email address",
+    "passwordTooShort": "Password must be at least {minLength} characters",
+    "@passwordTooShort": {
+        "placeholders": {
+            "minLength": {
+                "type": "int"
+            }
+        }
+    },
+    "passwordsDoNotMatch": "Passwords do not match",
+    "phoneNumber": "Phone Number",
+    "invalidPhoneNumber": "Please enter a valid phone number",
+    "otpCode": "OTP Code",
+    "invalidOtp": "Please enter a valid {length}-digit code",
+    "@invalidOtp": {
+        "placeholders": {
+            "length": {
+                "type": "int"
+            }
+        }
+    },
+    "minLengthError": "Must be at least {min} characters",
+    "@minLengthError": {
+        "placeholders": {
+            "min": {
+                "type": "int"
+            }
+        }
+    },
+    "maxLengthError": "Must not exceed {max} characters",
+    "@maxLengthError": {
+        "placeholders": {
+            "max": {
+                "type": "int"
+            }
+        }
+    },
+    "invalidUrl": "Please enter a valid URL",
+    "imageTooLarge": "Image size exceeds {maxSize}MB. Please choose a smaller image.",
+    "@imageTooLarge": {
+        "placeholders": {
+            "maxSize": {
+                "type": "double"
+            }
+        }
+    },
+    "tryAgain": "Try Again",
+    "oldPasswordRequired": "Old password is required to change password",
+    "profileUpdateSuccess": "Profile updated successfully",
+    "noChangesToSave": "No changes to save",
+    "logout": "Logout"
+}
