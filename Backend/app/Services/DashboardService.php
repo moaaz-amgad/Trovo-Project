@@ -109,7 +109,7 @@ class DashboardService
             ->pluck('count', 'gender');
 
         // Phone usage purpose distribution
-        $purposeDist = PhoneUsageData::whereIn('user_id', $userIds)
+        $purposeDist = QuestionnaireResponse::whereIn('user_id', $userIds)
             ->selectRaw("phone_usage_purpose, COUNT(*) as count")
             ->groupBy('phone_usage_purpose')
             ->pluck('count', 'phone_usage_purpose');

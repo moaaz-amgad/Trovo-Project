@@ -19,7 +19,6 @@ class PhoneUsageData extends Model
         'apps_used_daily',
         'time_on_social_media',
         'time_on_gaming',
-        'phone_usage_purpose',
         'weekend_usage_hours',
         'collected_at'
     ];

@@ -22,6 +22,7 @@ class QuestionnaireResponse extends Model
         'depression_level',
         'self_esteem',
         'time_on_education',
+        'phone_usage_purpose',
         'answered_at'
     ];
 

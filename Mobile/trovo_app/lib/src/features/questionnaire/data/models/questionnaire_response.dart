@@ -36,6 +36,7 @@ abstract class QuestionnaireResponse with _$QuestionnaireResponse {
       'depression_level': sadnessFrequency.toString(),
       'self_esteem': selfEsteemScore.toString(),
       'time_on_education': '2',
+      'phone_usage_purpose': _normalizePhonePurpose(phonePurpose),
     };
   }
 
@@ -55,7 +56,6 @@ abstract class QuestionnaireResponse with _$QuestionnaireResponse {
       'apps_used_daily': appsUsed.toString(),
       'time_on_social_media': timeOnSocial.toStringAsFixed(1),
       'time_on_gaming': timeOnGaming.toStringAsFixed(1),
-      'phone_usage_purpose': _normalizePhonePurpose(phonePurpose),
       'weekend_usage_hours': weekend.toStringAsFixed(1),
     };
   }

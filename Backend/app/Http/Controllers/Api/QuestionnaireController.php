@@ -26,6 +26,7 @@ class QuestionnaireController extends Controller
             'depression_level'     => 'required|numeric|min:0',
             'self_esteem'          => 'required|numeric|min:0|max:100',
             'time_on_education'    => 'required|numeric|min:0|max:24',
+            'phone_usage_purpose'  => 'required|string|in:Social Media,Gaming,Education,Other',
         ]);
 
         $response = $user->questionnaireResponses()->create(array_merge($validatedData, [

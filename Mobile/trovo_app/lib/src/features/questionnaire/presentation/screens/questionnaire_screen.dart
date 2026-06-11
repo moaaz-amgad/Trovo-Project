@@ -583,7 +583,6 @@ class _QuestionnaireFormState extends State<_QuestionnaireForm> {
                   'time_on_social_media': metrics.timeOnSocialMedia
                       .toStringAsFixed(1),
                   'time_on_gaming': metrics.timeInGaming.toStringAsFixed(1),
-                  'phone_usage_purpose': _phonePurpose,
                   'weekend_usage_hours': metrics.weekendUsageHours
                       .toStringAsFixed(1),
                 });
@@ -1211,7 +1210,6 @@ class _ManualPhoneUsageSheetState extends State<_ManualPhoneUsageSheet> {
       'apps_used_daily': apps.toString(),
       'time_on_social_media': social.toStringAsFixed(1),
       'time_on_gaming': gaming.toStringAsFixed(1),
-      'phone_usage_purpose': widget.phonePurpose,
       'weekend_usage_hours': weekend.toStringAsFixed(1),
     });
   }

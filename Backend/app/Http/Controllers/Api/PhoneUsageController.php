@@ -23,7 +23,6 @@ class PhoneUsageController extends Controller
             'apps_used_daily'        => 'required|integer|min:0',
             'time_on_social_media'   => 'required|numeric|min:0|max:24',
             'time_on_gaming'         => 'required|numeric|min:0|max:24',
-            'phone_usage_purpose'    => 'required|string|in:Social Media,Gaming,Education,Other',
             'weekend_usage_hours'    => 'required|numeric|min:0|max:24',
         ]);
 

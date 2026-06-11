@@ -21,7 +21,6 @@ abstract class PhoneUsageData with _$PhoneUsageData {
     @Default(0.0)
     double timeOnSocialMedia,
     @JsonKey(name: 'time_in_gaming') @Default(0.0) double timeInGaming,
-    @JsonKey(name: 'phone_usage_purpose') @Default('') String phoneUsagePurpose,
     @JsonKey(name: 'weekend_usage_hours')
     @Default(0.0)
     double weekendUsageHours,
@@ -41,7 +40,6 @@ abstract class PhoneUsageData with _$PhoneUsageData {
     'apps_used_daily': appsUsedDaily.toString(),
     'time_on_social_media': timeOnSocialMedia.toString(),
     'time_on_gaming': timeInGaming.toString(),
-    'phone_usage_purpose': phoneUsagePurpose,
     'weekend_usage_hours': weekendUsageHours.toString(),
     'collected_at': (collectedAt ?? DateTime.now()).toIso8601String(),
   };

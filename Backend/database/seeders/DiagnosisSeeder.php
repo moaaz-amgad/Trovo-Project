@@ -36,7 +36,6 @@ class DiagnosisSeeder extends Seeder
                 'apps_used_daily'        => rand(3, 20),
                 'time_on_social_media'   => round(rand(10, 80) / 10, 1),
                 'time_on_gaming'         => round(rand(0, 50) / 10, 1),
-                'phone_usage_purpose'    => ['Social Media', 'Gaming', 'Education', 'Other'][rand(0, 3)],
                 'weekend_usage_hours'    => round(rand(20, 140) / 10, 1),
                 'collected_at'           => now(),
             ]);
@@ -53,6 +52,7 @@ class DiagnosisSeeder extends Seeder
                 'depression_level'     => round(rand(10, 80) / 10, 1),
                 'self_esteem'          => round(rand(20, 90) / 1, 1),
                 'time_on_education'    => round(rand(5, 60) / 10, 1),
+                'phone_usage_purpose'  => ['Social Media', 'Gaming', 'Education', 'Other'][rand(0, 3)],
                 'answered_at'          => now(),
             ]);
 

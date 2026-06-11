@@ -141,10 +141,10 @@ class DiagnosisService
             'Gender_Male'                      => ($questionnaire->gender == 'male') ? 1 : 0,
             'Gender_Other'                     => ($questionnaire->gender == 'other') ? 1 : 0,
 
-            'Phone_Usage_Purpose_Education'    => ($usage->phone_usage_purpose == 'Education') ? 1 : 0,
-            'Phone_Usage_Purpose_Gaming'       => ($usage->phone_usage_purpose == 'Gaming') ? 1 : 0,
-            'Phone_Usage_Purpose_Other'        => ($usage->phone_usage_purpose == 'Other') ? 1 : 0,
-            'Phone_Usage_Purpose_Social Media' => ($usage->phone_usage_purpose == 'Social Media') ? 1 : 0,
+            'Phone_Usage_Purpose_Education'    => ($questionnaire->phone_usage_purpose == 'Education') ? 1 : 0,
+            'Phone_Usage_Purpose_Gaming'       => ($questionnaire->phone_usage_purpose == 'Gaming') ? 1 : 0,
+            'Phone_Usage_Purpose_Other'        => ($questionnaire->phone_usage_purpose == 'Other') ? 1 : 0,
+            'Phone_Usage_Purpose_Social Media' => ($questionnaire->phone_usage_purpose == 'Social Media') ? 1 : 0,
         ];
     }
 }
