@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body x-data="dashboardApp" x-init="init()">
 
@@ -19,7 +19,7 @@
             <div class="login-box">
                 <div class="login-glow-line"></div>
                 <div class="login-header">
-                    <img src="logo.svg" alt="Trovo" class="login-logo-img">
+                    <img src="logo.png" alt="Trovo" class="login-logo-img">
                     <div class="login-logo-text">TROVO</div>
                     <p class="login-subtitle">Admin Dashboard · Authorization Required</p>
                 </div>
@@ -48,12 +48,12 @@
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <img src="logo.svg" alt="Trovo">
+                <img src="logo.png" alt="Trovo">
                 <span>TROVO</span>
             </div>
             <nav class="sidebar-nav">
                 <button @click="switchScreen('requests')" :class="screen==='requests' && 'nav-active'" class="nav-btn" id="nav-requests">
-                    <i class="fa-solid fa-user-check"></i> Student Requests
+                    <i class="fa-solid fa-users"></i> All Users
                     <span x-show="pendingCount > 0" class="nav-badge" x-text="pendingCount"></span>
                 </button>
                 <button @click="switchScreen('overview')" :class="screen==='overview' && 'nav-active'" class="nav-btn" id="nav-overview">
@@ -65,8 +65,11 @@
                 <button @click="switchScreen('diagnoses')" :class="screen==='diagnoses' && 'nav-active'" class="nav-btn" id="nav-diagnoses">
                     <i class="fa-solid fa-stethoscope"></i> All Diagnoses
                 </button>
+                <button @click="switchScreen('minigames')" :class="screen==='minigames' && 'nav-active'" class="nav-btn" id="nav-minigames">
+                    <i class="fa-solid fa-gamepad"></i> Mini Games
+                </button>
                 <button @click="switchScreen('enrollment')" :class="screen==='enrollment' && 'nav-active'" class="nav-btn" id="nav-enrollment">
-                    <i class="fa-solid fa-user-plus"></i> Enrollment
+                    <i class="fa-solid fa-gear"></i> Settings
                 </button>
             </nav>
             <div class="sidebar-bottom">
@@ -88,7 +91,7 @@
             </template>
 
             <!-- FILTER TOGGLE -->
-            <div class="filter-bar" x-show="screen !== 'enrollment'">
+            <div class="filter-bar" x-show="screen !== 'enrollment' && screen !== 'minigames'">
                 <button @click="setFilter('all')" :class="currentFilter==='all' ? 'filter-active' : ''" class="filter-btn" id="filter-all">
                     <i class="fa-solid fa-globe"></i> All Users
                 </button>
@@ -101,13 +104,13 @@
             <div x-show="screen==='requests'" x-transition class="screen-content">
                 <div class="screen-header">
                     <div>
-                        <h1 class="screen-title">Student Requests</h1>
-                        <p class="screen-subtitle">Manage student registrations and approvals</p>
+                        <h1 class="screen-title">All Students</h1>
+                        <p class="screen-subtitle">Manage student registrations and verification</p>
                     </div>
                     <div class="header-actions">
                         <div class="search-box">
                             <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" x-model="studentSearch" @input.debounce.300ms="fetchStudents()" placeholder="Search name or code..." id="search-students">
+                            <input type="text" x-model="studentSearch" @input.debounce.300ms="fetchStudents()" placeholder="Search name or email..." id="search-students">
                         </div>
                         <button @click="exportData('students')" class="btn-outline" id="export-students"><i class="fa-solid fa-download"></i> Export CSV</button>
                     </div>
@@ -115,20 +118,19 @@
                 <div class="data-table-wrap">
                     <table class="data-table" id="students-table">
                         <thead>
-                            <tr><th>Student Code</th><th>Name</th><th>Phone</th><th>Diagnoses</th><th>Status</th><th>Registered</th><th>Actions</th></tr>
+                            <tr><th>Name</th><th>Email</th><th>Diagnoses</th><th>Status</th><th>Registered</th><th>Actions</th></tr>
                         </thead>
                         <tbody>
                             <template x-for="s in students" :key="s.id">
                                 <tr>
-                                    <td class="code-cell" x-text="s.student_code"></td>
                                     <td><a href="#" @click.prevent="viewProfile(s.id)" class="name-link" x-text="s.name"></a></td>
-                                    <td class="sub-cell" x-text="s.phone_number || '—'"></td>
+                                    <td class="sub-cell" x-text="s.email"></td>
                                     <td x-text="s.diagnoses_count || 0"></td>
                                     <td><span class="status-badge" :class="s.is_approved ? 'badge-approved' : 'badge-pending'" x-text="s.is_approved ? 'Approved' : 'Pending'"></span></td>
                                     <td class="sub-cell" x-text="formatDate(s.created_at)"></td>
                                     <td class="actions-cell">
                                         <button x-show="!s.is_approved" @click="approveStudent(s.id)" class="btn-sm btn-approve" title="Approve"><i class="fa-solid fa-check"></i></button>
-                                        <button x-show="s.is_approved" @click="rejectStudent(s.id)" class="btn-sm btn-reject" title="Revoke"><i class="fa-solid fa-xmark"></i></button>
+                                        <button x-show="s.is_approved" @click="rejectStudent(s.id)" class="btn-sm btn-reject" title="Revoke Approval"><i class="fa-solid fa-xmark"></i></button>
                                         <button @click="viewProfile(s.id)" class="btn-sm btn-info" title="Profile"><i class="fa-solid fa-eye"></i></button>
                                         <button @click="deleteStudent(s.id, s.name)" class="btn-sm btn-danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
                                     </td>
@@ -150,7 +152,7 @@
             <!-- ==================== SCREEN: OVERVIEW ==================== -->
             <div x-show="screen==='overview'" x-transition class="screen-content">
                 <div class="screen-header">
-                    <div><h1 class="screen-title">Overview</h1><p class="screen-subtitle">Diagnostic analytics for Digital Dopamine Addiction</p></div>
+                    <div><h1 class="screen-title">Strategic Overview</h1><p class="screen-subtitle">Diagnostic analytics for Digital Dopamine Addiction</p></div>
                     <div class="status-pill"><span class="pulse-dot"></span> System Online</div>
                 </div>
                 <!-- Stats Cards -->
@@ -299,25 +301,90 @@
                 </div>
             </div>
 
-            <!-- ==================== SCREEN: ENROLLMENT ==================== -->
+            <!-- ==================== SCREEN: MINIGAMES ==================== -->
+            <div x-show="screen==='minigames'" x-transition class="screen-content" x-cloak>
+                <div class="screen-header">
+                    <div><h1 class="screen-title">Mini Games Analytics</h1><p class="screen-subtitle">Performance statistics across cognitive assessment games</p></div>
+                </div>
+                
+                <!-- Overall Stats -->
+                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 2rem;">
+                    <div class="stat-card"><p class="stat-label">Total Sessions</p><div class="stat-value" x-text="miniGameStats?.total_sessions || 0">0</div></div>
+                    <div class="stat-card card-green"><p class="stat-label">Overall Avg Score</p><div class="stat-value" x-text="miniGameStats?.overall_avg_score || 0">0</div></div>
+                    <div class="stat-card card-amber"><p class="stat-label">Overall Avg Reaction</p><div class="stat-value" x-text="(miniGameStats?.overall_avg_reaction_ms || 0) + ' ms'">0 ms</div></div>
+                    <div class="stat-card card-red"><p class="stat-label">Overall Accuracy</p><div class="stat-value" x-text="(miniGameStats?.overall_avg_accuracy || 0) + '%'">0%</div></div>
+                </div>
+
+                <div x-show="miniGameStats?.game_stats?.length > 0">
+                    <h3 class="section-title"><i class="fa-solid fa-layer-group"></i> Game Performance Profiles</h3>
+                    <div class="features-grid">
+                        <template x-for="g in miniGameStats.game_stats" :key="g.game_type">
+                            <div class="feature-card">
+                                <p class="feature-name" style="text-transform: capitalize; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; font-size: 1.1rem;" x-text="g.game_type.replace('_', ' ')"></p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Sessions</span>
+                                    <span style="font-weight: 600; color: var(--accent-blue);" x-text="g.total_played"></span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Avg Score</span>
+                                    <span style="font-weight: 600;" x-text="g.avg_score"></span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Reaction Time</span>
+                                    <span style="font-weight: 600; color: var(--accent-amber);" x-text="g.avg_reaction_ms + ' ms'"></span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Accuracy</span>
+                                    <span style="font-weight: 600; color: var(--accent-green);" x-text="g.avg_accuracy + '%'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top: 2rem;"><i class="fa-solid fa-clock-rotate-left"></i> Recent Sessions</h3>
+                    <div class="data-table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>User</th><th>Email</th><th>Game Type</th><th>Score</th><th>Reaction Time</th><th>Accuracy</th><th>Date</th></tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="s in miniGameStats.recent_sessions" :key="s.id">
+                                    <tr>
+                                        <td><a href="#" @click.prevent="viewProfile(s.user?.id)" class="name-link" x-text="s.user?.name || 'Unknown'"></a></td>
+                                        <td class="sub-cell" x-text="s.user?.email || '—'"></td>
+                                        <td><span class="mini-tag" style="text-transform: capitalize;" x-text="s.game_type.replace('_', ' ')"></span></td>
+                                        <td style="font-weight: 600;" x-text="s.score"></td>
+                                        <td class="sub-cell" x-text="s.reaction_time_ms + ' ms'"></td>
+                                        <td class="sub-cell" x-text="s.accuracy_percentage + '%'"></td>
+                                        <td class="sub-cell" x-text="formatDate(s.played_at)"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div x-show="!miniGameStats?.total_sessions" class="empty-state"><i class="fa-solid fa-gamepad"></i><p>No game data available yet.</p></div>
+            </div>
+
+            <!-- ==================== SCREEN: SETTINGS ==================== -->
             <div x-show="screen==='enrollment'" x-transition class="screen-content">
-                <h1 class="screen-title">Enrollment & Controls</h1>
-                <p class="screen-subtitle" style="margin-bottom:1.5rem;">Manage student enrollment and system settings</p>
+                <h1 class="screen-title">Settings & Controls</h1>
+                <p class="screen-subtitle" style="margin-bottom:1.5rem;">Manage student enrollment, imports, and system controls</p>
                 <div class="enroll-grid">
                     <div class="panel enroll-panel">
                         <div class="enroll-icon"><i class="fa-solid fa-pen-nib"></i></div>
                         <h3 class="panel-title">Manual Enrollment</h3>
                         <form @submit.prevent="handleEnrollment()" class="enroll-form">
                             <div class="form-group"><label>Full Name</label><input type="text" x-model="enrollForm.name" required id="enroll-name"></div>
-                            <div class="form-group"><label>Student Code</label><input type="text" x-model="enrollForm.student_code" required id="enroll-code"></div>
-                            <div class="form-group"><label>Phone Number</label><input type="text" x-model="enrollForm.phone_number" id="enroll-phone"></div>
+                            <div class="form-group"><label>Email Address</label><input type="email" x-model="enrollForm.email" required id="enroll-email"></div>
+                            <div class="form-group"><label>Password (Optional)</label><input type="password" x-model="enrollForm.password" id="enroll-password" placeholder="Leave empty to auto-generate"></div>
                             <button type="submit" :disabled="isLoading" class="btn-primary-full" id="enroll-submit">Create Student Account</button>
                         </form>
                     </div>
                     <div class="panel enroll-panel">
                         <div class="enroll-icon accent-icon"><i class="fa-solid fa-file-csv"></i></div>
                         <h3 class="panel-title">Bulk Import</h3>
-                        <p class="enroll-desc">Upload Excel/CSV with columns: name, student_code, phone_number</p>
+                        <p class="enroll-desc">Upload Excel/CSV with columns: name, email, password</p>
                         <input type="file" id="bulk_file" class="hidden" @change="handleBulkImport($event)">
                         <label for="bulk_file" class="btn-accent-full">Select File</label>
                     </div>
@@ -345,8 +412,7 @@
                                 <div>
                                     <h2 class="profile-name" x-text="selectedStudent.name"></h2>
                                     <div class="profile-meta">
-                                        <span x-text="'Code: ' + selectedStudent.student_code"></span>
-                                        <span x-text="'Phone: ' + (selectedStudent.phone_number || 'N/A')"></span>
+                                        <span x-text="'Email: ' + (selectedStudent.email || 'N/A')"></span>
                                         <span :class="selectedStudent.is_approved ? 'text-green' : 'text-amber'" x-text="selectedStudent.is_approved ? '✓ Approved' : '⏳ Pending'"></span>
                                         <span class="profile-diag-count" x-text="'Diagnoses: ' + (selectedStudent.diagnoses_count || 0)"></span>
                                     </div>
@@ -382,6 +448,6 @@
 
         </main>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>

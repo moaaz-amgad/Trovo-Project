@@ -27,6 +27,7 @@ class UsersImport implements ToModel, WithHeadingRow, SkipsEmptyRows
                 'name'              => $name,
                 'password'          => Hash::make($password),
                 'email_verified_at' => now(), // الأدمن تأكد من بياناتهم بالفعل
+                'is_approved'       => true,
             ]
         );
     }

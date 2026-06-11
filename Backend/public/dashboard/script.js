@@ -49,7 +49,10 @@ document.addEventListener('alpine:init', () => {
         selectedStudent: {},
 
         // === ENROLLMENT ===
-        enrollForm: { name: '', phone_number: '', student_code: '' },
+        enrollForm: { name: '', email: '', password: '' },
+
+        // === MINIGAMES ===
+        miniGameStats: null,
 
         // === API BASE ===
         get apiBase() {
@@ -117,7 +120,8 @@ document.addEventListener('alpine:init', () => {
             try {
                 await Promise.all([
                     this.fetchStats(), this.fetchStudents(),
-                    this.fetchDiagnoses(), this.fetchFeatures()
+                    this.fetchDiagnoses(), this.fetchFeatures(),
+                    this.fetchMiniGames()
                 ]);
             } catch (e) {
                 if (e.response?.status === 401) this.logoutSilently();
@@ -182,6 +186,15 @@ document.addEventListener('alpine:init', () => {
                 });
                 if (res.data?.data) this.featureData = res.data.data;
             } catch (e) { console.error('Features error:', e.message); }
+        },
+
+        async fetchMiniGames() {
+            try {
+                const res = await axios.get(`${this.apiBase}/admin/mini-game-stats`, {
+                    params: { filter: this.currentFilter }
+                });
+                if (res.data?.data) this.miniGameStats = res.data.data;
+            } catch (e) { console.error('MiniGames error:', e.message); }
         },
 
         // === STUDENT ACTIONS ===
@@ -252,18 +265,18 @@ document.addEventListener('alpine:init', () => {
 
         // === ENROLLMENT ===
         async handleEnrollment() {
-            if (!this.enrollForm.name || !this.enrollForm.student_code) {
-                this.showToast('Please fill name and student code', 'error');
+            if (!this.enrollForm.name || !this.enrollForm.email) {
+                this.showToast('Please fill name and email', 'error');
                 return;
             }
             this.isLoading = true;
             try {
                 await axios.post(`${this.apiBase}/admin/add-student-manual`, {
                     name: this.enrollForm.name,
-                    phone_number: this.enrollForm.phone_number,
-                    student_code: this.enrollForm.student_code
+                    email: this.enrollForm.email,
+                    password: this.enrollForm.password
                 });
-                this.enrollForm = { name: '', phone_number: '', student_code: '' };
+                this.enrollForm = { name: '', email: '', password: '' };
                 this.showToast('Student account created (auto-approved)', 'success');
                 await this.refreshAfterAction();
                 this.screen = 'requests';
@@ -333,7 +346,8 @@ document.addEventListener('alpine:init', () => {
             try {
                 await Promise.all([
                     this.fetchStats(), this.fetchStudents(),
-                    this.fetchDiagnoses(), this.fetchFeatures()
+                    this.fetchDiagnoses(), this.fetchFeatures(),
+                    this.fetchMiniGames()
                 ]);
             } finally { this.isLoading = false; }
         },
@@ -342,7 +356,8 @@ document.addEventListener('alpine:init', () => {
         async refreshAfterAction() {
             await Promise.all([
                 this.fetchStats(), this.fetchStudents(this.studentsPage),
-                this.fetchDiagnoses(this.diagPage), this.fetchFeatures()
+                this.fetchDiagnoses(this.diagPage), this.fetchFeatures(),
+                this.fetchMiniGames()
             ]);
         },
 

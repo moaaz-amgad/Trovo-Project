@@ -194,8 +194,8 @@ class DashboardService
     private function getUserQuery(string $filter)
     {
         $query = User::query();
-        if ($filter === 'verified') {
-            $query->whereNotNull('email_verified_at');
+        if ($filter === 'approved') {
+            $query->where('is_approved', true);
         }
         return $query;
     }
@@ -206,8 +206,8 @@ class DashboardService
     private function getDiagnosisQuery(string $filter)
     {
         $query = Diagnosis::query();
-        if ($filter === 'verified') {
-            $userIds = User::whereNotNull('email_verified_at')->pluck('id');
+        if ($filter === 'approved') {
+            $userIds = User::where('is_approved', true)->pluck('id');
             $query->whereIn('user_id', $userIds);
         }
         return $query;
@@ -219,6 +219,65 @@ class DashboardService
     public function clearCache(): void
     {
         Cache::forget('dashboard_stats_all');
-        Cache::forget('dashboard_stats_verified');
+        Cache::forget('dashboard_stats_approved');
+        Cache::forget('dashboard_minigame_stats_all');
+        Cache::forget('dashboard_minigame_stats_approved');
+    }
+
+    /**
+     * احصائيات الالعاب (Mini Games)
+     */
+    public function getMiniGameStats(string $filter = 'all'): array
+    {
+        $cacheKey = "dashboard_minigame_stats_{$filter}";
+
+        return Cache::remember($cacheKey, 300, function () use ($filter) {
+            $query = MiniGameSession::with('user:id,name,email');
+            
+            if ($filter === 'approved') {
+                $userIds = User::where('is_approved', true)->pluck('id');
+                $query->whereIn('user_id', $userIds);
+            }
+
+            // Total sessions
+            $totalSessions = (clone $query)->count();
+
+            // Stats per game type
+            $gameTypes = ['memory_sequence', 'attention_span', 'number_letter', 'stroop', 'time_focus'];
+            $gameStats = [];
+            $overallAvgScore = 0;
+            $overallAvgReaction = 0;
+            $overallAvgAccuracy = 0;
+
+            if ($totalSessions > 0) {
+                $overallAvgScore = round((clone $query)->avg('score'), 2);
+                $overallAvgReaction = round((clone $query)->avg('reaction_time_ms'), 2);
+                $overallAvgAccuracy = round((clone $query)->avg('accuracy_percentage'), 2);
+            }
+
+            foreach ($gameTypes as $type) {
+                $typeQuery = (clone $query)->where('game_type', $type);
+                $count = $typeQuery->count();
+                $gameStats[] = [
+                    'game_type' => $type,
+                    'total_played' => $count,
+                    'avg_score' => $count > 0 ? round($typeQuery->avg('score'), 2) : 0,
+                    'avg_reaction_ms' => $count > 0 ? round($typeQuery->avg('reaction_time_ms'), 2) : 0,
+                    'avg_accuracy' => $count > 0 ? round($typeQuery->avg('accuracy_percentage'), 2) : 0,
+                ];
+            }
+
+            // Recent sessions
+            $recentSessions = (clone $query)->latest('played_at')->take(10)->get();
+
+            return [
+                'total_sessions' => $totalSessions,
+                'overall_avg_score' => $overallAvgScore,
+                'overall_avg_reaction_ms' => $overallAvgReaction,
+                'overall_avg_accuracy' => $overallAvgAccuracy,
+                'game_stats' => $gameStats,
+                'recent_sessions' => $recentSessions,
+            ];
+        });
     }
 }

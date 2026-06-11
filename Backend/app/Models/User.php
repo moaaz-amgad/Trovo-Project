@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'email_verified_at',
+        'is_approved',
         'google_id',
         'avatar',
     ];
@@ -45,6 +46,7 @@ class User extends Authenticatable
         return [
             'password'          => 'hashed',
             'email_verified_at' => 'datetime',
+            'is_approved'       => 'boolean',
         ];
     }
 

@@ -54,10 +54,10 @@ class AdminDashboardController extends Controller
         $query = User::with('latestDiagnosis')
                      ->withCount('diagnoses');
 
-        if ($filter === 'verified') {
-            $query->whereNotNull('email_verified_at');
-        } elseif ($filter === 'unverified') {
-            $query->whereNull('email_verified_at');
+        if ($filter === 'approved') {
+            $query->where('is_approved', true);
+        } elseif ($filter === 'pending') {
+            $query->where('is_approved', false);
         }
 
         if (!empty($search)) {
@@ -113,8 +113,8 @@ class AdminDashboardController extends Controller
         $query = Diagnosis::with('user:id,name,email')
                           ->latest('diagnosed_at');
 
-        if ($filter === 'verified') {
-            $verifiedIds = User::whereNotNull('email_verified_at')->pluck('id');
+        if ($filter === 'approved') {
+            $verifiedIds = User::where('is_approved', true)->pluck('id');
             $query->whereIn('user_id', $verifiedIds);
         }
 
@@ -327,6 +327,58 @@ class AdminDashboardController extends Controller
         return response()->json([
             'status'  => 'success',
             'message' => 'تم تسجيل الخروج بنجاح.',
+        ], 200);
+    }
+
+    /**
+     * 13. توثيق الحساب يدوياً من الداشبورد (Approve)
+     */
+    public function approveStudent($id): JsonResponse
+    {
+        $student = User::find($id);
+        if (!$student) {
+            return response()->json(['status' => 'error', 'message' => 'المستخدم غير موجود.'], 404);
+        }
+
+        $student->update(['is_approved' => true]);
+        $this->dashboardService->clearCache();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم توثيق حساب المستخدم بنجاح.',
+        ], 200);
+    }
+
+    /**
+     * 14. إلغاء توثيق الحساب (Reject)
+     */
+    public function rejectStudent($id): JsonResponse
+    {
+        $student = User::find($id);
+        if (!$student) {
+            return response()->json(['status' => 'error', 'message' => 'المستخدم غير موجود.'], 404);
+        }
+
+        $student->update(['is_approved' => false]);
+        $this->dashboardService->clearCache();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم إلغاء توثيق الحساب.',
+        ], 200);
+    }
+
+    /**
+     * 15. إحصائيات الألعاب (Mini Games Stats)
+     */
+    public function getMiniGameStats(Request $request): JsonResponse
+    {
+        $filter = $request->query('filter', 'all');
+        $stats  = $this->dashboardService->getMiniGameStats($filter);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $stats,
         ], 200);
     }
 }

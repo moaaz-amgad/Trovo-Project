@@ -51,6 +51,7 @@ class ExcelController extends Controller
                 'email'             => strtolower(trim($request->email)),
                 'password'          => Hash::make($password),
                 'email_verified_at' => now(), // الأدمن تأكد من بياناته بالفعل
+                'is_approved'       => true,
             ]);
 
             return response()->json([

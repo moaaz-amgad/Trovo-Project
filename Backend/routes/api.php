@@ -91,6 +91,13 @@ Route::middleware(['auth:sanctum', 'check.admin'])->prefix('admin')->group(funct
     // إضافة مستخدمين يدوياً أو من إكسيل
     Route::post('/add-student-manual', [ExcelController::class, 'storeManual']);
     Route::post('/import-students', [ExcelController::class, 'import']);
+
+    // توثيق وإلغاء توثيق المستخدمين
+    Route::post('/student/{id}/approve', [AdminDashboardController::class, 'approveStudent']);
+    Route::post('/student/{id}/reject', [AdminDashboardController::class, 'rejectStudent']);
+
+    // إحصائيات الألعاب
+    Route::get('/mini-game-stats', [AdminDashboardController::class, 'getMiniGameStats']);
 });
 
 
