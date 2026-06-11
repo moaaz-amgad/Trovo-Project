@@ -117,33 +117,36 @@ class _QuestionnaireIntro extends StatelessWidget {
             ),
             Positioned.fill(
               top: 180,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  MediaQuery.viewPaddingOf(context).bottom + 16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const _IntroTitleSection(),
-                    const SizedBox(height: 16),
-                    const _PrivacyReassuranceCard(),
-                    const Spacer(),
-                    _IntroButton(
-                      label: 'Allow Access',
-                      primary: true,
-                      onTap: onComplete,
-                    ),
-                    const SizedBox(height: 16),
-                    _IntroButton(
-                      label: 'Maybe Later',
-                      primary: false,
-                      onTap: onComplete,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    MediaQuery.viewPaddingOf(context).bottom + 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _IntroTitleSection(),
+                      const SizedBox(height: 16),
+                      const _PrivacyReassuranceCard(),
+                      const SizedBox(height: 32),
+                      _IntroButton(
+                        label: 'Allow Access',
+                        primary: true,
+                        onTap: onComplete,
+                      ),
+                      const SizedBox(height: 16),
+                      _IntroButton(
+                        label: 'Maybe Later',
+                        primary: false,
+                        onTap: onComplete,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -660,22 +663,6 @@ class _QuestionnaireFormState extends State<_QuestionnaireForm> {
                       bottomActions: _buildBottomActions(isSubmitting),
                     ),
                   ),
-                  const Positioned(
-                    top: 52,
-                    left: 0,
-                    right: 0,
-                    child: IgnorePointer(
-                      child: Center(
-                        child: SizedBox(
-                          height: 185,
-                          child: Image(
-                            image: AssetImage('assets/images/sloth.png'),
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -1142,13 +1129,6 @@ class _FormPanel extends StatelessWidget {
         ),
         child: Column(
           children: [
-            QuestionnaireIntroCard(),
-            const SizedBox(height: 22),
-            QuestionnaireStepIndicator(
-              currentStep: step,
-              totalSteps: totalSteps,
-            ),
-            const SizedBox(height: 28),
             Expanded(
               child: Scrollbar(
                 controller: scrollController,
@@ -1159,7 +1139,27 @@ class _FormPanel extends StatelessWidget {
                   ),
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: stepContent,
+                  child: Column(
+                    children: [
+                      const Center(
+                        child: SizedBox(
+                          height: 185,
+                          child: Image(
+                            image: AssetImage('assets/images/sloth.png'),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                      QuestionnaireIntroCard(),
+                      const SizedBox(height: 22),
+                      QuestionnaireStepIndicator(
+                        currentStep: step,
+                        totalSteps: totalSteps,
+                      ),
+                      const SizedBox(height: 28),
+                      stepContent,
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1187,16 +1187,20 @@ class _ManualPhoneUsageSheet extends StatefulWidget {
 class _ManualPhoneUsageSheetState extends State<_ManualPhoneUsageSheet> {
   final _dailyController = TextEditingController(text: '4');
   final _bedController = TextEditingController(text: '1');
+  final _checksController = TextEditingController(text: '30');
+  final _appsController = TextEditingController(text: '10');
   final _socialController = TextEditingController(text: '2');
   final _gamingController = TextEditingController(text: '0');
+  final _weekendController = TextEditingController(text: '5');
 
   void _submit() {
     final daily = double.tryParse(_dailyController.text.trim()) ?? 4.0;
     final bed = double.tryParse(_bedController.text.trim()) ?? 1.0;
+    final checks = int.tryParse(_checksController.text.trim()) ?? 30;
+    final apps = int.tryParse(_appsController.text.trim()) ?? 10;
     final social = double.tryParse(_socialController.text.trim()) ?? 2.0;
     final gaming = double.tryParse(_gamingController.text.trim()) ?? 0.0;
-    final checks = (daily * 8).round();
-    final weekend = daily + 2;
+    final weekend = double.tryParse(_weekendController.text.trim()) ?? 5.0;
 
     Navigator.of(context).pop();
 
@@ -1204,7 +1208,7 @@ class _ManualPhoneUsageSheetState extends State<_ManualPhoneUsageSheet> {
       'daily_usage_hours': daily.toStringAsFixed(1),
       'screen_time_before_bed': bed.toStringAsFixed(1),
       'phone_checks_per_day': checks.toString(),
-      'apps_used_daily': '10',
+      'apps_used_daily': apps.toString(),
       'time_on_social_media': social.toStringAsFixed(1),
       'time_on_gaming': gaming.toStringAsFixed(1),
       'phone_usage_purpose': widget.phonePurpose,
@@ -1216,68 +1220,89 @@ class _ManualPhoneUsageSheetState extends State<_ManualPhoneUsageSheet> {
   void dispose() {
     _dailyController.dispose();
     _bedController.dispose();
+    _checksController.dispose();
+    _appsController.dispose();
     _socialController.dispose();
     _gamingController.dispose();
+    _weekendController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Manual Phone Usage Entry',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF042F40),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Your device does not support automatic screen time collection. Please estimate your usage.',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-          const SizedBox(height: 24),
-          _TextField(
-            controller: _dailyController,
-            label: 'Daily usage (hours)',
-          ),
-          const SizedBox(height: 12),
-          _TextField(
-            controller: _bedController,
-            label: 'Screen time before bed (hours)',
-          ),
-          const SizedBox(height: 12),
-          _TextField(
-            controller: _socialController,
-            label: 'Time on social media (hours)',
-          ),
-          const SizedBox(height: 12),
-          _TextField(
-            controller: _gamingController,
-            label: 'Time on gaming (hours)',
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _submit,
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF042F40),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Manual Phone Usage Entry',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF042F40),
               ),
             ),
-            child: const Text(
-              'Submit Usage & View Diagnosis',
-              style: TextStyle(fontSize: 16),
+            const SizedBox(height: 8),
+            const Text(
+              'Your device does not support automatic screen time collection. Please estimate your usage.',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            _TextField(
+              controller: _dailyController,
+              label: 'Daily usage (hours)',
+            ),
+            const SizedBox(height: 12),
+            _TextField(
+              controller: _bedController,
+              label: 'Screen time before bed (hours)',
+            ),
+            const SizedBox(height: 12),
+            _TextField(
+              controller: _checksController,
+              label: 'Phone checks per day',
+            ),
+            const SizedBox(height: 12),
+            _TextField(
+              controller: _appsController,
+              label: 'Apps used daily',
+            ),
+            const SizedBox(height: 12),
+            _TextField(
+              controller: _socialController,
+              label: 'Time on social media (hours)',
+            ),
+            const SizedBox(height: 12),
+            _TextField(
+              controller: _gamingController,
+              label: 'Time on gaming (hours)',
+            ),
+            const SizedBox(height: 12),
+            _TextField(
+              controller: _weekendController,
+              label: 'Weekend usage (hours)',
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _submit,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF042F40),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Submit Usage & View Diagnosis',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
