@@ -340,7 +340,10 @@ class AdminDashboardController extends Controller
             return response()->json(['status' => 'error', 'message' => 'المستخدم غير موجود.'], 404);
         }
 
-        $student->update(['is_approved' => true]);
+        $student->update([
+            'is_approved' => true,
+            'email_verified_at' => now(),
+        ]);
         $this->dashboardService->clearCache();
 
         return response()->json([

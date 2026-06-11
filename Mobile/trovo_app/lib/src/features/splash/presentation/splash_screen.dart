@@ -7,6 +7,7 @@ import '../../../core/di/injection_container.dart';
 import '../../../core/routing/app_router_paths.dart';
 import '../../../core/services/secure_storage_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../user/data/repositories/user_repository.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -31,9 +32,25 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
       final hasToken = await sl<SecureStorageService>().hasAccessToken();
       if (!mounted) return;
-      context.go(
-        hasToken ? AppRoutePaths.layoutScreen : AppRoutePaths.loginScreen,
-      );
+      
+      if (hasToken) {
+        final profileResult = await sl<UserRepository>().getProfile();
+        if (!mounted) return;
+        profileResult.fold(
+          (failure) {
+            context.go(AppRoutePaths.loginScreen);
+          },
+          (profile) {
+            if (profile.isEmailVerified) {
+              context.go(AppRoutePaths.layoutScreen);
+            } else {
+              context.go('${AppRoutePaths.otpScreen}?email=${profile.email ?? ""}');
+            }
+          },
+        );
+      } else {
+        context.go(AppRoutePaths.loginScreen);
+      }
     });
   }
 

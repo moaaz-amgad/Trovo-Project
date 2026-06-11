@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/di/injection_container.dart';
 import '../../profile/presentation/screens/profile_screen.dart';
 import '../../time_focus/presentation/time_focus_screen.dart';
+import '../../mini_game/presentation/cubit/mini_game_cubit.dart';
+import '../../progress/presentation/cubit/progress_cubit.dart';
 import '../../user/presentation/cubit/user_cubit.dart';
 import 'layout_screen.dart';
 
@@ -43,8 +45,18 @@ class HomeScreen extends StatelessWidget {
         bottomNavTopOverlap +
         MediaQuery.of(context).padding.bottom;
 
-    return BlocProvider<UserCubit>(
-      create: (_) => sl<UserCubit>()..loadProfile(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<UserCubit>(
+          create: (_) => sl<UserCubit>()..loadProfile(),
+        ),
+        BlocProvider<ProgressCubit>(
+          create: (_) => sl<ProgressCubit>()..load(),
+        ),
+        BlocProvider<MiniGameCubit>(
+          create: (_) => sl<MiniGameCubit>()..loadStats(),
+        ),
+      ],
       child: _HomeBody(bottomPadding: bottomPadding, embedded: embedded),
     );
   }
@@ -275,151 +287,167 @@ class _FocusScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 50,
-            offset: Offset(0, 25),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CURRENT STATE',
-                    style: TextStyle(
-                      color: Color(0x9902161F),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      height: 1.5,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    'Focus Score',
-                    style: TextStyle(
-                      color: HomeScreen.basis,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      height: 1.33,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC8EFFF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  '+12%',
-                  style: TextStyle(
-                    color: Color(0xFF042F3E),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    height: 1.33,
-                  ),
-                ),
+    return BlocBuilder<ProgressCubit, ProgressState>(
+      builder: (context, state) {
+        final summary = state.maybeWhen(
+          loaded: (s, _) => s,
+          orElse: () => null,
+        );
+
+        final focusScore = summary?.overallScore?.toInt() ?? 0;
+        final isOptimal = focusScore >= 80;
+        final scoreLabel = isOptimal ? 'OPTIMAL' : (focusScore > 0 ? 'AVERAGE' : 'NO DATA');
+        final streak = summary?.streak ?? 0;
+        final sessions = summary?.totalSessions ?? 0;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x40000000),
+                blurRadius: 50,
+                offset: Offset(0, 25),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Center(
-            child: SizedBox(
-              width: 192,
-              height: 192,
-              child: Stack(
-                alignment: Alignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomPaint(
-                    size: const Size(192, 192),
-                    painter: const _GradientRingPainter(
-                      trackColor: Color(0xFFD7E4EA),
-                      gradientColors: [
-                        Color(0xFF042F40),
-                        Color(0xFF91B8CA),
-                        Color(0xFFC8EFFF),
-                      ],
-                      strokeWidth: 14,
-                      value: 0.82,
-                    ),
-                  ),
                   const Column(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '82',
+                        'CURRENT STATE',
                         style: TextStyle(
-                          color: HomeScreen.basis,
-                          fontSize: 48,
-                          fontWeight: FontWeight.w800,
-                          height: 1,
-                          letterSpacing: -2.4,
+                          color: Color(0x9902161F),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          height: 1.5,
+                          letterSpacing: 1,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 6),
                       Text(
-                        'OPTIMAL',
+                        'Focus Score',
                         style: TextStyle(
-                          color: Color(0x99042F40),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          color: HomeScreen.basis,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
                           height: 1.33,
-                          letterSpacing: 1.2,
+                          letterSpacing: -0.3,
                         ),
                       ),
                     ],
                   ),
+                  if (focusScore > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC8EFFF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'ACTIVE',
+                        style: TextStyle(
+                          color: Color(0xFF042F3E),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          height: 1.33,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Row(
-            children: [
-              Expanded(
-                child: _MetricBadge(
-                  label: 'PEAK',
-                  value: '94',
-                  backgroundColor: HomeScreen.basis,
-                  valueColor: Color(0xFFF2F2F2),
-                  labelColor: Color(0xFFC8EFFF),
+              const SizedBox(height: 20),
+              Center(
+                child: SizedBox(
+                  width: 192,
+                  height: 192,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: const Size(192, 192),
+                        painter: _GradientRingPainter(
+                          trackColor: const Color(0xFFD7E4EA),
+                          gradientColors: const [
+                            Color(0xFF042F40),
+                            Color(0xFF91B8CA),
+                            Color(0xFFC8EFFF),
+                          ],
+                          strokeWidth: 14,
+                          value: focusScore > 0 ? (focusScore / 100).clamp(0.0, 1.0) : 0,
+                        ),
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$focusScore',
+                            style: const TextStyle(
+                              color: HomeScreen.basis,
+                              fontSize: 48,
+                              fontWeight: FontWeight.w800,
+                              height: 1,
+                              letterSpacing: -2.4,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            scoreLabel,
+                            style: const TextStyle(
+                              color: Color(0x99042F40),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              height: 1.33,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              SizedBox(width: 16),
-              Expanded(
-                child: _MetricBadge(
-                  label: 'AVG',
-                  value: '76',
-                  backgroundColor: HomeScreen.basis,
-                  valueColor: Color(0xFFF2F2F2),
-                  labelColor: Color(0xFFC8EFFF),
-                ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MetricBadge(
+                      label: 'STREAK',
+                      value: '$streak',
+                      backgroundColor: HomeScreen.basis,
+                      valueColor: const Color(0xFFF2F2F2),
+                      labelColor: const Color(0xFFC8EFFF),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _MetricBadge(
+                      label: 'SESSIONS',
+                      value: '$sessions',
+                      backgroundColor: HomeScreen.basis,
+                      valueColor: const Color(0xFFF2F2F2),
+                      labelColor: const Color(0xFFC8EFFF),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -442,8 +470,7 @@ class _MetricBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
@@ -489,151 +516,95 @@ class _BentoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Left column
-        Expanded(
-          child: Column(
-            children: [
-              _BentoCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _bentoCategoryRow(Icons.flash_on_rounded, 'REACTION'),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+    return BlocBuilder<MiniGameCubit, MiniGameDashboardState>(
+      builder: (context, state) {
+        final stats = state.maybeWhen(
+          loaded: (d, s, _) => s,
+          orElse: () => null,
+        );
+
+        final reactionMs = stats?.averageReactionTimeMs?.toInt() ?? 0;
+        final accuracy = stats?.averageAccuracy?.toInt() ?? 0;
+        final bestScore = stats?.bestScore?.toInt() ?? 0;
+        final totalGames = stats?.totalSessions ?? 0;
+
+        // Mastery level based on total games
+        final masteryLevel = totalGames >= 50
+            ? 10
+            : totalGames >= 30
+                ? 8
+                : totalGames >= 15
+                    ? 5
+                    : totalGames >= 5
+                        ? 3
+                        : 1;
+        final masteryLabel = masteryLevel >= 8
+            ? 'ELITE'
+            : masteryLevel >= 5
+                ? 'ADVANCED'
+                : 'BEGINNER';
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left column
+            Expanded(
+              child: Column(
+                children: [
+                  _BentoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '215',
-                          style: GoogleFonts.nunito(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            color: _basis,
-                            height: 1,
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Text(
-                            'ms',
-                            style: GoogleFonts.nunito(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _basis,
+                        _bentoCategoryRow(Icons.flash_on_rounded, 'REACTION'),
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '$reactionMs',
+                              style: GoogleFonts.nunito(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                                color: _basis,
+                                height: 1,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 2),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: Text(
+                                'ms',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _basis,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.arrow_upward_rounded,
-                          size: 12,
-                          color: _greenish,
-                        ),
-                        const SizedBox(width: 2),
+                        const SizedBox(height: 6),
                         Text(
-                          '4ms faster',
+                          reactionMs > 0 && reactionMs < 300 ? 'FAST' : (reactionMs > 0 ? 'NORMAL' : 'NO DATA'),
                           style: GoogleFonts.nunito(
                             fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: _greenish,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              _BentoCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _bentoCategoryRow(Icons.star_rounded, 'MASTERY LEVEL'),
-                    const SizedBox(height: 12),
-                    Text(
-                      'LVL 8',
-                      style: GoogleFonts.nunito(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: _basis,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _accent,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'ELITE',
-                        style: GoogleFonts.nunito(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF042F3E),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Right column
-        Expanded(
-          child: Column(
-            children: [
-              _BentoCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _bentoCategoryRow(Icons.repeat_rounded, 'CONSISTENCY'),
-                    const SizedBox(height: 12),
-                    Text(
-                      '91%',
-                      style: GoogleFonts.nunito(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: _greenish,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const _MiniBarChart(
-                      bars: [0.35, 0.55, 0.45, 0.7, 1.0],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              _BentoCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _bentoCategoryRow(
-                      Icons.center_focus_strong_rounded,
-                      'FOCUS DEPTH',
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                  ),
+                  const SizedBox(height: 8),
+                  _BentoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _bentoCategoryRow(Icons.star_rounded, 'MASTERY LEVEL'),
+                        const SizedBox(height: 12),
                         Text(
-                          '85',
+                          'LVL $masteryLevel',
                           style: GoogleFonts.nunito(
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
@@ -641,36 +612,119 @@ class _BentoGrid extends StatelessWidget {
                             height: 1,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _accent,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                           child: Text(
-                            '%',
+                            masteryLabel,
                             style: GoogleFonts.nunito(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: _basis,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF042F3E),
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'DEEP PHASE',
-                      style: GoogleFonts.nunito(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: _greenish,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+            const SizedBox(width: 8),
+            // Right column
+            Expanded(
+              child: Column(
+                children: [
+                  _BentoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _bentoCategoryRow(Icons.repeat_rounded, 'ACCURACY'),
+                        const SizedBox(height: 12),
+                        Text(
+                          '$accuracy%',
+                          style: GoogleFonts.nunito(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: _greenish,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _MiniBarChart(
+                          bars: [
+                            accuracy > 0 ? (accuracy / 100).clamp(0.0, 1.0) : 0.1,
+                            0.55,
+                            0.45,
+                            0.7,
+                            accuracy > 0 ? (accuracy / 100).clamp(0.0, 1.0) : 0.1,
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _BentoCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _bentoCategoryRow(
+                          Icons.emoji_events_rounded,
+                          'BEST SCORE',
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '$bestScore',
+                              style: GoogleFonts.nunito(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                                color: _basis,
+                                height: 1,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: Text(
+                                ' pts',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: _basis,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '$totalGames games',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _greenish,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -884,40 +938,69 @@ class _MentalLoadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'MENTAL LOAD INDICATORS',
-            style: TextStyle(
-              color: HomeScreen.softText,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              height: 1.5,
-              letterSpacing: 1,
-            ),
+    return BlocBuilder<ProgressCubit, ProgressState>(
+      builder: (context, state) {
+        final summary = state.maybeWhen(
+          loaded: (s, _) => s,
+          orElse: () => null,
+        );
+
+        final addictionLevel = summary?.currentLevel?.toDouble() ?? 0;
+        final trend = summary?.currentTrend ?? 'unknown';
+        // Clamp between 0 and 100 for display
+        final addictionPct = addictionLevel.clamp(0.0, 100.0);
+        final addictionLabel = addictionPct <= 30
+            ? 'Low'
+            : addictionPct <= 60
+                ? 'Mod'
+                : 'High';
+
+        final trendLabel = trend == 'improving'
+            ? 'Improving ↓'
+            : trend == 'worsening'
+                ? 'Worsening ↑'
+                : 'Stable →';
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
           ),
-          const SizedBox(height: 20),
-          const _IndicatorRow(
-            label: 'Anxiety Level',
-            value: 'Low (12%)',
-            progress: 0.2273,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'MENTAL LOAD INDICATORS',
+                style: TextStyle(
+                  color: HomeScreen.softText,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  height: 1.5,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _IndicatorRow(
+                label: 'Addiction Score',
+                value: '$addictionLabel (${addictionPct.toStringAsFixed(0)}%)',
+                progress: addictionPct / 100,
+              ),
+              const SizedBox(height: 20),
+              _IndicatorRow(
+                label: 'Current Trend',
+                value: trendLabel,
+                progress: trend == 'improving'
+                    ? 0.3
+                    : trend == 'worsening'
+                        ? 0.8
+                        : 0.5,
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          const _IndicatorRow(
-            label: 'Addiction Score',
-            value: 'Mod (45%)',
-            progress: 0.45,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

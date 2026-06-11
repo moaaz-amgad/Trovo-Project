@@ -503,44 +503,48 @@ class _SettingRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                color: Color(0xFFC8EFFF),
-                shape: BoxShape.circle,
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFC8EFFF),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: kBasis, size: 20),
               ),
-              alignment: Alignment.center,
-              child: Icon(icon, color: kBasis, size: 20),
-            ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: kBasis,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    height: 1.5,
-                  ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: kBasis,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: kSoftText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        height: 1.33,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: kSoftText,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    height: 1.33,
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
         GestureDetector(
           onTap: () => onToggle(!enabled),
