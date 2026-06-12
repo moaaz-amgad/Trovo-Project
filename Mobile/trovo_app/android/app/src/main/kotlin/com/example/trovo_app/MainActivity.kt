@@ -46,6 +46,7 @@ class MainActivity : FlutterActivity() {
 				packageName,
 			)
 		} else {
+			@Suppress("DEPRECATION")
 			appOps.checkOpNoThrow(
 				AppOpsManager.OPSTR_GET_USAGE_STATS,
 				Process.myUid(),
@@ -73,21 +74,29 @@ class MainActivity : FlutterActivity() {
 		val usageStatsManager =
 			getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 		val now = System.currentTimeMillis()
-		val start7d = now - DateUtils.DAY_IN_MILLIS * 7
 		val start24h = now - DateUtils.DAY_IN_MILLIS
 		val bedWindow = buildBedtimeWindow(now)
 		val bedStart = bedWindow.first
 		val bedEnd = bedWindow.second
 
+		// ── Use queryEvents for ALL calculations (eliminates double-counting) ──
+		val start7d = now - DateUtils.DAY_IN_MILLIS * 7
 		val events = usageStatsManager.queryEvents(start7d, now)
 		val lastForeground = mutableMapOf<String, Long>()
-		val usageByPackage = mutableMapOf<String, Long>()
-		val appsUsedToday = mutableSetOf<String>()
 
+		// Daily usage (last 24h only) — calculated from events, not stats
 		var dailyUsageMs = 0L
-		var weekendUsageMs = 0L
+		val appsUsedToday = mutableSetOf<String>()
+		val usageByPackage24h = mutableMapOf<String, Long>()
+
 		var beforeBedMs = 0L
+		var weekendUsageMs = 0L
+
+		// Phone checks: count actual "sessions" — a new session starts when
+		// there has been no foreground activity for at least 60 seconds.
 		var phoneChecks = 0
+		var lastAnyBackgroundTime = 0L
+		val sessionGapThreshold = 60_000L  // 60 seconds gap = new session
 
 		val event = UsageEvents.Event()
 		while (events.hasNextEvent()) {
@@ -95,17 +104,28 @@ class MainActivity : FlutterActivity() {
 			val pkg = event.packageName ?: continue
 			val time = event.timeStamp
 
-			val isForeground =
-				event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND ||
-					event.eventType == UsageEvents.Event.ACTIVITY_RESUMED
-			val isBackground =
-				event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND ||
-					event.eventType == UsageEvents.Event.ACTIVITY_PAUSED
+			// Use only ACTIVITY_RESUMED/PAUSED (API 29+) to avoid double-counting
+			val isForeground = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+				event.eventType == UsageEvents.Event.ACTIVITY_RESUMED
+			} else {
+				event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND
+			}
+			val isBackground = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+				event.eventType == UsageEvents.Event.ACTIVITY_PAUSED
+			} else {
+				event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND
+			}
 
 			if (isForeground) {
 				lastForeground[pkg] = time
+
+				// Count phone checks: only within last 24h and only when
+				// there was a significant gap since the last activity
 				if (time >= start24h) {
-					phoneChecks += 1
+					if (lastAnyBackgroundTime == 0L ||
+						(time - lastAnyBackgroundTime) >= sessionGapThreshold) {
+						phoneChecks += 1
+					}
 				}
 			}
 
@@ -114,34 +134,49 @@ class MainActivity : FlutterActivity() {
 				val duration = time - startTime
 				if (duration <= 0) continue
 
-				val overlap24h = overlapMs(startTime, time, start24h, now)
-				if (overlap24h > 0) {
-					dailyUsageMs += overlap24h
-					usageByPackage[pkg] = (usageByPackage[pkg] ?: 0L) + overlap24h
-					appsUsedToday.add(pkg)
+				lastAnyBackgroundTime = time
+
+				// ── Daily usage: only count the portion within the last 24h ──
+				if (time >= start24h) {
+					val clampedStart = maxOf(startTime, start24h)
+					val sessionInWindow = time - clampedStart
+					if (sessionInWindow > 0) {
+						dailyUsageMs += sessionInWindow
+						appsUsedToday.add(pkg)
+						usageByPackage24h[pkg] =
+							(usageByPackage24h[pkg] ?: 0L) + sessionInWindow
+					}
 				}
 
+				// Bedtime overlap
 				val overlapBed = overlapMs(startTime, time, bedStart, bedEnd)
 				if (overlapBed > 0) {
 					beforeBedMs += overlapBed
 				}
 
+				// Weekend usage (from 7-day window)
 				if (isWeekend(startTime)) {
 					weekendUsageMs += duration
 				}
 			}
 		}
 
+		// Handle still-open apps (currently in foreground)
 		for ((pkg, startTime) in lastForeground) {
 			val endTime = now
 			val duration = endTime - startTime
 			if (duration <= 0) continue
 
-			val overlap24h = overlapMs(startTime, endTime, start24h, now)
-			if (overlap24h > 0) {
-				dailyUsageMs += overlap24h
-				usageByPackage[pkg] = (usageByPackage[pkg] ?: 0L) + overlap24h
-				appsUsedToday.add(pkg)
+			// Daily usage for still-open apps
+			if (endTime >= start24h) {
+				val clampedStart = maxOf(startTime, start24h)
+				val sessionInWindow = endTime - clampedStart
+				if (sessionInWindow > 0) {
+					dailyUsageMs += sessionInWindow
+					appsUsedToday.add(pkg)
+					usageByPackage24h[pkg] =
+						(usageByPackage24h[pkg] ?: 0L) + sessionInWindow
+				}
 			}
 
 			val overlapBed = overlapMs(startTime, endTime, bedStart, bedEnd)
@@ -154,30 +189,43 @@ class MainActivity : FlutterActivity() {
 			}
 		}
 
-		val socialMs = usageByPackage
+		// Calculate per-category usage from the accurate events data
+		val socialMs = usageByPackage24h
 			.filterKeys { isSocialPackage(it) }
 			.values
 			.sum()
-		val gamingMs = usageByPackage
+		val gamingMs = usageByPackage24h
 			.filterKeys { isGamingPackage(it) }
 			.values
 			.sum()
 
+		// Average weekend usage per day (from 7-day data, typically 2 weekend days)
+		val weekendDaysInWindow = countWeekendDays(start7d, now)
+		val avgWeekendHours = if (weekendDaysInWindow > 0) {
+			msToHours(weekendUsageMs) / weekendDaysInWindow
+		} else {
+			msToHours(weekendUsageMs)
+		}
+
 		return mapOf(
 			"is_available" to true,
-			"daily_usage_hours" to msToHours(dailyUsageMs),
-			"screen_time_before_bed" to msToHours(beforeBedMs),
+			"daily_usage_hours" to roundTo2(msToHours(dailyUsageMs)),
+			"screen_time_before_bed" to roundTo2(msToHours(beforeBedMs)),
 			"phone_check_per_day" to phoneChecks,
 			"apps_used_daily" to appsUsedToday.size,
-			"time_on_social_media" to msToHours(socialMs),
-			"time_in_gaming" to msToHours(gamingMs),
-			"weekend_usage_hours" to msToHours(weekendUsageMs),
+			"time_on_social_media" to roundTo2(msToHours(socialMs)),
+			"time_in_gaming" to roundTo2(msToHours(gamingMs)),
+			"weekend_usage_hours" to roundTo2(avgWeekendHours),
 			"collected_at" to isoNowString(),
 		)
 	}
 
 	private fun msToHours(value: Long): Double {
 		return value.toDouble() / 1000.0 / 60.0 / 60.0
+	}
+
+	private fun roundTo2(value: Double): Double {
+		return Math.round(value * 100.0) / 100.0
 	}
 
 	private fun overlapMs(
@@ -222,6 +270,26 @@ class MainActivity : FlutterActivity() {
 			calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY
 	}
 
+	private fun countWeekendDays(startMs: Long, endMs: Long): Int {
+		var count = 0
+		val cal = Calendar.getInstance()
+		cal.timeInMillis = startMs
+		// Reset to start of day
+		cal.set(Calendar.HOUR_OF_DAY, 0)
+		cal.set(Calendar.MINUTE, 0)
+		cal.set(Calendar.SECOND, 0)
+		cal.set(Calendar.MILLISECOND, 0)
+
+		while (cal.timeInMillis <= endMs) {
+			val dow = cal.get(Calendar.DAY_OF_WEEK)
+			if (dow == Calendar.SATURDAY || dow == Calendar.SUNDAY) {
+				count++
+			}
+			cal.add(Calendar.DAY_OF_YEAR, 1)
+		}
+		return count
+	}
+
 	private fun isSocialPackage(packageName: String): Boolean {
 		val normalized = packageName.lowercase(Locale.getDefault())
 		if (normalized in socialPackages) return true
@@ -248,6 +316,8 @@ class MainActivity : FlutterActivity() {
 	companion object {
 		private val socialPackages = setOf(
 			"com.facebook.katana",
+			"com.facebook.orca",
+			"com.facebook.lite",
 			"com.instagram.android",
 			"com.twitter.android",
 			"com.snapchat.android",
@@ -257,7 +327,10 @@ class MainActivity : FlutterActivity() {
 			"com.linkedin.android",
 			"com.discord",
 			"com.whatsapp",
+			"com.whatsapp.w4b",
 			"org.telegram.messenger",
+			"org.thunderdog.challegram",
+			"com.viber.voip",
 		)
 
 		private val gamingPackages = setOf(
@@ -267,6 +340,9 @@ class MainActivity : FlutterActivity() {
 			"com.king.candycrushsaga",
 			"com.mojang.minecraftpe",
 			"com.epicgames.fortnite",
+			"com.activision.callofduty.shooter",
+			"com.tencent.ig",
+			"com.dts.freefireth",
 		)
 	}
 }

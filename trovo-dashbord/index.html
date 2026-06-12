@@ -316,26 +316,41 @@
                 </div>
 
                 <div x-show="miniGameStats?.game_stats?.length > 0">
-                    <h3 class="section-title"><i class="fa-solid fa-layer-group"></i> Game Performance Profiles</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 class="section-title" style="margin-bottom: 0;"><i class="fa-solid fa-layer-group"></i> Game Performance Profiles</h3>
+                        <div class="search-box" style="width: auto; padding: 0;">
+                            <select x-model="selectedGameType" style="padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); font-family: 'Urbanist', sans-serif; font-size: 0.95rem; outline: none; cursor: pointer; appearance: none; padding-right: 36px; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%237d8a9e%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 14px top 50%; background-size: .65em auto;">
+                                <option value="all" style="background: #1e293b; color: #f8fafc;">All Games</option>
+                                <template x-for="g in miniGameStats.game_stats" :key="g.game_type">
+                                    <option :value="g.game_type" x-text="g.game_type.replace('_', ' ')" style="background: #1e293b; color: #f8fafc;"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
                     <div class="features-grid">
                         <template x-for="g in miniGameStats.game_stats" :key="g.game_type">
-                            <div class="feature-card">
-                                <p class="feature-name" style="text-transform: capitalize; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; font-size: 1.1rem;" x-text="g.game_type.replace('_', ' ')"></p>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Sessions</span>
-                                    <span style="font-weight: 600; color: var(--accent-blue);" x-text="g.total_played"></span>
+                            <div class="feature-card" x-show="selectedGameType === 'all' || selectedGameType === g.game_type" x-transition>
+                                <div style="display: flex; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light);">
+                                    <div style="width: 40px; height: 40px; background: rgba(14, 165, 233, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; color: var(--accent-blue);">
+                                        <i class="fa-solid fa-gamepad"></i>
+                                    </div>
+                                    <p class="feature-name" style="text-transform: capitalize; font-weight: 800; color: var(--text-primary); font-size: 1.15rem; margin: 0;" x-text="g.game_type.replace('_', ' ')"></p>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Avg Score</span>
-                                    <span style="font-weight: 600;" x-text="g.avg_score"></span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Total Sessions</span>
+                                    <span style="font-weight: 700; color: var(--text-primary); font-size: 1rem;" x-text="g.total_played"></span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Reaction Time</span>
-                                    <span style="font-weight: 600; color: var(--accent-amber);" x-text="g.avg_reaction_ms + ' ms'"></span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Average Score</span>
+                                    <span style="font-weight: 700; color: var(--text-primary); font-size: 1rem;" x-text="g.avg_score"></span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Reaction Time</span>
+                                    <span style="font-weight: 700; color: var(--accent-amber); font-size: 1rem;" x-text="g.avg_reaction_ms + ' ms'"></span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Accuracy</span>
-                                    <span style="font-weight: 600; color: var(--accent-green);" x-text="g.avg_accuracy + '%'"></span>
+                                    <span style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Accuracy Rate</span>
+                                    <span style="font-weight: 700; color: var(--accent-green); font-size: 1rem;" x-text="g.avg_accuracy + '%'"></span>
                                 </div>
                             </div>
                         </template>

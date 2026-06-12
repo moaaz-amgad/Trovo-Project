@@ -49,6 +49,7 @@ _LoginResponse _$LoginResponseFromJson(Map<String, dynamic> json) =>
           ? null
           : LoginResponseData.fromJson(json['data'] as Map<String, dynamic>),
       token: _readToken(json, 'token') as String?,
+      hasDiagnosis: _readHasDiagnosis(json, 'hasDiagnosis') as bool? ?? false,
       errors: json['errors'],
     );
 
@@ -58,5 +59,6 @@ Map<String, dynamic> _$LoginResponseToJson(_LoginResponse instance) =>
       'message': instance.message,
       'data': instance.data,
       'token': instance.token,
+      'hasDiagnosis': instance.hasDiagnosis,
       'errors': instance.errors,
     };

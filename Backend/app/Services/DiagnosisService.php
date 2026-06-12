@@ -108,9 +108,17 @@ class DiagnosisService
             ];
 
         } catch (\Exception $e) {
+            \Log::error('DiagnosisService Error', [
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
             return [
                 'status' => 'error',
-                'message' => 'حدث خطأ أثناء الاتصال بسيرفر التحليل. يرجى المحاولة لاحقاً.',
+                'message' => 'حدث خطأ أثناء الاتصال بسيرفر التحليل: ' . $e->getMessage(),
                 'code' => 500
             ];
         }

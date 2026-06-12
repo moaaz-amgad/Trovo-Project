@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../attention_span/presentation/screens/attention_span_screen.dart';
 import '../../../memory_sequence/presentation/screens/memory_sequence_screen.dart';
+import '../../../mini_game/presentation/cubit/mini_game_cubit.dart';
 import '../../../number_letter/presentation/screens/nl_screen.dart';
+import '../../../progress/presentation/cubit/progress_cubit.dart';
 import '../../../stroop/presentation/screens/stroop_screen.dart';
 
 const Color _kBasis = Color(0xFF042F40);
@@ -26,6 +29,16 @@ PageRouteBuilder<void> _fadeRoute(Widget page) {
 /// The "Digital Antidote" games catalogue — the Games tab of the app shell.
 class GamesListScreen extends StatelessWidget {
   const GamesListScreen({super.key});
+
+  /// Navigate to a game screen and refresh stats when returning.
+  void _openGame(BuildContext context, Widget screen) {
+    Navigator.of(context).push(_fadeRoute(screen)).then((_) {
+      if (context.mounted) {
+        context.read<MiniGameCubit>().loadStats();
+        context.read<ProgressCubit>().load();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,8 +65,7 @@ class GamesListScreen extends StatelessWidget {
               description:
                   'Train your brain by quickly switching between numbers '
                   'and letters decisions.',
-              onTap: () =>
-                  Navigator.of(context).push(_fadeRoute(const NlScreen())),
+              onTap: () => _openGame(context, const NlScreen()),
             ),
             const SizedBox(height: 16),
             _GameCard(
@@ -62,9 +74,7 @@ class GamesListScreen extends StatelessWidget {
               description:
                   'Test your focus by reacting only to specific letters '
                   'while ignoring distractions.',
-              onTap: () => Navigator.of(
-                context,
-              ).push(_fadeRoute(const AttentionSpanScreen())),
+              onTap: () => _openGame(context, const AttentionSpanScreen()),
             ),
             const SizedBox(height: 16),
             _GameCard(
@@ -73,9 +83,7 @@ class GamesListScreen extends StatelessWidget {
               description:
                   'Remember and repeat the correct sequence to improve '
                   'working memory.',
-              onTap: () => Navigator.of(
-                context,
-              ).push(_fadeRoute(const MemorySequenceScreen())),
+              onTap: () => _openGame(context, const MemorySequenceScreen()),
             ),
             const SizedBox(height: 16),
             _GameCard(
@@ -84,8 +92,7 @@ class GamesListScreen extends StatelessWidget {
               description:
                   'Train your brain by quickly switching between numbers '
                   'and letters decisions.',
-              onTap: () =>
-                  Navigator.of(context).push(_fadeRoute(const StroopScreen())),
+              onTap: () => _openGame(context, const StroopScreen()),
             ),
           ],
         ),

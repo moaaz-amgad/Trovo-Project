@@ -53,6 +53,7 @@ document.addEventListener('alpine:init', () => {
 
         // === MINIGAMES ===
         miniGameStats: null,
+        selectedGameType: 'all',
 
         // === API BASE ===
         get apiBase() {

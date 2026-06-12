@@ -6,6 +6,7 @@ use App\Models\Diagnosis;
 use App\Models\User;
 use App\Models\PhoneUsageData;
 use App\Models\QuestionnaireResponse;
+use App\Models\MiniGameSession;
 use Illuminate\Support\Facades\Cache;
 
 class DashboardService

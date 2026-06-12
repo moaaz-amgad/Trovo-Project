@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/routing/app_router_paths.dart';
 import '../../../diagnosis/presentation/cubit/diagnosis_cubit.dart';
 import '../../../diagnosis/presentation/screens/diagnosis_result_screen.dart';
 import '../../../progress/data/models/progress_summary.dart';
 import '../../../progress/presentation/cubit/progress_cubit.dart';
+import '../../../user/presentation/cubit/user_cubit.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Palette (consistent with app)
@@ -29,6 +34,9 @@ class ResultsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<UserCubit>(
+          create: (_) => sl<UserCubit>()..loadProfile(),
+        ),
         BlocProvider<ProgressCubit>(
           create: (_) => sl<ProgressCubit>()..load(),
         ),
@@ -72,7 +80,11 @@ class _ResultsBody extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildHeader(),
+                            const _HomeHeader(),
+                            const SizedBox(height: 32),
+                            const _InsightCard(),
+                            const SizedBox(height: 24),
+                            const _MentalLoadCard(),
                             const SizedBox(height: 24),
                             _buildLatestResult(progressState),
                             const SizedBox(height: 16),
@@ -286,11 +298,7 @@ class _ResultsBody extends StatelessWidget {
       height: 52,
       child: ElevatedButton.icon(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const DiagnosisResultScreen(),
-            ),
-          );
+          context.push(AppRoutePaths.phoneUsageScreen);
         },
         icon: const Icon(Icons.refresh_rounded, size: 20),
         label: Text(
@@ -649,5 +657,325 @@ class _HistoryCard extends StatelessWidget {
     } catch (_) {
       return raw;
     }
+  }
+}
+
+PageRouteBuilder<void> _fadeRoute(Widget page) {
+  return PageRouteBuilder<void>(
+    pageBuilder: (_, _, _) => page,
+    transitionsBuilder: (_, animation, _, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+        child: child,
+      );
+    },
+  );
+}
+
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader();
+
+  String get _greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<UserCubit, UserState>(
+      builder: (context, state) {
+        final profile = state.maybeWhen(
+          loaded: (p) => p,
+          actionInProgress: (p) => p,
+          actionSuccess: (p, _) => p,
+          orElse: () => null,
+        );
+        final name = profile?.fullName?.split(' ').first;
+        final avatarUrl = profile?.avatar;
+
+        return Row(
+          children: [
+            GestureDetector(
+              onTap: () =>
+                  Navigator.of(context).push(_fadeRoute(const ProfileScreen())),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: const Color(0xFFB5C8D1),
+                backgroundImage:
+                    avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                child: avatarUrl == null
+                    ? const Icon(
+                        Icons.person,
+                        size: 22,
+                        color: _kBasis,
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                name != null ? '$_greeting, $name' : _greeting,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _kBasis,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  height: 1.17,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+        Container(
+          width: 40,
+          height: 40,
+          decoration: const BoxDecoration(
+            color: Color(0xFFC3CBCF),
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: 16,
+            height: 20,
+            child: SvgPicture.asset(
+              'assets/images/home_icon_bell.svg',
+              colorFilter: const ColorFilter.mode(
+                _kBasis,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+          ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  const _InsightCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: _kCardWhite,
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: 0,
+            top: 18,
+            bottom: 18,
+            child: Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: const Color(0x73042F40),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(92, 20, 24, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Daily Mindful Insight',
+                  style: TextStyle(
+                    color: _kBasis,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    height: 1.5,
+                    letterSpacing: -0.15,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  '"The best way to sharpen your\nfocus is to embrace the silence\nbetween tasks. Take 3 deep\nbreaths before starting your next\nsession."',
+                  style: TextStyle(
+                    color: Color(0xFF41484B),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    height: 1.62,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 22,
+            top: 42,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Color(0xFFDCE5EA),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: SvgPicture.asset(
+                  'assets/images/home_icon_bulb.svg',
+                  colorFilter: const ColorFilter.mode(
+                    _kBasis,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MentalLoadCard extends StatelessWidget {
+  const _MentalLoadCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProgressCubit, ProgressState>(
+      builder: (context, state) {
+        final summary = state.maybeWhen(
+          loaded: (s, _) => s,
+          orElse: () => null,
+        );
+
+        final addictionLevel = summary?.currentLevel?.toDouble() ?? 0;
+        final trend = summary?.currentTrend ?? 'unknown';
+        // Clamp between 0 and 100 for display
+        final addictionPct = addictionLevel.clamp(0.0, 100.0);
+        final addictionLabel = addictionPct <= 30
+            ? 'Low'
+            : addictionPct <= 60
+                ? 'Mod'
+                : 'High';
+
+        final trendLabel = trend == 'improving'
+            ? 'Improving ↓'
+            : trend == 'worsening'
+                ? 'Worsening ↑'
+                : 'Stable →';
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'MENTAL LOAD INDICATORS',
+                style: TextStyle(
+                  color: _kSoft,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  height: 1.5,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _IndicatorRow(
+                label: 'Addiction Score',
+                value: '$addictionLabel (${addictionPct.toStringAsFixed(0)}%)',
+                progress: addictionPct / 100,
+              ),
+              const SizedBox(height: 20),
+              _IndicatorRow(
+                label: 'Current Trend',
+                value: trendLabel,
+                progress: trend == 'improving'
+                    ? 0.3
+                    : trend == 'worsening'
+                        ? 0.8
+                        : 0.5,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _IndicatorRow extends StatelessWidget {
+  const _IndicatorRow({
+    required this.label,
+    required this.value,
+    required this.progress,
+  });
+
+  final String label;
+  final String value;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: _kBasis,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                height: 1.33,
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: _kBasis,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                height: 1.33,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            height: 8,
+            child: Stack(
+              children: [
+                const Positioned.fill(
+                  child: ColoredBox(color: Color(0x66042F40)),
+                ),
+                FractionallySizedBox(
+                  widthFactor: progress.clamp(0.0, 1.0),
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF042F40), Color(0xFFC8EFFF)],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

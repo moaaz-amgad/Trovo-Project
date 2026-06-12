@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:trovo_app/src/core/di/injection_container.dart';
+import 'package:trovo_app/src/core/routing/app_router_paths.dart';
 import 'package:trovo_app/src/core/services/hive_cache_service.dart';
 import 'package:trovo_app/src/core/theming/app_colors.dart';
 import 'package:trovo_app/src/core/theming/app_text_styles.dart';
@@ -32,15 +34,12 @@ class _PhoneUsageView extends StatefulWidget {
   State<_PhoneUsageView> createState() => _PhoneUsageViewState();
 }
 
-class _PhoneUsageViewState extends State<_PhoneUsageView> {
+class _PhoneUsageViewState extends State<_PhoneUsageView>
+    with WidgetsBindingObserver {
   static const _consentCacheKey = 'phone_usage_consent';
   static const _latestMetricsCacheKey = 'phone_usage_latest_metrics';
 
   final _cacheService = HiveCacheService();
-
-  final _userIdController = TextEditingController();
-  final _diagnosisIdController = TextEditingController();
-  final _purposeController = TextEditingController();
 
   final _dailyUsageController = TextEditingController();
   final _screenTimeBeforeBedController = TextEditingController();
@@ -55,6 +54,7 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
   bool _isSaving = false;
   bool _hasUsageAccess = false;
   bool _manualEntry = false;
+  bool _waitingForSettingsReturn = false;
   String? _statusMessage;
   PhoneUsageMetrics? _metrics;
   _PhoneUsageAction? _activeAction;
@@ -68,15 +68,17 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadCachedState();
     _refreshUsageAccess();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _collectUsageData();
+    });
   }
 
   @override
   void dispose() {
-    _userIdController.dispose();
-    _diagnosisIdController.dispose();
-    _purposeController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     _dailyUsageController.dispose();
     _screenTimeBeforeBedController.dispose();
     _phoneCheckController.dispose();
@@ -85,6 +87,15 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
     _gamingController.dispose();
     _weekendUsageController.dispose();
     super.dispose();
+  }
+
+  /// Called when the app returns from background (e.g. after Settings).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _waitingForSettingsReturn) {
+      _waitingForSettingsReturn = false;
+      _onReturnFromSettings();
+    }
   }
 
   Future<void> _loadCachedState() async {
@@ -152,16 +163,40 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
     }
     if (hasAccess) return true;
 
+    // Set flag so the lifecycle observer knows to retry when user comes back
+    _waitingForSettingsReturn = true;
     await _cubit.openUsageAccessSettings();
-    final updated = await _cubit.hasUsageAccess();
+
+    // Don't check immediately — the observer will handle the return.
+    // Return false so _collectUsageData stops here; _onReturnFromSettings
+    // will re-trigger the whole flow if the user granted access.
+    return false;
+  }
+
+  /// Called by didChangeAppLifecycleState when user returns from Settings.
+  Future<void> _onReturnFromSettings() async {
+    final hasAccess = await _cubit.hasUsageAccess();
     if (mounted) {
-      setState(() => _hasUsageAccess = updated);
+      setState(() => _hasUsageAccess = hasAccess);
     }
 
-    if (!updated && mounted) {
-      _showSnackBar('Usage access is still not granted.');
+    if (hasAccess) {
+      // Permission granted — restart collection automatically
+      setState(() {
+        _isLoading = true;
+        _manualEntry = false;
+        _statusMessage = null;
+      });
+      _activeAction = _PhoneUsageAction.collect;
+      _cubit.loadPlatformUsage();
+    } else if (mounted) {
+      // Still no access — inform the user that permission is mandatory
+      _showSnackBar('Usage access is mandatory to accurately calculate usage. Please grant access in Settings.');
+      setState(() {
+        _isLoading = false;
+        _manualEntry = false; // Block manual entry
+      });
     }
-    return updated;
   }
 
   Future<void> _sendToBackend() async {
@@ -185,15 +220,6 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
   }
 
   PhoneUsageData? _buildPhoneUsageData() {
-    final userId = int.tryParse(_userIdController.text.trim());
-    final diagnosisId = int.tryParse(_diagnosisIdController.text.trim());
-    final purpose = _purposeController.text.trim();
-
-    if (userId == null || diagnosisId == null || purpose.isEmpty) {
-      _showSnackBar('Please provide user id, diagnosis id, and purpose.');
-      return null;
-    }
-
     final metrics = _manualEntry
         ? _metricsFromControllers()
         : (_metrics ?? _metricsFromControllers());
@@ -205,15 +231,12 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
 
     return PhoneUsageData(
       usageId: DateTime.now().millisecondsSinceEpoch,
-      userId: userId,
-      diagnosisId: diagnosisId,
       dailyUsageHours: metrics.dailyUsageHours,
       screenTimeBeforeBed: metrics.screenTimeBeforeBed,
       phoneCheckPerDay: metrics.phoneCheckPerDay,
       appsUsedDaily: metrics.appsUsedDaily,
       timeOnSocialMedia: metrics.timeOnSocialMedia,
       timeInGaming: metrics.timeInGaming,
-      phoneUsagePurpose: purpose,
       weekendUsageHours: metrics.weekendUsageHours,
       collectedAt: metrics.collectedAt,
     );
@@ -335,17 +358,16 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
                 _isLoading = false;
               });
               _activeAction = null;
+              _sendToBackend();
             }
           },
           permissionRequired: (message) {
             if (_activeAction == _PhoneUsageAction.collect) {
               setState(() {
                 _statusMessage = message;
-                _manualEntry = true;
+                _manualEntry = false; // Block manual entry
                 _isLoading = false;
-                _metrics = PhoneUsageMetrics(collectedAt: DateTime.now());
               });
-              _syncMetricControllers(_metrics!);
               _activeAction = null;
             }
           },
@@ -354,23 +376,28 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
               _showSnackBar('Usage data sent successfully.');
               setState(() => _isSaving = false);
               _activeAction = null;
+              
+              // Ensure we have access to go_router via context
+              try {
+                context.go(AppRoutePaths.questionnaireScreen);
+              } catch (_) {}
             }
           },
           error: (message) {
             if (_activeAction == _PhoneUsageAction.submit) {
               _showSnackBar('Failed to send data: $message');
-              setState(() => _isSaving = false);
+              setState(() {
+                _isSaving = false;
+              });
               _activeAction = null;
               return;
             }
 
             setState(() {
               _statusMessage = message;
-              _manualEntry = true;
+              _manualEntry = false; // Block manual entry
               _isLoading = false;
-              _metrics = PhoneUsageMetrics(collectedAt: DateTime.now());
             });
-            _syncMetricControllers(_metrics!);
             _activeAction = null;
           },
         );
@@ -459,33 +486,7 @@ class _PhoneUsageViewState extends State<_PhoneUsageView> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'User details',
-                    style: AppTextStyles.titleMedium.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
                   const SizedBox(height: 12),
-                  _TextField(
-                    controller: _userIdController,
-                    label: 'User id',
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  _TextField(
-                    controller: _diagnosisIdController,
-                    label: 'Diagnosis id',
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  _TextField(
-                    controller: _purposeController,
-                    label: 'Primary phone usage purpose',
-                    hintText: 'Example: Learning, social, work',
-                  ),
-                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

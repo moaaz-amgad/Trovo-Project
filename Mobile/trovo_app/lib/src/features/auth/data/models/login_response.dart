@@ -58,6 +58,9 @@ abstract class LoginResponseData with _$LoginResponseData {
       _$LoginResponseDataFromJson(json);
 }
 
+Object? _readHasDiagnosis(Map json, String key) =>
+    json['has_diagnosis'] ?? json['hasDiagnosis'] ?? false;
+
 @freezed
 abstract class LoginResponse with _$LoginResponse {
   const factory LoginResponse({
@@ -65,6 +68,7 @@ abstract class LoginResponse with _$LoginResponse {
     @Default('') String message,
     LoginResponseData? data,
     @JsonKey(readValue: _readToken) String? token,
+    @JsonKey(readValue: _readHasDiagnosis) @Default(false) bool hasDiagnosis,
     Object? errors,
   }) = _LoginResponse;
 

@@ -9,6 +9,7 @@ import '../../time_focus/presentation/time_focus_screen.dart';
 import '../../mini_game/presentation/cubit/mini_game_cubit.dart';
 import '../../progress/presentation/cubit/progress_cubit.dart';
 import '../../user/presentation/cubit/user_cubit.dart';
+import '../../diagnosis/presentation/screens/diagnosis_history_screen.dart';
 import 'layout_screen.dart';
 
 PageRouteBuilder<void> _fadeRoute(Widget page) {
@@ -45,6 +46,18 @@ class HomeScreen extends StatelessWidget {
         bottomNavTopOverlap +
         MediaQuery.of(context).padding.bottom;
 
+    final body = _HomeBody(bottomPadding: bottomPadding, embedded: embedded);
+
+    // When embedded inside MainLayoutScreen, MiniGameCubit & ProgressCubit
+    // are already provided at the parent level — only add UserCubit here.
+    if (embedded) {
+      return BlocProvider<UserCubit>(
+        create: (_) => sl<UserCubit>()..loadProfile(),
+        child: body,
+      );
+    }
+
+    // Standalone mode — provide all cubits locally.
     return MultiBlocProvider(
       providers: [
         BlocProvider<UserCubit>(
@@ -57,7 +70,7 @@ class HomeScreen extends StatelessWidget {
           create: (_) => sl<MiniGameCubit>()..loadStats(),
         ),
       ],
-      child: _HomeBody(bottomPadding: bottomPadding, embedded: embedded),
+      child: body,
     );
   }
 }
@@ -78,24 +91,59 @@ class _HomeBody extends StatelessWidget {
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 430),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(16, 14, 16, bottomPadding),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _HomeHeader(),
-                      SizedBox(height: 32),
-                      _InsightCard(),
-                      SizedBox(height: 26),
-                      _FocusScoreCard(),
-                      SizedBox(height: 24),
-                      _BentoGrid(),
-                      SizedBox(height: 24),
-                      _SessionPerformanceCard(),
-                      SizedBox(height: 24),
-                      _MentalLoadCard(),
-                    ],
+                child: RefreshIndicator(
+                  color: HomeScreen.basis,
+                  onRefresh: () async {
+                    await context.read<MiniGameCubit>().loadStats();
+                    if (context.mounted) {
+                      await context.read<ProgressCubit>().load();
+                    }
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    padding: EdgeInsets.fromLTRB(16, 14, 16, bottomPadding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: const BoxDecoration(
+                                color: HomeScreen.basis,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.gamepad_rounded,
+                                color: Color(0xFFC8EFFF),
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Text(
+                              'Games Analytics',
+                              style: GoogleFonts.nunito(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                color: HomeScreen.basis,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        const _FocusScoreCard(),
+                        const SizedBox(height: 24),
+                        const _BentoGrid(),
+                        const SizedBox(height: 24),
+                        const _SessionPerformanceCard(),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -790,47 +838,83 @@ class _SessionPerformanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'SESSION PERFORMANCE',
-            style: TextStyle(
-              color: HomeScreen.softText,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              height: 1.5,
-              letterSpacing: 1,
-            ),
+    return BlocBuilder<MiniGameCubit, MiniGameDashboardState>(
+      builder: (context, state) {
+        final history = state.maybeWhen(
+          loaded: (_, __, h) => h,
+          orElse: () => <dynamic>[],
+        );
+
+        if (history.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final recent = history.take(2).toList();
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
           ),
-          const SizedBox(height: 16),
-          _SessionRow(
-            iconAsset: 'assets/images/home_icon_focus.svg',
-            title: 'Deep Work Block',
-            subtitle: 'Today • 10:30 AM',
-            value: '+8.5',
-            valueLabel: 'Score Impact',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'RECENT SESSIONS',
+                style: TextStyle(
+                  color: HomeScreen.softText,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  height: 1.5,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 16),
+              for (var i = 0; i < recent.length; i++) ...[
+                if (i > 0) ...[
+                  const SizedBox(height: 16),
+                  Container(height: 1, color: const Color(0x1A042F40)),
+                  const SizedBox(height: 16),
+                ],
+                _SessionRow(
+                  iconAsset: 'assets/images/home_icon_games.svg',
+                  title: _formatGameType(recent[i].gameType ?? ''),
+                  subtitle: _formatDate(recent[i].playedAt ?? ''),
+                  value: '${recent[i].score ?? 0}',
+                  valueLabel: 'Score',
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 16),
-          Container(height: 1, color: const Color(0x1A042F40)),
-          const SizedBox(height: 16),
-          _SessionRow(
-            iconAsset: 'assets/images/home_icon_mastery.svg',
-            title: 'Sprint Analysis',
-            subtitle: 'Today • 2:15 PM',
-            value: '+3.2',
-            valueLabel: 'Score Impact',
-          ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  String _formatGameType(String type) {
+    if (type.isEmpty) return 'Game';
+    return type
+        .split('_')
+        .map((e) => e.isEmpty ? '' : '${e[0].toUpperCase()}${e.substring(1)}')
+        .join(' ');
+  }
+
+  String _formatDate(String raw) {
+    try {
+      final dt = DateTime.parse(raw);
+      final months = [
+        '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
+      final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+      final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+      final min = dt.minute.toString().padLeft(2, '0');
+      return '${months[dt.month]} ${dt.day} • $hour:$min $ampm';
+    } catch (_) {
+      return raw;
+    }
   }
 }
 
@@ -855,54 +939,60 @@ class _SessionRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: HomeScreen.basis,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: SvgPicture.asset(
-                  iconAsset,
-                  colorFilter: const ColorFilter.mode(
-                    Color(0xFFC8EFFF),
-                    BlendMode.srcIn,
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: HomeScreen.basis,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: SvgPicture.asset(
+                    iconAsset,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFFC8EFFF),
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: HomeScreen.basis,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    height: 1.43,
-                  ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: HomeScreen.basis,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        height: 1.43,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: HomeScreen.softText,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        height: 1.5,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: HomeScreen.softText,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -1085,6 +1175,11 @@ class _BottomNavigationBar extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
+            Positioned.fill(
+              child: Container(
+                color: HomeScreen.pageBg,
+              ),
+            ),
             Positioned(
               left: 0,
               right: 0,
@@ -1124,8 +1219,23 @@ class _BottomNavigationBar extends StatelessWidget {
                         ).pushReplacement(_fadeRoute(const TimeFocusScreen()));
                       },
                     ),
-                    const _BottomNavItem(
-                      iconAsset: 'assets/images/home_icon_library.svg',
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pushReplacement(
+                          _fadeRoute(const DiagnosisHistoryScreen()),
+                        );
+                      },
+                      child: const SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Center(
+                          child: Icon(
+                            Icons.analytics_outlined,
+                            color: Color(0xFFF2F2F2),
+                            size: 24,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

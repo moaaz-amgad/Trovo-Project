@@ -71,8 +71,13 @@ class _LoginViewState extends State<_LoginView> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         state.whenOrNull(
-          loginSuccess: (_) =>
-              context.go(AppRoutePaths.questionnaireScreen),
+          loginSuccess: (data) {
+            if (data.hasDiagnosis) {
+              context.go(AppRoutePaths.layoutScreen);
+            } else {
+              context.go(AppRoutePaths.questionnaireScreen);
+            }
+          },
           emailNotVerified: (email) => context.go(
             '${AppRoutePaths.otpScreen}?email=${Uri.encodeComponent(email)}',
           ),
@@ -100,7 +105,7 @@ class _LoginViewState extends State<_LoginView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 228),
+                      const SizedBox(height: 180),
                       _LoginInputField(
                         label: 'Email',
                         hintText: 'Write Your Email',
@@ -159,7 +164,7 @@ class _LoginViewState extends State<_LoginView> {
                       ),
                       const SizedBox(height: 18),
                       SizedBox(
-                        height: 44,
+                        height: 54,
                         child: ElevatedButton(
                           onPressed: isSubmitting ? null : _submit,
                           style: ElevatedButton.styleFrom(
@@ -182,7 +187,7 @@ class _LoginViewState extends State<_LoginView> {
                               : const Text(
                                   'Log in',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 24,
                                     height: 1.35,
                                     fontWeight: FontWeight.w700,
                                   ),

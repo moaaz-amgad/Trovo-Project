@@ -108,7 +108,7 @@ class _RegisterViewState extends State<_RegisterView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 130),
+                      const SizedBox(height: 100),
                       const Text(
                         'Let’s Start',
                         style: TextStyle(
@@ -160,7 +160,7 @@ class _RegisterViewState extends State<_RegisterView> {
                       ),
                       const SizedBox(height: 18),
                       SizedBox(
-                        height: 44,
+                        height: 54,
                         child: ElevatedButton(
                           onPressed: isSubmitting ? null : _submit,
                           style: ElevatedButton.styleFrom(
@@ -183,7 +183,7 @@ class _RegisterViewState extends State<_RegisterView> {
                               : const Text(
                                   'Sign up',
                                   style: TextStyle(
-                                    fontSize: 30,
+                                    fontSize: 24,
                                     height: 0.75,
                                     fontWeight: FontWeight.w700,
                                   ),

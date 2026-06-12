@@ -586,7 +586,7 @@ $LoginUserCopyWith<$Res>? get user {
 /// @nodoc
 mixin _$LoginResponse {
 
- String get status; String get message; LoginResponseData? get data;@JsonKey(readValue: _readToken) String? get token; Object? get errors;
+ String get status; String get message; LoginResponseData? get data;@JsonKey(readValue: _readToken) String? get token;@JsonKey(readValue: _readHasDiagnosis) bool get hasDiagnosis; Object? get errors;
 /// Create a copy of LoginResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -599,16 +599,16 @@ $LoginResponseCopyWith<LoginResponse> get copyWith => _$LoginResponseCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginResponse&&(identical(other.status, status) || other.status == status)&&(identical(other.message, message) || other.message == message)&&(identical(other.data, data) || other.data == data)&&(identical(other.token, token) || other.token == token)&&const DeepCollectionEquality().equals(other.errors, errors));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginResponse&&(identical(other.status, status) || other.status == status)&&(identical(other.message, message) || other.message == message)&&(identical(other.data, data) || other.data == data)&&(identical(other.token, token) || other.token == token)&&(identical(other.hasDiagnosis, hasDiagnosis) || other.hasDiagnosis == hasDiagnosis)&&const DeepCollectionEquality().equals(other.errors, errors));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,status,message,data,token,const DeepCollectionEquality().hash(errors));
+int get hashCode => Object.hash(runtimeType,status,message,data,token,hasDiagnosis,const DeepCollectionEquality().hash(errors));
 
 @override
 String toString() {
-  return 'LoginResponse(status: $status, message: $message, data: $data, token: $token, errors: $errors)';
+  return 'LoginResponse(status: $status, message: $message, data: $data, token: $token, hasDiagnosis: $hasDiagnosis, errors: $errors)';
 }
 
 
@@ -619,7 +619,7 @@ abstract mixin class $LoginResponseCopyWith<$Res>  {
   factory $LoginResponseCopyWith(LoginResponse value, $Res Function(LoginResponse) _then) = _$LoginResponseCopyWithImpl;
 @useResult
 $Res call({
- String status, String message, LoginResponseData? data,@JsonKey(readValue: _readToken) String? token, Object? errors
+ String status, String message, LoginResponseData? data,@JsonKey(readValue: _readToken) String? token,@JsonKey(readValue: _readHasDiagnosis) bool hasDiagnosis, Object? errors
 });
 
 
@@ -636,13 +636,14 @@ class _$LoginResponseCopyWithImpl<$Res>
 
 /// Create a copy of LoginResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? message = null,Object? data = freezed,Object? token = freezed,Object? errors = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? message = null,Object? data = freezed,Object? token = freezed,Object? hasDiagnosis = null,Object? errors = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as LoginResponseData?,token: freezed == token ? _self.token : token // ignore: cast_nullable_to_non_nullable
-as String?,errors: freezed == errors ? _self.errors : errors ,
+as String?,hasDiagnosis: null == hasDiagnosis ? _self.hasDiagnosis : hasDiagnosis // ignore: cast_nullable_to_non_nullable
+as bool,errors: freezed == errors ? _self.errors : errors ,
   ));
 }
 /// Create a copy of LoginResponse
@@ -739,10 +740,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String status,  String message,  LoginResponseData? data, @JsonKey(readValue: _readToken)  String? token,  Object? errors)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String status,  String message,  LoginResponseData? data, @JsonKey(readValue: _readToken)  String? token, @JsonKey(readValue: _readHasDiagnosis)  bool hasDiagnosis,  Object? errors)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LoginResponse() when $default != null:
-return $default(_that.status,_that.message,_that.data,_that.token,_that.errors);case _:
+return $default(_that.status,_that.message,_that.data,_that.token,_that.hasDiagnosis,_that.errors);case _:
   return orElse();
 
 }
@@ -760,10 +761,10 @@ return $default(_that.status,_that.message,_that.data,_that.token,_that.errors);
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String status,  String message,  LoginResponseData? data, @JsonKey(readValue: _readToken)  String? token,  Object? errors)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String status,  String message,  LoginResponseData? data, @JsonKey(readValue: _readToken)  String? token, @JsonKey(readValue: _readHasDiagnosis)  bool hasDiagnosis,  Object? errors)  $default,) {final _that = this;
 switch (_that) {
 case _LoginResponse():
-return $default(_that.status,_that.message,_that.data,_that.token,_that.errors);case _:
+return $default(_that.status,_that.message,_that.data,_that.token,_that.hasDiagnosis,_that.errors);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -780,10 +781,10 @@ return $default(_that.status,_that.message,_that.data,_that.token,_that.errors);
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String status,  String message,  LoginResponseData? data, @JsonKey(readValue: _readToken)  String? token,  Object? errors)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String status,  String message,  LoginResponseData? data, @JsonKey(readValue: _readToken)  String? token, @JsonKey(readValue: _readHasDiagnosis)  bool hasDiagnosis,  Object? errors)?  $default,) {final _that = this;
 switch (_that) {
 case _LoginResponse() when $default != null:
-return $default(_that.status,_that.message,_that.data,_that.token,_that.errors);case _:
+return $default(_that.status,_that.message,_that.data,_that.token,_that.hasDiagnosis,_that.errors);case _:
   return null;
 
 }
@@ -795,13 +796,14 @@ return $default(_that.status,_that.message,_that.data,_that.token,_that.errors);
 @JsonSerializable()
 
 class _LoginResponse extends LoginResponse {
-  const _LoginResponse({this.status = '', this.message = '', this.data, @JsonKey(readValue: _readToken) this.token, this.errors}): super._();
+  const _LoginResponse({this.status = '', this.message = '', this.data, @JsonKey(readValue: _readToken) this.token, @JsonKey(readValue: _readHasDiagnosis) this.hasDiagnosis = false, this.errors}): super._();
   factory _LoginResponse.fromJson(Map<String, dynamic> json) => _$LoginResponseFromJson(json);
 
 @override@JsonKey() final  String status;
 @override@JsonKey() final  String message;
 @override final  LoginResponseData? data;
 @override@JsonKey(readValue: _readToken) final  String? token;
+@override@JsonKey(readValue: _readHasDiagnosis) final  bool hasDiagnosis;
 @override final  Object? errors;
 
 /// Create a copy of LoginResponse
@@ -817,16 +819,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LoginResponse&&(identical(other.status, status) || other.status == status)&&(identical(other.message, message) || other.message == message)&&(identical(other.data, data) || other.data == data)&&(identical(other.token, token) || other.token == token)&&const DeepCollectionEquality().equals(other.errors, errors));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LoginResponse&&(identical(other.status, status) || other.status == status)&&(identical(other.message, message) || other.message == message)&&(identical(other.data, data) || other.data == data)&&(identical(other.token, token) || other.token == token)&&(identical(other.hasDiagnosis, hasDiagnosis) || other.hasDiagnosis == hasDiagnosis)&&const DeepCollectionEquality().equals(other.errors, errors));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,status,message,data,token,const DeepCollectionEquality().hash(errors));
+int get hashCode => Object.hash(runtimeType,status,message,data,token,hasDiagnosis,const DeepCollectionEquality().hash(errors));
 
 @override
 String toString() {
-  return 'LoginResponse(status: $status, message: $message, data: $data, token: $token, errors: $errors)';
+  return 'LoginResponse(status: $status, message: $message, data: $data, token: $token, hasDiagnosis: $hasDiagnosis, errors: $errors)';
 }
 
 
@@ -837,7 +839,7 @@ abstract mixin class _$LoginResponseCopyWith<$Res> implements $LoginResponseCopy
   factory _$LoginResponseCopyWith(_LoginResponse value, $Res Function(_LoginResponse) _then) = __$LoginResponseCopyWithImpl;
 @override @useResult
 $Res call({
- String status, String message, LoginResponseData? data,@JsonKey(readValue: _readToken) String? token, Object? errors
+ String status, String message, LoginResponseData? data,@JsonKey(readValue: _readToken) String? token,@JsonKey(readValue: _readHasDiagnosis) bool hasDiagnosis, Object? errors
 });
 
 
@@ -854,13 +856,14 @@ class __$LoginResponseCopyWithImpl<$Res>
 
 /// Create a copy of LoginResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? message = null,Object? data = freezed,Object? token = freezed,Object? errors = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? message = null,Object? data = freezed,Object? token = freezed,Object? hasDiagnosis = null,Object? errors = freezed,}) {
   return _then(_LoginResponse(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as LoginResponseData?,token: freezed == token ? _self.token : token // ignore: cast_nullable_to_non_nullable
-as String?,errors: freezed == errors ? _self.errors : errors ,
+as String?,hasDiagnosis: null == hasDiagnosis ? _self.hasDiagnosis : hasDiagnosis // ignore: cast_nullable_to_non_nullable
+as bool,errors: freezed == errors ? _self.errors : errors ,
   ));
 }
 

@@ -13,8 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminSeeder::class,     // الأدمنز أولاً
-            UserSeeder::class,      // الطلاب ثانياً
-            DiagnosisSeeder::class, // التشخيصات ثالثاً (تعتمد على وجود طلاب)
+            // UserSeeder::class,      // Students removed for production
+            // DiagnosisSeeder::class, // Fake diagnoses removed for production
         ]);
     }
 }

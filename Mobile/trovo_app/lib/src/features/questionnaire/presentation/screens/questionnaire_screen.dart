@@ -694,18 +694,41 @@ class _QuestionnaireFormState extends State<_QuestionnaireForm> {
           const SizedBox(height: 10),
           _buildTextField(
             controller: _nameController,
-            hint: 'Ahmed Adel',
+            hint: 'Full Name',
             onChanged: (_) => _updateAndSetState(() {}),
           ),
           const SizedBox(height: 22),
           const QuestionnaireQuestionTitle("What's your birth year?"),
           const SizedBox(height: 10),
-          _buildTextField(
-            controller: _birthYearController,
-            hint: '2004',
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (_) => _updateAndSetState(() {}),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF82979F), width: 0.5),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                value: _birthYearController.text.isEmpty ? null : _birthYearController.text,
+                hint: const Text('Select Year', style: TextStyle(color: Color(0x80042F40))),
+                items: List.generate(
+                  DateTime.now().year - 1949, // From 1950 to current year
+                  (index) => (DateTime.now().year - index).toString(),
+                ).map((year) {
+                  return DropdownMenuItem(
+                    value: year,
+                    child: Text(year, style: const TextStyle(color: Color(0xFF042F40))),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    _birthYearController.text = val;
+                    _updateAndSetState(() {});
+                  }
+                },
+              ),
+            ),
           ),
           const SizedBox(height: 24),
           const QuestionnaireQuestionTitle('What is your gender?'),

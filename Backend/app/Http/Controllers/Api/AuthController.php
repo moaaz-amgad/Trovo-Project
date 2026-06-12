@@ -109,12 +109,15 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token', ['access-student'])->plainTextToken;
 
+        $hasDiagnosis = \App\Models\Diagnosis::where('user_id', $user->id)->exists();
+
         return response()->json([
             'status'         => 'success',
             'message'        => 'تم تسجيل الدخول بنجاح.',
             'access_token'   => $token,
             'token_type'     => 'Bearer',
             'email_verified' => true,
+            'has_diagnosis'  => $hasDiagnosis,
             'user'           => [
                 'id'     => $user->id,
                 'name'   => $user->name,

@@ -15,6 +15,7 @@ import 'package:trovo_app/src/features/auth/presentation/screens/otp_screen.dart
 import 'package:trovo_app/src/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:trovo_app/src/features/auth/presentation/screens/new_password_screen.dart';
 import 'package:trovo_app/src/features/diagnosis/presentation/screens/diagnosis_result_screen.dart';
+import 'package:trovo_app/src/features/diagnosis/presentation/screens/diagnosis_history_screen.dart';
 import 'package:trovo_app/src/features/number_letter/presentation/screens/nl_screen.dart';
 import 'package:trovo_app/src/features/stroop/presentation/screens/stroop_screen.dart';
 import 'package:trovo_app/src/features/time_focus/presentation/time_focus_screen.dart';
@@ -103,6 +104,10 @@ abstract class AppRouter {
       GoRoute(
         path: AppRoutePaths.profileScreen,
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.diagnosisHistoryScreen,
+        builder: (context, state) => const DiagnosisHistoryScreen(),
       ),
     ],
   );

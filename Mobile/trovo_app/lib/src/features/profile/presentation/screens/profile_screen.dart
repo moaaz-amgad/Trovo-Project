@@ -7,6 +7,7 @@ import 'package:trovo_app/src/core/di/injection_container.dart';
 import 'package:trovo_app/src/core/routing/app_router_paths.dart';
 import 'package:trovo_app/src/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:trovo_app/src/features/user/presentation/cubit/user_cubit.dart';
+import 'package:trovo_app/src/features/progress/presentation/cubit/progress_cubit.dart';
 
 const Color _kBg = Color(0xFFF2F2F2);
 const Color _kBasis = Color(0xFF042F40);
@@ -19,8 +20,15 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<UserCubit>(
-      create: (_) => sl<UserCubit>()..loadProfile(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<UserCubit>(
+          create: (_) => sl<UserCubit>()..loadProfile(),
+        ),
+        BlocProvider<ProgressCubit>(
+          create: (_) => sl<ProgressCubit>()..load(),
+        ),
+      ],
       child: const _ProfileView(),
     );
   }
@@ -129,26 +137,32 @@ class _ProfileView extends StatelessWidget {
                           onTap: () => _openSettings(context),
                         ),
                         const SizedBox(height: 12),
-                        const _ProgressStatsCard(),
-                        const SizedBox(height: 12),
-                        const Row(
-                          children: [
-                            Expanded(
-                              child: _MiniStatCard(
-                                icon: Icons.timer_outlined,
-                                value: '12.5h',
-                                label: 'Focus Time',
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: _MiniStatCard(
-                                icon: Icons.self_improvement_rounded,
-                                value: '24',
-                                label: 'Sessions',
-                              ),
-                            ),
-                          ],
+                        BlocBuilder<ProgressCubit, ProgressState>(
+                          builder: (context, state) {
+                            final summary = state.maybeWhen(
+                              loaded: (s, _) => s,
+                              orElse: () => null,
+                            );
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: _MiniStatCard(
+                                    icon: Icons.local_fire_department_rounded,
+                                    value: '${summary?.streak ?? 0}d',
+                                    label: 'Streak',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _MiniStatCard(
+                                    icon: Icons.assignment_turned_in_rounded,
+                                    value: '${summary?.totalDiagnoses ?? 0}',
+                                    label: 'Diagnoses',
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),

@@ -21,7 +21,6 @@ return new class extends Migration
             $table->integer('apps_used_daily');
             $table->float('time_on_social_media');
             $table->float('time_on_gaming');
-            $table->string('phone_usage_purpose', 50); // (Gaming, Social Media, Education, Other)
             $table->float('weekend_usage_hours');
             
             $table->timestamp('collected_at')->useCurrent();

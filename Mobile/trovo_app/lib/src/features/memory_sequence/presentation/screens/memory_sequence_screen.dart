@@ -289,7 +289,7 @@ class _MemorySequenceViewState extends State<_MemorySequenceView> {
                 context.read<MemorySequenceCubit>().restart();
                 setState(() => _stage = _FlowStage.playing);
               },
-              onChooseAnotherLevel: _quit,
+              onChooseAnotherLevel: _exitToMain,
             );
           },
         ),
@@ -1041,7 +1041,7 @@ class _ResultBody extends StatelessWidget {
             _PrimaryButton(label: 'Play Again', onPressed: onPlayAgain),
             const SizedBox(height: 12),
             _PrimaryButton(
-              label: 'Choose Another Level',
+              label: 'Back',
               onPressed: onChooseAnotherLevel,
             ),
           ],

@@ -13,7 +13,7 @@ _UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => _UserProfile(
   gender: json['gender'] as String?,
   age: (json['age'] as num?)?.toInt(),
   avatar: _readAvatar(json, 'avatar') as String?,
-  emailVerifiedAt: _readVerifiedAt(json, 'emailVerifiedAt') as String?,
+  emailVerified: _readVerified(json, 'emailVerified') as bool?,
 );
 
 Map<String, dynamic> _$UserProfileToJson(_UserProfile instance) =>
@@ -24,5 +24,5 @@ Map<String, dynamic> _$UserProfileToJson(_UserProfile instance) =>
       'gender': instance.gender,
       'age': instance.age,
       'avatar': instance.avatar,
-      'emailVerifiedAt': instance.emailVerifiedAt,
+      'emailVerified': instance.emailVerified,
     };

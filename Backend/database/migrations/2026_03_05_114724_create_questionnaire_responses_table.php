@@ -26,6 +26,7 @@ return new class extends Migration
             $table->float('depression_level');
             $table->float('self_esteem');
             $table->float('time_on_education'); 
+            $table->string('phone_usage_purpose', 50)->default('Other');
             
             $table->timestamp('answered_at')->useCurrent();
         });

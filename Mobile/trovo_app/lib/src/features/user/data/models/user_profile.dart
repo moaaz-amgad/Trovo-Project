@@ -9,8 +9,12 @@ Object? _readFullName(Map json, String key) =>
 Object? _readAvatar(Map json, String key) =>
     json['avatar'] ?? json['avatar_url'] ?? json['image'];
 
-Object? _readVerifiedAt(Map json, String key) =>
-    json['email_verified_at'] ?? json['emailVerifiedAt'];
+Object? _readVerified(Map json, String key) {
+  if (json.containsKey('email_verified')) return json['email_verified'];
+  if (json.containsKey('email_verified_at')) return json['email_verified_at'] != null;
+  if (json.containsKey('emailVerifiedAt')) return json['emailVerifiedAt'] != null;
+  return false;
+}
 
 /// Authenticated user as returned by `GET /api/user`.
 @freezed
@@ -22,7 +26,7 @@ abstract class UserProfile with _$UserProfile {
     String? gender,
     int? age,
     @JsonKey(readValue: _readAvatar) String? avatar,
-    @JsonKey(readValue: _readVerifiedAt) String? emailVerifiedAt,
+    @JsonKey(readValue: _readVerified) bool? emailVerified,
   }) = _UserProfile;
 
   const UserProfile._();
@@ -45,5 +49,5 @@ abstract class UserProfile with _$UserProfile {
     return UserProfile.fromJson(json);
   }
 
-  bool get isEmailVerified => emailVerifiedAt != null;
+  bool get isEmailVerified => emailVerified ?? false;
 }

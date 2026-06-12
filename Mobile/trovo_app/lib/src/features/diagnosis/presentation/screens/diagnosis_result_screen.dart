@@ -282,7 +282,7 @@ class _ResultView extends StatelessWidget {
                 width: double.infinity,
                 height: 44,
                 child: FilledButton(
-                  onPressed: () => context.go(AppRoutePaths.phoneUsageScreen),
+                  onPressed: () => context.go(AppRoutePaths.layoutScreen),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF042F40),
                     foregroundColor: Colors.white,

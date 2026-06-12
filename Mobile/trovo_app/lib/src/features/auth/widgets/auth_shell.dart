@@ -35,6 +35,11 @@ class AuthShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final double currentSlothHeight = isKeyboardOpen ? 0 : slothHeight;
+    final double currentHeaderHeight = isKeyboardOpen ? 80 : 155;
+    final double currentTopPadding = isKeyboardOpen ? 60 : topPadding;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       body: SafeArea(
@@ -43,8 +48,9 @@ class AuthShell extends StatelessWidget {
             IgnorePointer(
               child: Column(
                 children: [
-                  Container(
-                    height: 155,
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    height: currentHeaderHeight,
                     decoration: const BoxDecoration(
                       color: Color(0xFF042F3E),
                       borderRadius: BorderRadius.vertical(
@@ -73,35 +79,40 @@ class AuthShell extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-            Positioned(
-              top: slothTop,
-              left: 0,
-              right: 0,
-              child: IgnorePointer(
-                child: Align(
-                  alignment: slothAlignment,
-                  child: SizedBox(
-                    width: slothWidth,
-                    height: slothHeight,
-                    child: Image.asset(
-                      'assets/images/sloth.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) =>
-                          SvgPicture.asset(
-                            'assets/images/sloth.svg',
-                            fit: BoxFit.contain,
-                            placeholderBuilder: (context) =>
-                                const SizedBox.shrink(),
-                            errorBuilder: (context, error, stackTrace) =>
-                                _imageFallback(),
-                          ),
+            if (!isKeyboardOpen)
+              Positioned(
+                top: slothTop,
+                left: 0,
+                right: 0,
+                child: IgnorePointer(
+                  child: Align(
+                    alignment: slothAlignment,
+                    child: SizedBox(
+                      width: slothWidth,
+                      height: currentSlothHeight,
+                      child: Image.asset(
+                        'assets/images/sloth.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            SvgPicture.asset(
+                              'assets/images/sloth.svg',
+                              fit: BoxFit.contain,
+                              placeholderBuilder: (context) =>
+                                  const SizedBox.shrink(),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _imageFallback(),
+                            ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            Positioned.fill(
-              top: topPadding,
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 250),
+              top: currentTopPadding,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: child,

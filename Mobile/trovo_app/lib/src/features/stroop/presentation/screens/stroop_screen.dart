@@ -288,7 +288,7 @@ class _StroopViewState extends State<_StroopView>
                 _startElapsedTimer();
                 setState(() => _stage = _Stage.playing);
               },
-              onChooseAnotherLevel: _quit,
+              onChooseAnotherLevel: _exitToMain,
             );
           },
         ),
@@ -1185,7 +1185,7 @@ class _ResultBody extends StatelessWidget {
             _PrimaryButton(label: 'Play Again', onPressed: onPlayAgain),
             const SizedBox(height: 12),
             _PrimaryButton(
-              label: 'Choose Another Level',
+              label: 'Back',
               onPressed: onChooseAnotherLevel,
             ),
           ],

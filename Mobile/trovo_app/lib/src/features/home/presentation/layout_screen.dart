@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../memory_sequence/presentation/screens/memory_sequence_screen.dart';
 import '../../stroop/presentation/screens/stroop_screen.dart';
+import '../../diagnosis/presentation/screens/diagnosis_history_screen.dart';
 import 'home_screen.dart';
 
 PageRouteBuilder<void> _fadeRoute(Widget page) {
@@ -290,6 +291,11 @@ class _LayoutBottomNavBar extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
+            Positioned.fill(
+              child: Container(
+                color: const Color(0xFFF2F2F2),
+              ),
+            ),
             Positioned(
               left: 0,
               right: 0,
@@ -338,15 +344,22 @@ class _LayoutBottomNavBar extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Library icon
-                    SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: Center(
-                        child: Icon(
-                          Icons.menu_book_outlined,
-                          color: const Color(0xFFF2F2F2),
-                          size: 28,
+                    // Diagnosis icon
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pushReplacement(_fadeRoute(
+                          const DiagnosisHistoryScreen(),
+                        ));
+                      },
+                      child: const SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Center(
+                          child: Icon(
+                            Icons.analytics_outlined,
+                            color: Color(0xFFF2F2F2),
+                            size: 28,
+                          ),
                         ),
                       ),
                     ),

@@ -34,4 +34,6 @@ class AppRoutePaths {
   static String get attentionSpanScreen => '/attention-span';
 
   static String get profileScreen => '/profile';
+
+  static String get diagnosisHistoryScreen => '/diagnosis-history';
 }

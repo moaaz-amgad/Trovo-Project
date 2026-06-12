@@ -6,8 +6,9 @@ class ApiConstants {
   static const bool enableApiIntegration = true;
 
   /// Base URL
-  static const String baseUrl =
-      'https://brandy-bronzelike-lai.ngrok-free.dev';
+  /// To fix the WiFi issue, run `ngrok http 8000` and put the URL here.
+  /// Example: 'https://1a2b-3c4d.ngrok-free.app'
+  static const String baseUrl = 'https://brandy-bronzelike-lai.ngrok-free.dev';
 
   /// Timeouts
   static const Duration connectTimeout = Duration(seconds: 60);
