@@ -52,11 +52,13 @@ class AuthController extends Controller
 
         // إنشاء توكن (يمكنه الوصول لبعض الأشياء لكن بدون تأكيد الإيميل لن يقدر يعمل شغل كامل)
         $token = $user->createToken('auth_token', ['access-student'])->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['refresh'])->plainTextToken;
 
         return response()->json([
             'status'       => 'success',
             'message'      => 'تم إنشاء حسابك بنجاح! تم إرسال كود التحقق إلى بريدك الإلكتروني.',
             'access_token' => $token,
+            'refresh_token' => $refreshToken,
             'token_type'   => 'Bearer',
             'email_verified' => false,
             'user'         => [
@@ -108,6 +110,7 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('auth_token', ['access-student'])->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['refresh'])->plainTextToken;
 
         $hasDiagnosis = \App\Models\Diagnosis::where('user_id', $user->id)->exists();
 
@@ -115,6 +118,7 @@ class AuthController extends Controller
             'status'         => 'success',
             'message'        => 'تم تسجيل الدخول بنجاح.',
             'access_token'   => $token,
+            'refresh_token'  => $refreshToken,
             'token_type'     => 'Bearer',
             'email_verified' => true,
             'has_diagnosis'  => $hasDiagnosis,
@@ -170,11 +174,13 @@ class AuthController extends Controller
         // إنشاء توكن جديد
         $user->tokens()->delete();
         $token = $user->createToken('auth_token', ['access-student'])->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['refresh'])->plainTextToken;
 
         return response()->json([
             'status'         => 'success',
             'message'        => 'تم تأكيد بريدك الإلكتروني بنجاح! يمكنك الآن استخدام التطبيق.',
             'access_token'   => $token,
+            'refresh_token'  => $refreshToken,
             'token_type'     => 'Bearer',
             'email_verified' => true,
             'user'           => [
@@ -418,6 +424,7 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('auth_token', ['access-student'])->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['refresh'])->plainTextToken;
 
         return response()->json([
             'status'         => 'success',
@@ -425,6 +432,7 @@ class AuthController extends Controller
                 ? 'تم إنشاء حسابك وتسجيل الدخول بنجاح عبر Google!'
                 : 'تم تسجيل الدخول بنجاح عبر Google!',
             'access_token'   => $token,
+            'refresh_token'  => $refreshToken,
             'token_type'     => 'Bearer',
             'email_verified' => true,
             'is_new_user'    => $isNewUser,
@@ -633,6 +641,48 @@ class AuthController extends Controller
         return response()->json([
             'status'  => 'success',
             'message' => 'تم حذف حساب ' . $userName . ' وجميع البيانات المرتبطة نهائياً.',
+        ]);
+    }
+
+    /**
+     * ========================================
+     * 13. تجديد التوكن (Refresh Token)
+     * ========================================
+     */
+    public function refreshToken(Request $request): JsonResponse
+    {
+        $refreshTokenPlain = $request->header('refreshtoken');
+
+        if (!$refreshTokenPlain) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Refresh token missing',
+            ], 401);
+        }
+
+        $token = \Laravel\Sanctum\PersonalAccessToken::findToken($refreshTokenPlain);
+
+        if (!$token || !$token->can('refresh')) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Invalid or expired refresh token',
+            ], 401);
+        }
+
+        $user = $token->tokenable;
+
+        // حذف التوكن القديم لتجنب تراكم التوكنات
+        $token->delete();
+
+        // إنشاء توكنات جديدة
+        $newAccessToken = $user->createToken('auth_token', ['access-student'])->plainTextToken;
+        $newRefreshToken = $user->createToken('refresh_token', ['refresh'])->plainTextToken;
+
+        return response()->json([
+            'status'         => 'success',
+            'access_token'   => $newAccessToken,
+            'refresh_token'  => $newRefreshToken,
+            'token_type'     => 'Bearer',
         ]);
     }
 }

@@ -68,7 +68,7 @@ class DiagnosisService
 
             $response = Http::withHeaders([
                 'Accept' => 'application/json'
-            ])->timeout($timeout)->post($aiUrl . '/predict', $aiInputs);
+            ])->connectTimeout(10)->timeout($timeout)->post($aiUrl . '/predict', $aiInputs);
 
             if (!$response->successful()) {
                 return [

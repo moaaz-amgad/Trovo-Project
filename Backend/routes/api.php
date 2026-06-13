@@ -54,6 +54,10 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])
 Route::post('/admin/login', [AdminAuthController::class, 'login'])
     ->middleware('throttle:5,1');
 
+// تجديد التوكن
+Route::post('/refresh-token', [AuthController::class, 'refreshToken'])
+    ->middleware('throttle:10,1');
+
 
 // =============================================
 // 2. مسارات الإدارة (Admin Dashboard) المحمية
