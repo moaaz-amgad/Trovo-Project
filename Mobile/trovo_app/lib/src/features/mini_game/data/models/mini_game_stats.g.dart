@@ -14,6 +14,7 @@ _MiniGameStats _$MiniGameStatsFromJson(Map<String, dynamic> json) =>
       averageReactionTimeMs:
           _readAvgReaction(json, 'averageReactionTimeMs') as num?,
       bestScore: _readBestScore(json, 'bestScore') as num?,
+      focusScore: _readFocusScore(json, 'focusScore') as num?,
     );
 
 Map<String, dynamic> _$MiniGameStatsToJson(_MiniGameStats instance) =>
@@ -23,4 +24,5 @@ Map<String, dynamic> _$MiniGameStatsToJson(_MiniGameStats instance) =>
       'averageAccuracy': instance.averageAccuracy,
       'averageReactionTimeMs': instance.averageReactionTimeMs,
       'bestScore': instance.bestScore,
+      'focusScore': instance.focusScore,
     };

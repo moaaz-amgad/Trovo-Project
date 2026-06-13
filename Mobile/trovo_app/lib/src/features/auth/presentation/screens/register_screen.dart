@@ -85,6 +85,13 @@ class _RegisterViewState extends State<_RegisterView> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         state.whenOrNull(
+          loginSuccess: (data) {
+            if (data.hasDiagnosis) {
+              context.go(AppRoutePaths.layoutScreen);
+            } else {
+              context.go(AppRoutePaths.phoneUsageScreen);
+            }
+          },
           registerSuccess: (_) => context.go(
             '${AppRoutePaths.otpScreen}?email=${Uri.encodeComponent(_submittedEmail)}',
           ),

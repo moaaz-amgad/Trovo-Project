@@ -336,19 +336,26 @@ class _FocusScoreCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ProgressCubit, ProgressState>(
-      builder: (context, state) {
-        final summary = state.maybeWhen(
+      builder: (context, progressState) {
+        final summary = progressState.maybeWhen(
           loaded: (s, _) => s,
           orElse: () => null,
         );
+        
+        return BlocBuilder<MiniGameCubit, MiniGameDashboardState>(
+          builder: (context, miniGameState) {
+            final stats = miniGameState.maybeWhen(
+              loaded: (d, s, _) => s,
+              orElse: () => null,
+            );
 
-        final focusScore = summary?.overallScore?.toInt() ?? 0;
-        final isOptimal = focusScore >= 80;
-        final scoreLabel = isOptimal ? 'OPTIMAL' : (focusScore > 0 ? 'AVERAGE' : 'NO DATA');
-        final streak = summary?.streak ?? 0;
-        final sessions = summary?.totalSessions ?? 0;
+            final focusScore = stats?.focusScore?.toInt() ?? 0;
+            final isOptimal = focusScore >= 80;
+            final scoreLabel = isOptimal ? 'OPTIMAL' : (focusScore > 0 ? 'AVERAGE' : 'NO DATA');
+            final streak = summary?.streak ?? 0;
+            final sessions = summary?.totalSessions ?? 0;
 
-        return Container(
+            return Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
           decoration: BoxDecoration(
@@ -494,6 +501,8 @@ class _FocusScoreCard extends StatelessWidget {
               ),
             ],
           ),
+        );
+          },
         );
       },
     );

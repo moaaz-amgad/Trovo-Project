@@ -359,21 +359,21 @@ class _DurationChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 12,
+      runSpacing: 12,
       children: [
         _DurationChip(
           label: '15 min',
           selected: selectedMinutes == 15,
           onTap: () => onSelected(15),
         ),
-        const SizedBox(width: 12),
         _DurationChip(
           label: '25 min',
           selected: selectedMinutes == 25,
           onTap: () => onSelected(25),
         ),
-        const SizedBox(width: 12),
         _DurationChip(
           label: '45 min',
           selected: selectedMinutes == 45,

@@ -8,20 +8,25 @@ Object? _readTotal(Map json, String key) =>
     json['count'];
 
 Object? _readAvgScore(Map json, String key) =>
-    json['average_score'] ?? json['averageScore'] ?? json['avg_score'];
+    json['average_score'] ?? json['averageScore'] ?? json['avg_score'] ?? json['avgScore'];
 
 Object? _readAvgAccuracy(Map json, String key) =>
     json['average_accuracy'] ??
     json['averageAccuracy'] ??
-    json['avg_accuracy'];
+    json['avg_accuracy'] ??
+    json['consistencyPercentage'];
 
 Object? _readAvgReaction(Map json, String key) =>
     json['average_reaction_time_ms'] ??
     json['averageReactionTimeMs'] ??
-    json['avg_reaction_time_ms'];
+    json['avg_reaction_time_ms'] ??
+    json['reactionTimeMs'];
 
 Object? _readBestScore(Map json, String key) =>
-    json['best_score'] ?? json['bestScore'] ?? json['highest_score'];
+    json['best_score'] ?? json['bestScore'] ?? json['highest_score'] ?? json['peakScore'];
+
+Object? _readFocusScore(Map json, String key) =>
+    json['focusScore'] ?? json['focus_score'];
 
 /// Aggregate mini-game statistics from `GET /api/mini-game/stats`.
 ///
@@ -35,6 +40,7 @@ abstract class MiniGameStats with _$MiniGameStats {
     @JsonKey(readValue: _readAvgAccuracy) num? averageAccuracy,
     @JsonKey(readValue: _readAvgReaction) num? averageReactionTimeMs,
     @JsonKey(readValue: _readBestScore) num? bestScore,
+    @JsonKey(readValue: _readFocusScore) num? focusScore,
   }) = _MiniGameStats;
 
   factory MiniGameStats.fromJson(Map<String, dynamic> json) =>

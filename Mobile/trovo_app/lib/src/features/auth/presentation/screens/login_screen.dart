@@ -75,7 +75,7 @@ class _LoginViewState extends State<_LoginView> {
             if (data.hasDiagnosis) {
               context.go(AppRoutePaths.layoutScreen);
             } else {
-              context.go(AppRoutePaths.questionnaireScreen);
+              context.go(AppRoutePaths.phoneUsageScreen);
             }
           },
           emailNotVerified: (email) => context.go(

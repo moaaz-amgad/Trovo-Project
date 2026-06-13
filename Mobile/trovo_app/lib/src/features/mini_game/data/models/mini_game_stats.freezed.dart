@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MiniGameStats {
 
-@JsonKey(readValue: _readTotal) int? get totalSessions;@JsonKey(readValue: _readAvgScore) num? get averageScore;@JsonKey(readValue: _readAvgAccuracy) num? get averageAccuracy;@JsonKey(readValue: _readAvgReaction) num? get averageReactionTimeMs;@JsonKey(readValue: _readBestScore) num? get bestScore;
+@JsonKey(readValue: _readTotal) int? get totalSessions;@JsonKey(readValue: _readAvgScore) num? get averageScore;@JsonKey(readValue: _readAvgAccuracy) num? get averageAccuracy;@JsonKey(readValue: _readAvgReaction) num? get averageReactionTimeMs;@JsonKey(readValue: _readBestScore) num? get bestScore;@JsonKey(readValue: _readFocusScore) num? get focusScore;
 /// Create a copy of MiniGameStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $MiniGameStatsCopyWith<MiniGameStats> get copyWith => _$MiniGameStatsCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MiniGameStats&&(identical(other.totalSessions, totalSessions) || other.totalSessions == totalSessions)&&(identical(other.averageScore, averageScore) || other.averageScore == averageScore)&&(identical(other.averageAccuracy, averageAccuracy) || other.averageAccuracy == averageAccuracy)&&(identical(other.averageReactionTimeMs, averageReactionTimeMs) || other.averageReactionTimeMs == averageReactionTimeMs)&&(identical(other.bestScore, bestScore) || other.bestScore == bestScore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MiniGameStats&&(identical(other.totalSessions, totalSessions) || other.totalSessions == totalSessions)&&(identical(other.averageScore, averageScore) || other.averageScore == averageScore)&&(identical(other.averageAccuracy, averageAccuracy) || other.averageAccuracy == averageAccuracy)&&(identical(other.averageReactionTimeMs, averageReactionTimeMs) || other.averageReactionTimeMs == averageReactionTimeMs)&&(identical(other.bestScore, bestScore) || other.bestScore == bestScore)&&(identical(other.focusScore, focusScore) || other.focusScore == focusScore));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalSessions,averageScore,averageAccuracy,averageReactionTimeMs,bestScore);
+int get hashCode => Object.hash(runtimeType,totalSessions,averageScore,averageAccuracy,averageReactionTimeMs,bestScore,focusScore);
 
 @override
 String toString() {
-  return 'MiniGameStats(totalSessions: $totalSessions, averageScore: $averageScore, averageAccuracy: $averageAccuracy, averageReactionTimeMs: $averageReactionTimeMs, bestScore: $bestScore)';
+  return 'MiniGameStats(totalSessions: $totalSessions, averageScore: $averageScore, averageAccuracy: $averageAccuracy, averageReactionTimeMs: $averageReactionTimeMs, bestScore: $bestScore, focusScore: $focusScore)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $MiniGameStatsCopyWith<$Res>  {
   factory $MiniGameStatsCopyWith(MiniGameStats value, $Res Function(MiniGameStats) _then) = _$MiniGameStatsCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(readValue: _readTotal) int? totalSessions,@JsonKey(readValue: _readAvgScore) num? averageScore,@JsonKey(readValue: _readAvgAccuracy) num? averageAccuracy,@JsonKey(readValue: _readAvgReaction) num? averageReactionTimeMs,@JsonKey(readValue: _readBestScore) num? bestScore
+@JsonKey(readValue: _readTotal) int? totalSessions,@JsonKey(readValue: _readAvgScore) num? averageScore,@JsonKey(readValue: _readAvgAccuracy) num? averageAccuracy,@JsonKey(readValue: _readAvgReaction) num? averageReactionTimeMs,@JsonKey(readValue: _readBestScore) num? bestScore,@JsonKey(readValue: _readFocusScore) num? focusScore
 });
 
 
@@ -65,13 +65,14 @@ class _$MiniGameStatsCopyWithImpl<$Res>
 
 /// Create a copy of MiniGameStats
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? totalSessions = freezed,Object? averageScore = freezed,Object? averageAccuracy = freezed,Object? averageReactionTimeMs = freezed,Object? bestScore = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? totalSessions = freezed,Object? averageScore = freezed,Object? averageAccuracy = freezed,Object? averageReactionTimeMs = freezed,Object? bestScore = freezed,Object? focusScore = freezed,}) {
   return _then(_self.copyWith(
 totalSessions: freezed == totalSessions ? _self.totalSessions : totalSessions // ignore: cast_nullable_to_non_nullable
 as int?,averageScore: freezed == averageScore ? _self.averageScore : averageScore // ignore: cast_nullable_to_non_nullable
 as num?,averageAccuracy: freezed == averageAccuracy ? _self.averageAccuracy : averageAccuracy // ignore: cast_nullable_to_non_nullable
 as num?,averageReactionTimeMs: freezed == averageReactionTimeMs ? _self.averageReactionTimeMs : averageReactionTimeMs // ignore: cast_nullable_to_non_nullable
 as num?,bestScore: freezed == bestScore ? _self.bestScore : bestScore // ignore: cast_nullable_to_non_nullable
+as num?,focusScore: freezed == focusScore ? _self.focusScore : focusScore // ignore: cast_nullable_to_non_nullable
 as num?,
   ));
 }
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readTotal)  int? totalSessions, @JsonKey(readValue: _readAvgScore)  num? averageScore, @JsonKey(readValue: _readAvgAccuracy)  num? averageAccuracy, @JsonKey(readValue: _readAvgReaction)  num? averageReactionTimeMs, @JsonKey(readValue: _readBestScore)  num? bestScore)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readTotal)  int? totalSessions, @JsonKey(readValue: _readAvgScore)  num? averageScore, @JsonKey(readValue: _readAvgAccuracy)  num? averageAccuracy, @JsonKey(readValue: _readAvgReaction)  num? averageReactionTimeMs, @JsonKey(readValue: _readBestScore)  num? bestScore, @JsonKey(readValue: _readFocusScore)  num? focusScore)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MiniGameStats() when $default != null:
-return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_that.averageReactionTimeMs,_that.bestScore);case _:
+return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_that.averageReactionTimeMs,_that.bestScore,_that.focusScore);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readTotal)  int? totalSessions, @JsonKey(readValue: _readAvgScore)  num? averageScore, @JsonKey(readValue: _readAvgAccuracy)  num? averageAccuracy, @JsonKey(readValue: _readAvgReaction)  num? averageReactionTimeMs, @JsonKey(readValue: _readBestScore)  num? bestScore)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readTotal)  int? totalSessions, @JsonKey(readValue: _readAvgScore)  num? averageScore, @JsonKey(readValue: _readAvgAccuracy)  num? averageAccuracy, @JsonKey(readValue: _readAvgReaction)  num? averageReactionTimeMs, @JsonKey(readValue: _readBestScore)  num? bestScore, @JsonKey(readValue: _readFocusScore)  num? focusScore)  $default,) {final _that = this;
 switch (_that) {
 case _MiniGameStats():
-return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_that.averageReactionTimeMs,_that.bestScore);case _:
+return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_that.averageReactionTimeMs,_that.bestScore,_that.focusScore);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: _readTotal)  int? totalSessions, @JsonKey(readValue: _readAvgScore)  num? averageScore, @JsonKey(readValue: _readAvgAccuracy)  num? averageAccuracy, @JsonKey(readValue: _readAvgReaction)  num? averageReactionTimeMs, @JsonKey(readValue: _readBestScore)  num? bestScore)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: _readTotal)  int? totalSessions, @JsonKey(readValue: _readAvgScore)  num? averageScore, @JsonKey(readValue: _readAvgAccuracy)  num? averageAccuracy, @JsonKey(readValue: _readAvgReaction)  num? averageReactionTimeMs, @JsonKey(readValue: _readBestScore)  num? bestScore, @JsonKey(readValue: _readFocusScore)  num? focusScore)?  $default,) {final _that = this;
 switch (_that) {
 case _MiniGameStats() when $default != null:
-return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_that.averageReactionTimeMs,_that.bestScore);case _:
+return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_that.averageReactionTimeMs,_that.bestScore,_that.focusScore);case _:
   return null;
 
 }
@@ -213,7 +214,7 @@ return $default(_that.totalSessions,_that.averageScore,_that.averageAccuracy,_th
 @JsonSerializable()
 
 class _MiniGameStats implements MiniGameStats {
-  const _MiniGameStats({@JsonKey(readValue: _readTotal) this.totalSessions, @JsonKey(readValue: _readAvgScore) this.averageScore, @JsonKey(readValue: _readAvgAccuracy) this.averageAccuracy, @JsonKey(readValue: _readAvgReaction) this.averageReactionTimeMs, @JsonKey(readValue: _readBestScore) this.bestScore});
+  const _MiniGameStats({@JsonKey(readValue: _readTotal) this.totalSessions, @JsonKey(readValue: _readAvgScore) this.averageScore, @JsonKey(readValue: _readAvgAccuracy) this.averageAccuracy, @JsonKey(readValue: _readAvgReaction) this.averageReactionTimeMs, @JsonKey(readValue: _readBestScore) this.bestScore, @JsonKey(readValue: _readFocusScore) this.focusScore});
   factory _MiniGameStats.fromJson(Map<String, dynamic> json) => _$MiniGameStatsFromJson(json);
 
 @override@JsonKey(readValue: _readTotal) final  int? totalSessions;
@@ -221,6 +222,7 @@ class _MiniGameStats implements MiniGameStats {
 @override@JsonKey(readValue: _readAvgAccuracy) final  num? averageAccuracy;
 @override@JsonKey(readValue: _readAvgReaction) final  num? averageReactionTimeMs;
 @override@JsonKey(readValue: _readBestScore) final  num? bestScore;
+@override@JsonKey(readValue: _readFocusScore) final  num? focusScore;
 
 /// Create a copy of MiniGameStats
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +237,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MiniGameStats&&(identical(other.totalSessions, totalSessions) || other.totalSessions == totalSessions)&&(identical(other.averageScore, averageScore) || other.averageScore == averageScore)&&(identical(other.averageAccuracy, averageAccuracy) || other.averageAccuracy == averageAccuracy)&&(identical(other.averageReactionTimeMs, averageReactionTimeMs) || other.averageReactionTimeMs == averageReactionTimeMs)&&(identical(other.bestScore, bestScore) || other.bestScore == bestScore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MiniGameStats&&(identical(other.totalSessions, totalSessions) || other.totalSessions == totalSessions)&&(identical(other.averageScore, averageScore) || other.averageScore == averageScore)&&(identical(other.averageAccuracy, averageAccuracy) || other.averageAccuracy == averageAccuracy)&&(identical(other.averageReactionTimeMs, averageReactionTimeMs) || other.averageReactionTimeMs == averageReactionTimeMs)&&(identical(other.bestScore, bestScore) || other.bestScore == bestScore)&&(identical(other.focusScore, focusScore) || other.focusScore == focusScore));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalSessions,averageScore,averageAccuracy,averageReactionTimeMs,bestScore);
+int get hashCode => Object.hash(runtimeType,totalSessions,averageScore,averageAccuracy,averageReactionTimeMs,bestScore,focusScore);
 
 @override
 String toString() {
-  return 'MiniGameStats(totalSessions: $totalSessions, averageScore: $averageScore, averageAccuracy: $averageAccuracy, averageReactionTimeMs: $averageReactionTimeMs, bestScore: $bestScore)';
+  return 'MiniGameStats(totalSessions: $totalSessions, averageScore: $averageScore, averageAccuracy: $averageAccuracy, averageReactionTimeMs: $averageReactionTimeMs, bestScore: $bestScore, focusScore: $focusScore)';
 }
 
 
@@ -255,7 +257,7 @@ abstract mixin class _$MiniGameStatsCopyWith<$Res> implements $MiniGameStatsCopy
   factory _$MiniGameStatsCopyWith(_MiniGameStats value, $Res Function(_MiniGameStats) _then) = __$MiniGameStatsCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(readValue: _readTotal) int? totalSessions,@JsonKey(readValue: _readAvgScore) num? averageScore,@JsonKey(readValue: _readAvgAccuracy) num? averageAccuracy,@JsonKey(readValue: _readAvgReaction) num? averageReactionTimeMs,@JsonKey(readValue: _readBestScore) num? bestScore
+@JsonKey(readValue: _readTotal) int? totalSessions,@JsonKey(readValue: _readAvgScore) num? averageScore,@JsonKey(readValue: _readAvgAccuracy) num? averageAccuracy,@JsonKey(readValue: _readAvgReaction) num? averageReactionTimeMs,@JsonKey(readValue: _readBestScore) num? bestScore,@JsonKey(readValue: _readFocusScore) num? focusScore
 });
 
 
@@ -272,13 +274,14 @@ class __$MiniGameStatsCopyWithImpl<$Res>
 
 /// Create a copy of MiniGameStats
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? totalSessions = freezed,Object? averageScore = freezed,Object? averageAccuracy = freezed,Object? averageReactionTimeMs = freezed,Object? bestScore = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? totalSessions = freezed,Object? averageScore = freezed,Object? averageAccuracy = freezed,Object? averageReactionTimeMs = freezed,Object? bestScore = freezed,Object? focusScore = freezed,}) {
   return _then(_MiniGameStats(
 totalSessions: freezed == totalSessions ? _self.totalSessions : totalSessions // ignore: cast_nullable_to_non_nullable
 as int?,averageScore: freezed == averageScore ? _self.averageScore : averageScore // ignore: cast_nullable_to_non_nullable
 as num?,averageAccuracy: freezed == averageAccuracy ? _self.averageAccuracy : averageAccuracy // ignore: cast_nullable_to_non_nullable
 as num?,averageReactionTimeMs: freezed == averageReactionTimeMs ? _self.averageReactionTimeMs : averageReactionTimeMs // ignore: cast_nullable_to_non_nullable
 as num?,bestScore: freezed == bestScore ? _self.bestScore : bestScore // ignore: cast_nullable_to_non_nullable
+as num?,focusScore: freezed == focusScore ? _self.focusScore : focusScore // ignore: cast_nullable_to_non_nullable
 as num?,
   ));
 }

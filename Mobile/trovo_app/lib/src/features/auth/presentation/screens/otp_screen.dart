@@ -74,7 +74,7 @@ class _OtpViewState extends State<_OtpView> {
       listener: (context, state) {
         state.whenOrNull(
           verifyEmailSuccess: (_) =>
-              context.go(AppRoutePaths.questionnaireScreen),
+              context.go(AppRoutePaths.phoneUsageScreen),
           otpResentSuccess: (message) => _showMessage(message),
           error: (message) => _showMessage(message),
         );
